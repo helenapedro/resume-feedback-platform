@@ -124,7 +124,7 @@ Enterprise-grade resume feedback platform that allows users to upload and versio
 ##  Sequence Diagrams
 ![Seq 01](./seq-01.jpg)
 
-![Seq 02](./seq-02.drawio.jpg)
+![Seq 02.drawio](./seq-02.drawio.png)
 
 ![Seq 03](./seq-03.jpg)
 
@@ -132,4 +132,5 @@ Enterprise-grade resume feedback platform that allows users to upload and versio
 
 ![Seq 05](./seq-05.jpg)
 
-![Seq 06](./seq-06.jpg)
+![Seq 06](./Seq-06.jpg
+)
