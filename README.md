@@ -111,5 +111,8 @@ Enterprise-grade resume feedback platform that allows users to upload and versio
 - The system shall include integration tests for REST APIs.
 - The system shall include tests for asynchronous AI job processing and failure handling.
 
+##  Use Case Diagram 
+ ![Use cases](./use-cases.jpg)
+ 
 ## User Stories
   ![User stories](./user-stories.jpg)
