@@ -117,3 +117,6 @@ Enterprise-grade resume feedback platform that allows users to upload and versio
  
 ### User Stories
   ![User stories](./user-stories.jpg)
+
+### Domain Class Model
+  ![Domain class](./domain-class-model.jpg)
