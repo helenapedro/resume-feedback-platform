@@ -120,3 +120,16 @@ Enterprise-grade resume feedback platform that allows users to upload and versio
 
 ### Domain Class Model
   ![Domain class](./domain-class-model.jpg)
+
+##  Sequence Diagrams
+![Seq 01](./seq-01.jpg)
+
+![Seq 02](./seq-02.drawio.jpg)
+
+![Seq 03](./seq-03.jpg)
+
+![Seq 04](./seq-04.jpg)
+
+![Seq 05](./seq-05.jpg)
+
+![Seq 06](./seq-06.jpg)
