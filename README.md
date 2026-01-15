@@ -132,5 +132,9 @@ Enterprise-grade resume feedback platform that allows users to upload and versio
 
 ![Seq 05](./seq-05.jpg)
 
-![Seq 06](./Seq-06.jpg
-)
+![Seq 06](./Seq-06.jpg)
+## Domain Behavior
+![State diagrams](./statediagrams.jpg)
+
+## Main Flows
+![Activity diagrams](./activitydiagrams.jpg)
