@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.1</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.pedro</groupId>
+    <artifactId>feedback</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>resume-feedback-platform</name>
+    <description>Multi-module parent for Resume Feedback Platform</description>
+
+    <properties>
+        <java.version>17</java.version>
+
+        <!-- centralize versions used across modules -->
+        <springdoc.version>2.8.0</springdoc.version>
+        <aws.sdk.version>2.30.0</aws.sdk.version>
+        <testcontainers.version>1.20.4</testcontainers.version>
+    </properties>
+
+    <modules>
+        <module>common</module>
+        <module>resume-api</module>
+        <module>resume-worker</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- OpenAPI / Swagger UI -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+
+            <!-- AWS SDK BOM (for S3, etc.) -->
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws.sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Testcontainers BOM -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- No spring-boot-maven-plugin here (belongs in runnable modules) -->
+
+</project>
