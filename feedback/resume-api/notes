@@ -1,0 +1,7 @@
+@PrePersist:
+    marks a method to run automatically just before a
+    new entity is first saved (persisted) to the database
+
+ @Transactional:
+    annotation in Java is used to define that a method or class
+    should be executed within a database transaction.
