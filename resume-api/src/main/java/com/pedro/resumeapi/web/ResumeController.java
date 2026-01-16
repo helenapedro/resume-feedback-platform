@@ -66,10 +66,17 @@ public class ResumeController {
     ) {
         var payload = resumeService.downloadVersion(resumeId, versionId);
 
+        String safeName = payload.filename()
+                .replace("\"", "")
+                .replace("\r", "")
+                .replace("\n", "")
+                .replace("\\", "_")
+                .replace("/", "_");
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + payload.filename().replace("\"", "") + "\"")
-                .header(HttpHeaders.CONTENT_TYPE, payload.contentType())
+                .contentType(org.springframework.http.MediaType.parseMediaType(payload.contentType()))
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + safeName + "\"")
                 .body(payload.resource());
     }
 }

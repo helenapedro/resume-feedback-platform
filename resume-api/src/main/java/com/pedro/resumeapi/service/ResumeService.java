@@ -151,24 +151,20 @@ public class ResumeService {
 
     @Transactional(readOnly = true)
     public DownloadPayload downloadVersion(UUID resumeId, UUID versionId) {
-        Resume resume = getMyResume(resumeId);
+        getMyResume(resumeId);
 
-        ResumeVersion v = versionRepository.findById(versionId)
+        var resumeVersion = versionRepository.findByIdAndResume_Id(versionId, resumeId)
                 .orElseThrow(() -> new IllegalArgumentException("Version not found"));
 
-        if (!v.getResume().getId().equals(resume.getId())) {
-            throw new IllegalArgumentException("Version does not belong to resume");
-        }
+        var resource = storage.loadAsResource(resumeVersion.getStorageKey());
 
-        Resource resource = storage.loadAsResource(v.getStorageKey());
-
-        String filename = (v.getOriginalFilename() == null || v.getOriginalFilename().isBlank())
+        String filename = (resumeVersion.getOriginalFilename() == null || resumeVersion.getOriginalFilename().isBlank())
                 ? "resume.pdf"
-                : v.getOriginalFilename();
+                : resumeVersion.getOriginalFilename();
 
-        String contentType = (v.getContentType() == null || v.getContentType().isBlank())
+        String contentType = (resumeVersion.getContentType() == null || resumeVersion.getContentType().isBlank())
                 ? "application/octet-stream"
-                : v.getContentType();
+                : resumeVersion.getContentType();
 
         return new DownloadPayload(resource, filename, contentType);
     }
