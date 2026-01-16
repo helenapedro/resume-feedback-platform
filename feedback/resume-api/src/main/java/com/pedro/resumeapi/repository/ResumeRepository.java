@@ -7,5 +7,6 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ResumeRepository extends JpaRepository<Resume, UUID> {
-    List<Resume> findByOwnerIdOrderByCreatedAtDesc(UUID ownerId);
+    List<Resume> findByOwner_IdOrderByCreatedAtDesc(UUID ownerId);
+
 }

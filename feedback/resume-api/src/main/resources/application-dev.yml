@@ -13,4 +13,8 @@ spring:
 
 app:
   storage:
-    local-dir: ./local-storage
+    local-dir: C:/temp/resume-storage
+logging:
+  level:
+    org.springframework.security: DEBUG
+

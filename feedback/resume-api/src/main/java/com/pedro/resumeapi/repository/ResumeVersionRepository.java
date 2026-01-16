@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ResumeVersionRepository extends JpaRepository<ResumeVersion, UUID> {
-    List<ResumeVersion> findByResumeIdOrderByVersionNumberDesc(UUID resumeId);
-    Optional<ResumeVersion> findTopByResumeIdOrderByVersionNumberDesc(UUID resumeId);
+    List<ResumeVersion> findByResume_IdOrderByVersionNumberDesc(UUID resumeId);
+
+    Optional<ResumeVersion> findTopByResume_IdOrderByVersionNumberDesc(UUID resumeId);
+
 }

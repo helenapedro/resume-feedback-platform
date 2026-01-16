@@ -17,16 +17,20 @@ public class ResumeVersion {
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @Column(name = "resume_id", nullable = false, columnDefinition = "BINARY(16)")
-    private UUID resumeId;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "resume_id", nullable = false)
+    private Resume resume;
 
     @Column(name = "version_number", nullable = false)
     private int versionNumber;
 
-    @Column(name = "file_name", nullable = false)
+    @Column(name = "original_filename", nullable = false, length = 255)
+    private String originalFilename;
+
+    @Column(name = "file_name", nullable = false, length = 255)
     private String fileName;
 
-    @Column(name = "content_type", nullable = false)
+    @Column(name = "content_type", nullable = false, length = 255)
     private String contentType;
 
     @Column(name = "storage_key", nullable = false, length = 1024)

@@ -2,7 +2,10 @@ CREATE TABLE resume_versions (
     id BINARY(16) NOT NULL PRIMARY KEY,
     resume_id BINARY(16) NOT NULL,
     version_number INT NOT NULL,
+
     original_filename VARCHAR(255) NOT NULL,
+    file_name varchar(255) NOT NULL,
+
     content_type VARCHAR(120) NOT NULL,
     file_size_bytes BIGINT NULL,
 
