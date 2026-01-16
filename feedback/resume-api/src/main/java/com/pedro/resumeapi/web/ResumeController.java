@@ -4,7 +4,10 @@ import com.pedro.resumeapi.dto.ResumeSummaryDTO;
 import com.pedro.resumeapi.dto.ResumeVersionDTO;
 import com.pedro.resumeapi.service.ResumeService;
 import lombok.AllArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -52,5 +55,19 @@ public class ResumeController {
 
         var version = resumeService.addVersion(id, file);
         return resumeService.toVersionDTO(version);
+    }
+
+    @GetMapping("/{resumeId}/versions/{versionId}/download")
+    public ResponseEntity<Resource> download(
+            @PathVariable UUID resumeId,
+            @PathVariable UUID versionId
+    ) {
+        var payload = resumeService.downloadVersion(resumeId, versionId);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + payload.filename().replace("\"", "") + "\"")
+                .header(HttpHeaders.CONTENT_TYPE, payload.contentType())
+                .body(payload.resource());
     }
 }

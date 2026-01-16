@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.util.List;
@@ -102,7 +103,7 @@ public class ResumeService {
                 ? "application/pdf"
                 : file.getContentType();
 
-        ResumeVersion resumeVersion = new ResumeVersion();
+        var resumeVersion = new ResumeVersion();
         resumeVersion.setResume(resume);
         resumeVersion.setVersionNumber(version);
 
@@ -110,6 +111,9 @@ public class ResumeService {
         resumeVersion.setFileName(original);
 
         resumeVersion.setContentType(contentType);
+        resumeVersion.setFileSizeBytes(file.getSize());
+
+        resumeVersion.setCreatedBy(resume.getOwner());
 
         String storageKey = storage.store(FIXED_OWNER_ID, resume.getId(), version, file);
         resumeVersion.setStorageKey(storageKey);
@@ -143,4 +147,31 @@ public class ResumeService {
                 v.getCreatedAt()
         );
     }
+
+    public record DownloadPayload(Resource resource, String filename, String contentType) {}
+
+    @Transactional(readOnly = true)
+    public DownloadPayload downloadVersion(UUID resumeId, UUID versionId) {
+        Resume resume = getMyResume(resumeId); // valida owner
+
+        ResumeVersion v = versionRepository.findById(versionId)
+                .orElseThrow(() -> new IllegalArgumentException("Version not found"));
+
+        if (!v.getResume().getId().equals(resume.getId())) {
+            throw new IllegalArgumentException("Version does not belong to resume");
+        }
+
+        Resource resource = storage.loadAsResource(v.getStorageKey());
+
+        String filename = (v.getOriginalFilename() == null || v.getOriginalFilename().isBlank())
+                ? "resume.pdf"
+                : v.getOriginalFilename();
+
+        String contentType = (v.getContentType() == null || v.getContentType().isBlank())
+                ? "application/octet-stream"
+                : v.getContentType();
+
+        return new DownloadPayload(resource, filename, contentType);
+    }
+
 }
