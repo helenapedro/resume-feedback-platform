@@ -16,6 +16,8 @@ import java.util.UUID;
 @NoArgsConstructor @AllArgsConstructor
 public class User {
 
+    public enum Role { USER, ADMIN }
+
     @Id
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
@@ -26,8 +28,9 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String role; // USER/ADMIN (enum later)
+    private Role role;
 
     @Column(nullable = false)
     private boolean enabled = true;
@@ -38,13 +41,13 @@ public class User {
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 
+    @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
+    private List<Resume> resumes;
+
     @PrePersist
     void prePersist() {
         if (id == null) id = UUID.randomUUID();
         if (createdAt == null) createdAt = Instant.now();
     }
-
-    @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
-    private List<Resume> resumes;
 }
 
