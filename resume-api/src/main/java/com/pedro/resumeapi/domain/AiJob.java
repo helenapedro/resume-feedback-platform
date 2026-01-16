@@ -18,8 +18,9 @@ public class AiJob {
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @Column(name = "resume_version_id", nullable = false, columnDefinition = "BINARY(16)")
-    private UUID resumeVersionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resume_version_id", nullable = false)
+    private ResumeVersion resumeVersion;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

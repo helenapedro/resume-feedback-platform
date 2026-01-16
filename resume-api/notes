@@ -1,3 +1,12 @@
+RUN: mvn -pl resume-api spring-boot:run -Dspring-boot.run.profiles=dev
+
+DOCKER SHOW DB TABLES:
+    docker exec -it resume-mysql mysql -uapp -papp -D resume_feedback -e "SHOW TABLES;"
+    docker exec -it resume-mysql mysql -uapp -papp -D resume_feedback -e "SHOW CREATE TABLE resumes\G"
+
+SDOCKER HOW TABLE CREATION:
+    docker exec -it resume-mysql mysql -uapp -papp -D resume_feedback -e "SHOW CREATE TABLE resume_versions\G"
+
 @PrePersist:
     marks a method to run automatically just before a
     new entity is first saved (persisted) to the database

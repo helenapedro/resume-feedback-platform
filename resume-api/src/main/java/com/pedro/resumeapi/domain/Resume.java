@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -16,17 +18,22 @@ public class Resume {
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @Column(name = "owner_id", nullable = false, columnDefinition = "BINARY(16)")
-    private UUID ownerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private User owner;
 
     @Column(nullable = false)
     private String title;
 
-    @Column(name = "current_version_id", columnDefinition = "BINARY(16)")
-    private UUID currentVersionId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_version_id")
+    private ResumeVersion currentVersion;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    @OneToMany(mappedBy = "resume", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ResumeVersion> versions = new ArrayList<>();
 
     @PrePersist
     void prePersist() {

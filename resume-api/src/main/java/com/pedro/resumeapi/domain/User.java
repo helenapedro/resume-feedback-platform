@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -42,5 +43,8 @@ public class User {
         if (id == null) id = UUID.randomUUID();
         if (createdAt == null) createdAt = Instant.now();
     }
+
+    @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
+    private List<Resume> resumes;
 }
 
