@@ -1,7 +1,5 @@
 package com.pedro.resumeapi.web;
 
-import com.pedro.resumeapi.domain.Resume;
-import com.pedro.resumeapi.domain.ResumeVersion;
 import com.pedro.resumeapi.dto.ResumeSummaryDTO;
 import com.pedro.resumeapi.dto.ResumeVersionDTO;
 import com.pedro.resumeapi.service.ResumeService;
@@ -22,39 +20,18 @@ public class ResumeController {
 
     @GetMapping
     public List<ResumeSummaryDTO> list() {
-        return resumeService.listMyResumes().stream()
-                .map(r -> new ResumeSummaryDTO(
-                        r.getId(),
-                        r.getTitle(),
-                        r.getCurrentVersion() != null ? r.getCurrentVersion().getId() : null,
-                        r.getCreatedAt()
-                ))
-                .toList();
+        return resumeService.listMyResumes().stream().map(resumeService::toSummaryDTO).toList();
     }
 
     @GetMapping("/{id}")
     public Map<String, Object> get(@PathVariable UUID id) {
-        Resume r = resumeService.getMyResume(id);
-        List<ResumeVersion> versions = resumeService.listVersions(id);
+        var resume = resumeService.getMyResume(id);
+        var versions = resumeService.listVersions(id);
 
         Map<String, Object> out = new LinkedHashMap<>();
-        out.put("resume", new ResumeSummaryDTO(
-                r.getId(),
-                r.getTitle(),
-                r.getCurrentVersion() != null ? r.getCurrentVersion().getId() : null,
-                r.getCreatedAt()
-        ));
+        out.put("resume", resumeService.toSummaryDTO(resume));
 
-        out.put("versions", versions.stream()
-                .map(v -> new ResumeVersionDTO(
-                        v.getId(),
-                        v.getVersionNumber(),
-                        v.getOriginalFilename(),
-                        v.getContentType(),
-                        v.getCreatedAt()
-                ))
-                .toList()
-        );
+        out.put("versions", versions.stream().map(resumeService::toVersionDTO).toList());
 
         return out;
     }
@@ -64,13 +41,8 @@ public class ResumeController {
                                    @RequestPart("file") MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) throw new IllegalArgumentException("File is required");
 
-        Resume resume = resumeService.createResume(title, file);
-        return new ResumeSummaryDTO(
-                resume.getId(),
-                resume.getTitle(),
-                resume.getCurrentVersion() != null ? resume.getCurrentVersion().getId() : null,
-                resume.getCreatedAt()
-        );
+        var resume = resumeService.createResume(title, file);
+        return resumeService.toSummaryDTO(resume);
     }
 
     @PostMapping(value = "/{id}/versions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -78,13 +50,7 @@ public class ResumeController {
                                        @RequestPart("file") MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) throw new IllegalArgumentException("File is required");
 
-        ResumeVersion resumeVersion = resumeService.addVersion(id, file);
-        return new ResumeVersionDTO(
-                resumeVersion.getId(),
-                resumeVersion.getVersionNumber(),
-                resumeVersion.getOriginalFilename(),
-                resumeVersion.getContentType(),
-                resumeVersion.getCreatedAt()
-        );
+        var version = resumeService.addVersion(id, file);
+        return resumeService.toVersionDTO(version);
     }
 }

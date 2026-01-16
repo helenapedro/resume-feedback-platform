@@ -4,6 +4,8 @@ import com.pedro.resumeapi.domain.AiJob;
 import com.pedro.resumeapi.domain.Resume;
 import com.pedro.resumeapi.domain.ResumeVersion;
 import com.pedro.resumeapi.domain.User;
+import com.pedro.resumeapi.dto.ResumeSummaryDTO;
+import com.pedro.resumeapi.dto.ResumeVersionDTO;
 import com.pedro.resumeapi.repository.AiJobRepository;
 import com.pedro.resumeapi.repository.ResumeRepository;
 import com.pedro.resumeapi.repository.ResumeVersionRepository;
@@ -30,6 +32,7 @@ public class ResumeService {
     private final AiJobRepository aiJobRepository;
     private final LocalStorageService storage;
     private final UserRepository userRepository;
+    private final ResumeVersionRepository resumeVersionRepository;
 
     public List<Resume> listMyResumes() {
         return resumeRepository.findByOwner_IdOrderByCreatedAtDesc(FIXED_OWNER_ID);
@@ -117,5 +120,27 @@ public class ResumeService {
     public List<ResumeVersion> listVersions(UUID resumeId) {
         Resume resume = getMyResume(resumeId);
         return versionRepository.findByResume_IdOrderByVersionNumberDesc(resume.getId());
+    }
+
+    // mappers
+    public ResumeSummaryDTO toSummaryDTO(Resume r) {
+        return new ResumeSummaryDTO(
+                r.getId(),
+                r.getTitle(),
+                r.getCurrentVersion() != null ? r.getCurrentVersion().getId() : null,
+                r.getCreatedAt()
+        );
+    }
+
+    public ResumeVersionDTO toVersionDTO(ResumeVersion v) {
+        return new ResumeVersionDTO(
+                v.getId(),
+                v.getVersionNumber(),
+                v.getOriginalFilename(),
+                v.getContentType(),
+                v.getFileSizeBytes(),
+                v.getCreatedBy() != null ? v.getCreatedBy().getId() : null,
+                v.getCreatedAt()
+        );
     }
 }
