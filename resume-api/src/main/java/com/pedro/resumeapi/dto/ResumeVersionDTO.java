@@ -8,5 +8,7 @@ public record ResumeVersionDTO(
         int versionNumber,
         String originalFilename,
         String contentType,
+        Long fileSizeBytes,
+        UUID createdById,
         Instant createdAt
 ) {}

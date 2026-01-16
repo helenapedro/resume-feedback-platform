@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -15,7 +16,8 @@ public class SecurityConfig {
     SecurityFilterChain apiChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/api/**", "/actuator/**")
-                .csrf(csrf -> csrf.disable())
+                .cors(cors -> {})
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
@@ -35,6 +37,7 @@ public class SecurityConfig {
     @Order(2)
     SecurityFilterChain anyOtherChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> {})
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
