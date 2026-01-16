@@ -14,7 +14,11 @@ spring:
 app:
   storage:
     local-dir: C:/temp/resume-storage
-logging:
-  level:
-    org.springframework.security: DEBUG
-
+  jwt:
+    secret: mySecretKeyMySecretKeyMySecretKeyMySecretKeyMySecretKey
+    issuer: resume-api
+    expMinutes: 120
+#logging:
+#  level:
+#    org.springframework.security: DEBUG
+#

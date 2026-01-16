@@ -1,5 +1,6 @@
 package com.pedro.resumeapi.web;
 
+import com.pedro.resumeapi.domain.User;
 import com.pedro.resumeapi.dto.ResumeSummaryDTO;
 import com.pedro.resumeapi.dto.ResumeVersionDTO;
 import com.pedro.resumeapi.service.ResumeService;
@@ -51,6 +52,7 @@ public class ResumeController {
     @PostMapping(value = "/{id}/versions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResumeVersionDTO addVersion(@PathVariable UUID id,
                                        @RequestPart("file") MultipartFile file) throws IOException {
+
         if (file == null || file.isEmpty()) throw new IllegalArgumentException("File is required");
 
         var version = resumeService.addVersion(id, file);
