@@ -35,6 +35,9 @@ public class Resume {
     @OneToMany(mappedBy = "resume", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ResumeVersion> versions = new ArrayList<>();
 
+    @OneToMany(mappedBy = "resume", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ShareLink> shareLinks = new ArrayList<>();
+
     @PrePersist
     void prePersist() {
         if (id == null) id = UUID.randomUUID();

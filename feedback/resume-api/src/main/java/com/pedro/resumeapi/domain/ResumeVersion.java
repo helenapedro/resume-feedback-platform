@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -62,6 +64,13 @@ public class ResumeVersion {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    @OneToMany(mappedBy = "resumeVersion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "resumeVersion", fetch = FetchType.LAZY)
+    private List<AiFeedbackRef> aiFeedbackRefs = new ArrayList<>();
+
 
     @PrePersist
     void prePersist() {
