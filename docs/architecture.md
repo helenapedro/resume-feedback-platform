@@ -4,34 +4,34 @@
 
 ### Use Case Diagram
 
-![Use cases](./images/use-cases.jpg)
+![Use cases](./diagrams/use-cases.jpg)
 
 ### User Stories
 
-![User stories](./images/user-stories.jpg)
+![User stories](./diagrams/user-stories.jpg)
 
 ### Domain Class Model
 
-![Domain class](./images/domain-class-model.jpg)
+![Domain class](./diagrams/domain-class-model.jpg)
 
 ## Sequence Diagrams
 
-![Seq 01](./images/seq-01.jpg)
+![Seq 01](./diagrams/seq-01.jpg)
 
-![Seq 02.drawio](./images/seq-02.drawio.png)
+![Seq 02.drawio](./diagrams/seq-02.drawio.png)
 
-![Seq 03](./images/seq-03.jpg)
+![Seq 03](./diagrams/seq-03.jpg)
 
-![Seq 04](./images/seq-04.jpg)
+![Seq 04](./diagrams/seq-04.jpg)
 
-![Seq 05](./images/seq-05.jpg)
+![Seq 05](./diagrams/seq-05.jpg)
 
-![Seq 06](./images/Seq-06.jpg)
+![Seq 06](./diagrams/Seq-06.jpg)
 
 ## Domain Behavior
 
-![State diagrams](./images/statediagrams.jpg)
+![State diagrams](./diagrams/statediagrams.jpg)
 
 ## Main Flows
 
-![Activity diagrams](./images/activitydiagrams.jpg)
+![Activity diagrams](./diagrams/activitydiagrams.jpg)
