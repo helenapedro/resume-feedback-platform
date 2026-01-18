@@ -4,34 +4,34 @@
 
 ### Use Case Diagram
 
-![Use cases](./images/use-cases.jpg)
+![Use cases](https://raw.githubusercontent.com/helenapedro/resume-feedback-platform/e16c5cf8e0eeb2ddaaa054777c4ea13e798999d6/docs/images/use-cases.jpg)
 
 ### User Stories
 
-![User stories](./images/user-stories.jpg)
+![User stories](https://raw.githubusercontent.com/helenapedro/resume-feedback-platform/e16c5cf8e0eeb2ddaaa054777c4ea13e798999d6/docs/images/user-stories.jpg)
 
 ### Domain Class Model
 
-![Domain class](./images/domain-class-model.jpg)
+![Domain class](https://raw.githubusercontent.com/helenapedro/resume-feedback-platform/e16c5cf8e0eeb2ddaaa054777c4ea13e798999d6/docs/images/domain-class-model.jpg)
 
 ## Sequence Diagrams
 
-![Seq 01](./images/seq-01.jpg)
+![Seq 01](https://raw.githubusercontent.com/helenapedro/resume-feedback-platform/e16c5cf8e0eeb2ddaaa054777c4ea13e798999d6/docs/images/seq-01.jpg)
 
-![Seq 02.drawio](./images/seq-02.drawio.png)
+![Seq 02.drawio](https://raw.githubusercontent.com/helenapedro/resume-feedback-platform/e16c5cf8e0eeb2ddaaa054777c4ea13e798999d6/docs/images/seq-02.drawio.png)
 
-![Seq 03](./images/seq-03.jpg)
+![Seq 03](https://raw.githubusercontent.com/helenapedro/resume-feedback-platform/e16c5cf8e0eeb2ddaaa054777c4ea13e798999d6/docs/images/seq-03.jpg)
 
-![Seq 04](./images/seq-04.jpg)
+![Seq 04](https://raw.githubusercontent.com/helenapedro/resume-feedback-platform/e16c5cf8e0eeb2ddaaa054777c4ea13e798999d6/docs/images/seq-04.jpg)
 
-![Seq 05](./images/seq-05.jpg)
+![Seq 05](https://raw.githubusercontent.com/helenapedro/resume-feedback-platform/e16c5cf8e0eeb2ddaaa054777c4ea13e798999d6/docs/images/seq-05.jpg)
 
-![Seq 06](./images/Seq-06.jpg)
+![Seq 06](https://raw.githubusercontent.com/helenapedro/resume-feedback-platform/e16c5cf8e0eeb2ddaaa054777c4ea13e798999d6/docs/images/Seq-06.jpg)
 
 ## Domain Behavior
 
-![State diagrams](./images/statediagrams.jpg)
+![State diagrams](https://raw.githubusercontent.com/helenapedro/resume-feedback-platform/e16c5cf8e0eeb2ddaaa054777c4ea13e798999d6/docs/images/statediagrams.jpg)
 
 ## Main Flows
 
-![Activity diagrams](./images/activitydiagrams.jpg)
+![Activity diagrams](https://raw.githubusercontent.com/helenapedro/resume-feedback-platform/e16c5cf8e0eeb2ddaaa054777c4ea13e798999d6/docs/images/activitydiagrams.jpg)
