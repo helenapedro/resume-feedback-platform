@@ -1,10 +1,7 @@
 # resume-feedback-platform
 
-## Artifacts — Discovery & Analysis Phase
-
 ### Use Case Diagram
 
-<<<<<<< HEAD
 ![Use cases](./diagrams/use-cases.jpg)
 
 ### User Stories
