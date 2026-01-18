@@ -1,10 +1,12 @@
 package com.pedro.resumeapi.web;
 
+import com.pedro.resumeapi.api.error.FileRequiredException;
 import com.pedro.resumeapi.domain.User;
 import com.pedro.resumeapi.dto.ResumeSummaryDTO;
 import com.pedro.resumeapi.dto.ResumeVersionDTO;
 import com.pedro.resumeapi.service.ResumeService;
 import lombok.AllArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -24,7 +26,10 @@ public class ResumeController {
 
     @GetMapping
     public List<ResumeSummaryDTO> list() {
-        return resumeService.listMyResumes().stream().map(resumeService::toSummaryDTO).toList();
+        return resumeService.listMyResumes()
+                .stream()
+                .map(resumeService::toSummaryDTO)
+                .toList();
     }
 
     @GetMapping("/{id}")
@@ -35,7 +40,11 @@ public class ResumeController {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("resume", resumeService.toSummaryDTO(resume));
 
-        out.put("versions", versions.stream().map(resumeService::toVersionDTO).toList());
+        out.put("versions", versions
+                .stream()
+                .map(resumeService::toVersionDTO)
+                .toList()
+        );
 
         return out;
     }
@@ -43,7 +52,8 @@ public class ResumeController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResumeSummaryDTO create(@RequestParam(required = false) String title,
                                    @RequestPart("file") MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) throw new IllegalArgumentException("File is required");
+        if (file == null || file.isEmpty())
+            throw new FileRequiredException();
 
         var resume = resumeService.createResume(title, file);
         return resumeService.toSummaryDTO(resume);
@@ -53,7 +63,8 @@ public class ResumeController {
     public ResumeVersionDTO addVersion(@PathVariable UUID id,
                                        @RequestPart("file") MultipartFile file) throws IOException {
 
-        if (file == null || file.isEmpty()) throw new IllegalArgumentException("File is required");
+        if (file == null || file.isEmpty())
+            throw new BadRequestException("File is required");
 
         var version = resumeService.addVersion(id, file);
         return resumeService.toVersionDTO(version);
