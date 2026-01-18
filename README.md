@@ -1,7 +1,5 @@
 # Resume Feedback Platform
 
-Enterprise-grade platform for resume upload, versioning, secure sharing, and AI-powered feedback.
-
 ## 🚀 Features
 
 - Resume upload with versioning (S3)
