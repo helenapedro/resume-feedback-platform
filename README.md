@@ -35,6 +35,5 @@ docker compose up -d
 
 ## 📚 Documentation
 
-![System Requirements](./docs/system-requirements.md)
-
-![Architecture Diagrams](./docs/archtecture/*)
+- System Requirements: [docs/system-requirements.md](docs/system-requirements.md)
+- Architecture Diagrams: [docs/architecture](docs/architecture/)
