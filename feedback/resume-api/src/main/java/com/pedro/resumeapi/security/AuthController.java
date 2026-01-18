@@ -1,5 +1,6 @@
 package com.pedro.resumeapi.security;
 
+import com.pedro.resumeapi.api.error.UnauthorizedException;
 import com.pedro.resumeapi.domain.User;
 import com.pedro.resumeapi.repository.UserRepository;
 import com.pedro.resumeapi.security.dto.*;
@@ -43,15 +44,18 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@RequestBody LoginRequest req) {
         var user = userRepository.findByEmail(req.email().trim().toLowerCase())
-                .orElseThrow(() -> new IllegalArgumentException("invalid credentials"));
+                .orElseThrow(() -> new UnauthorizedException("invalid credentials"));
 
         if (!user.isEnabled()) throw new IllegalArgumentException("user disabled");
 
         if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
-            throw new IllegalArgumentException("invalid credentials");
+            throw new UnauthorizedException("invalid credentials");
         }
 
-        String token = jwtService.generate(user.getId(), user.getEmail(), user.getRole().name());
+        String token = jwtService.generate(user.getId(),
+                user.getEmail(),
+                user.getRole().name())
+                ;
         return new AuthResponse(token);
     }
 }

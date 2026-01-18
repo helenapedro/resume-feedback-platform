@@ -1,5 +1,8 @@
 package com.pedro.resumeapi.service;
 
+import com.pedro.resumeapi.api.error.ForbiddenException;
+import com.pedro.resumeapi.api.error.ResumeNotFoundException;
+import com.pedro.resumeapi.api.error.VersionNotFoundException;
 import com.pedro.resumeapi.domain.AiJob;
 import com.pedro.resumeapi.domain.Resume;
 import com.pedro.resumeapi.domain.ResumeVersion;
@@ -41,8 +44,9 @@ public class ResumeService {
 
     public Resume getMyResume(UUID resumeId) {
         var resume = resumeRepository.findById(resumeId)
-                .orElseThrow(() -> new IllegalArgumentException("Resume not found"));
-        if (!currentUser.id().equals(resume.getOwner().getId())) throw new IllegalArgumentException("Forbidden");
+                .orElseThrow(ResumeNotFoundException::new);
+        if (!currentUser.id().equals(resume.getOwner().getId()))
+            throw new ForbiddenException("You do not own this resume");
         return resume;
     }
 
@@ -154,15 +158,17 @@ public class ResumeService {
         getMyResume(resumeId);
 
         var resumeVersion = versionRepository.findByIdAndResume_Id(versionId, resumeId)
-                .orElseThrow(() -> new IllegalArgumentException("Version not found"));
+                .orElseThrow(VersionNotFoundException::new);
 
         var resource = storage.loadAsResource(resumeVersion.getStorageKey());
 
-        String filename = (resumeVersion.getOriginalFilename() == null || resumeVersion.getOriginalFilename().isBlank())
+        String filename = (resumeVersion.getOriginalFilename() == null ||
+                resumeVersion.getOriginalFilename().isBlank())
                 ? "resume.pdf"
                 : resumeVersion.getOriginalFilename();
 
-        String contentType = (resumeVersion.getContentType() == null || resumeVersion.getContentType().isBlank())
+        String contentType = (resumeVersion.getContentType() == null ||
+                resumeVersion.getContentType().isBlank())
                 ? "application/octet-stream"
                 : resumeVersion.getContentType();
 
