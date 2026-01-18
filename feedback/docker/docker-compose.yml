@@ -1,21 +1,18 @@
 services:
   mysql:
     image: mysql:8.4
-    container_name: resume-mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: resume_feedback
       MYSQL_USER: app
       MYSQL_PASSWORD: app
-    ports:
-      - "3306:3306"
     volumes:
       - resume_mysql_data:/var/lib/mysql
     command: >
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_0900_ai_ci
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$$MYSQL_USER -p$$MYSQL_PASSWORD"]
       interval: 5s
       timeout: 5s
       retries: 20
