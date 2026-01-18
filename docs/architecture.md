@@ -4,6 +4,7 @@
 
 ### Use Case Diagram
 
+<<<<<<< HEAD
 ![Use cases](./diagrams/use-cases.jpg)
 
 ### User Stories
@@ -31,7 +32,3 @@
 ## Domain Behavior
 
 ![State diagrams](./diagrams/statediagrams.jpg)
-
-## Main Flows
-
-![Activity diagrams](./diagrams/activitydiagrams.jpg)
