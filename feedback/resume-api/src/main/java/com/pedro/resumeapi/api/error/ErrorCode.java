@@ -26,5 +26,10 @@ public enum ErrorCode {
     DATA_INTEGRITY_VIOLATION,
 
     // Generic
-    INTERNAL_ERROR
+    INTERNAL_ERROR,
+
+    // Share Link
+    SHARE_LINK_NOT_FOUND,
+    SHARE_LINK_GONE,
+
 }
