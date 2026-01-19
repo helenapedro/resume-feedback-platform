@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -23,11 +24,16 @@ public class ShareLinkService {
     private final Clock clock = Clock.systemUTC();
 
     @Transactional
+    public List<ShareLink> listForOwner(UUID resumeId) {
+        Resume resume = resumeService.getMyResume(resumeId); // garante owner
+        return shareLinkRepo.findByResume_IdOrderByCreatedAtDesc(resume.getId());
+    }
+
+    @Transactional
     public CreateShareLinkResult create(UUID resumeId,
                                         ShareLink.Permission perm,
                                         Instant expiresAt,
-                                        Integer maxUses,
-                                        User owner
+                                        Integer maxUses
     ) {
         Resume resume = resumeService.getMyResume(resumeId);
 
@@ -40,7 +46,7 @@ public class ShareLinkService {
         link.setExpiresAt(expiresAt);
         link.setMaxUses(maxUses);
         link.setTokenHash(tokenHash);
-        link.setCreatedBy(owner);
+        link.setCreatedBy(resume.getOwner());
 
         shareLinkRepo.save(link);
         return new CreateShareLinkResult(link.getId(), token, perm, expiresAt, maxUses);
@@ -49,23 +55,25 @@ public class ShareLinkService {
     @Transactional
     public ShareLink resolveValidLinkOrThrow(String rawToken, String ip, String ua) {
         String hash = TokenUtil.sha256Hex(rawToken);
+
         ShareLink link = shareLinkRepo.findByTokenHash(hash)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid link"));
+                .orElseThrow(() -> new IllegalArgumentException("SHARE_LINK INVALID"));
 
         Instant now = Instant.now(clock);
+
         if (link.isRevoked()) {
             audit(link, AccessAudit.EventType.OPEN_LINK, ip, ua, false, "revoked", null);
-            throw new IllegalArgumentException("Link revoked");
+            throw new IllegalArgumentException("SHARE_LINK REVOKED");
         }
 
         if (link.isExpired(now)) {
             audit(link, AccessAudit.EventType.OPEN_LINK, ip, ua, false, "expired", null);
-            throw new IllegalArgumentException("Link expired");
+            throw new IllegalArgumentException("SHARE_LINK EXPIRED");
         }
 
         if (link.isExhausted()) {
             audit(link, AccessAudit.EventType.OPEN_LINK, ip, ua, false, "max_uses_reached", null);
-            throw new IllegalArgumentException("Link max uses reached");
+            throw new IllegalArgumentException("SHARE_LINK_MAX_USES_REACHED");
         }
 
         link.setUseCount(link.getUseCount() + 1);
@@ -78,10 +86,12 @@ public class ShareLinkService {
     @Transactional
     public void revoke(UUID resumeId, UUID linkId) {
         Resume resume = resumeService.getMyResume(resumeId);
+
         ShareLink link = shareLinkRepo.findById(linkId)
-                .orElseThrow(() -> new IllegalArgumentException("Link not found"));
+                .orElseThrow(() -> new IllegalArgumentException("SHARE_LINK_NOT_FOUND"));
+
         if (!link.getResume().getId().equals(resume.getId()))
-            throw new ForbiddenException("You are not allowed to see this resume");
+            throw new ForbiddenException("You are not allowed to revoke this resume");
 
         link.setRevokedAt(Instant.now(clock));
         shareLinkRepo.save(link);
