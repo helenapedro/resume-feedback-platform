@@ -45,9 +45,7 @@ public class ShareLinkOwnerController {
 
     @GetMapping
     public List<ShareLinkDTO> list(@PathVariable UUID resumeId) {
-        UUID ownerId = currentUser.id();
-
-        return shareLinkService.listForOwner(resumeId, ownerId).stream()
+        return shareLinkService.listForOwner(resumeId).stream()
                 .map(ShareLinkMapper::toDTO)
                 .toList();
     }
