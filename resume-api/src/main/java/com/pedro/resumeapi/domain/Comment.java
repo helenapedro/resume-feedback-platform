@@ -47,6 +47,11 @@ public class Comment {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = Instant.now();
+    }
+
     @PrePersist
     void prePersist() {
         if (id == null) id = UUID.randomUUID();

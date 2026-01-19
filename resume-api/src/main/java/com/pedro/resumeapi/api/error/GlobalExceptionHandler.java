@@ -19,7 +19,7 @@ import java.util.UUID;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // TODO - use real traceId real (ex: Sleuth/OTel).
+    // TODO: replace with real traceId from OTel/MDC
     private String traceId() {
         return UUID.randomUUID().toString();
     }
@@ -38,6 +38,48 @@ public class GlobalExceptionHandler {
                 ex.getDetails()
         );
         return ResponseEntity.status(ex.getStatus()).body(body);
+    }
+
+    @ExceptionHandler({
+            ShareLinkNotFoundException.class,
+            InvalidShareLinkException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleShareLinkNotFoundOrInvalid(HttpServletRequest req) {
+        // Deliberately 404 for security: do not reveal whether token exists.
+        var body = ApiErrorResponse.of(
+                ErrorCode.SHARE_LINK_NOT_FOUND.name(),
+                "Share link not found",
+                HttpStatus.NOT_FOUND.value(),
+                req.getRequestURI(),
+                traceId(),
+                null
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler({
+            ShareLinkExpiredException.class,
+            ShareLinkRevokedException.class,
+            ShareLinkMaxUsesReachedException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleShareLinkGone(RuntimeException ex, HttpServletRequest req) {
+        // 410 GONE for expired/revoked/exhausted
+        ErrorCode code = ErrorCode.SHARE_LINK_GONE;
+
+        String message = "Share link is no longer valid";
+        if (ex instanceof ShareLinkExpiredException) message = "Share link has expired";
+        if (ex instanceof ShareLinkRevokedException) message = "Share link has been revoked";
+        if (ex instanceof ShareLinkMaxUsesReachedException) message = "Share link usage limit reached";
+
+        var body = ApiErrorResponse.of(
+                code.name(),
+                message,
+                HttpStatus.GONE.value(),
+                req.getRequestURI(),
+                traceId(),
+                null
+        );
+        return ResponseEntity.status(HttpStatus.GONE).body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -63,6 +105,7 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.badRequest().body(body);
     }
+
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiErrorResponse> handleAuth(
@@ -96,13 +139,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDataIntegrity(
             DataIntegrityViolationException ex,
             HttpServletRequest req
     ) {
         Map<String, Object> details = new LinkedHashMap<>();
-
         details.put("reason", "Database constraint violation");
 
         var body = ApiErrorResponse.of(
@@ -116,6 +159,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
+
     @ExceptionHandler(ErrorResponseException.class)
     public ResponseEntity<ApiErrorResponse> handleSpringErrorResponse(
             ErrorResponseException ex,
@@ -123,7 +167,7 @@ public class GlobalExceptionHandler {
     ) {
         HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
 
-        String message = ex.getBody() != null && ex.getBody().getDetail() != null
+        String message = (ex.getBody() != null && ex.getBody().getDetail() != null)
                 ? ex.getBody().getDetail()
                 : "Invalid request";
 
@@ -135,9 +179,26 @@ public class GlobalExceptionHandler {
                 traceId(),
                 null
         );
-
         return ResponseEntity.status(status).body(body);
     }
+
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadRequest(
+            IllegalArgumentException ex,
+            HttpServletRequest req
+    ) {
+        var body = ApiErrorResponse.of(
+                ErrorCode.INVALID_REQUEST.name(),
+                ex.getMessage() == null ? "Invalid request" : ex.getMessage(),
+                HttpStatus.BAD_REQUEST.value(),
+                req.getRequestURI(),
+                traceId(),
+                null
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnknown(

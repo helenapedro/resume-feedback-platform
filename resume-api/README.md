@@ -64,6 +64,15 @@ exemplo curl:
 curl -L -o resume.pdf http://localhost:8080/api/share/<TOKEN>/download
 ```
 
+#### Comments
+Owner (JWT): 
+- GET /api/resumes/{resumeId}/versions/{versionId}/comments 
+- POST /api/resumes/{resumeId}/versions/{versionId}/comments
+
+Public (token + permission COMMENT):
+- GET /api/share/{token}/comments (pega comments do current version)
+- POST /api/share/{token}/comments
+
 #### DB schema
 Tables:
 - access_audit
