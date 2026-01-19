@@ -1,6 +1,9 @@
 package com.pedro.resumeapi.service;
 
 import com.pedro.resumeapi.api.error.ForbiddenException;
+import com.pedro.resumeapi.api.error.ShareLinkMaxUsesReachedException;
+import com.pedro.resumeapi.api.error.ShareLinkNotFoundException;
+import com.pedro.resumeapi.api.error.ShareLinkRevokedException;
 import com.pedro.resumeapi.domain.*;
 import com.pedro.resumeapi.repository.AccessAuditRepository;
 import com.pedro.resumeapi.repository.ShareLinkRepository;
@@ -62,23 +65,23 @@ public class ShareLinkService {
         String hash = TokenUtil.sha256Hex(rawToken);
 
         ShareLink link = shareLinkRepo.findByTokenHash(hash)
-                .orElseThrow(() -> new IllegalArgumentException("SHARE_LINK_INVALID"));
+                .orElseThrow(ShareLinkNotFoundException::new);
 
         Instant now = Instant.now(clock);
 
         if (link.isRevoked()) {
             audit(link, AccessAudit.EventType.OPEN_LINK, ip, ua, false, "revoked", null);
-            throw new IllegalArgumentException("SHARE_LINK_REVOKED");
+            throw new ShareLinkRevokedException();
         }
 
         if (link.isExpired(now)) {
             audit(link, AccessAudit.EventType.OPEN_LINK, ip, ua, false, "expired", null);
-            throw new IllegalArgumentException("SHARE_LINK_EXPIRED");
+            throw new ShareLinkMaxUsesReachedException();
         }
 
         if (link.isExhausted()) {
             audit(link, AccessAudit.EventType.OPEN_LINK, ip, ua, false, "max_uses_reached", null);
-            throw new IllegalArgumentException("SHARE_LINK_MAX_USES_REACHED");
+            throw new ShareLinkMaxUsesReachedException();
         }
 
         link.setUseCount(link.getUseCount() + 1);
