@@ -26,13 +26,12 @@ public class Comment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_user_id")
-    private User authorUser; // nullable para guest
+    private User authorUser; // nullable for guest
 
     @Column(name = "author_label", nullable = false, length = 120)
     private String authorLabel;
 
-    @Lob
-    @Column(name = "body", nullable = false)
+    @Column(name = "body", nullable = false, columnDefinition = "TEXT")
     private String body;
 
     @Column(name = "anchor_ref", length = 255)

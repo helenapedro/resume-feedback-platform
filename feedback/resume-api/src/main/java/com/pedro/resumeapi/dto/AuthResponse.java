@@ -1,3 +1,3 @@
-package com.pedro.resumeapi.security.dto;
+package com.pedro.resumeapi.dto;
 
 public record AuthResponse(String accessToken) { }

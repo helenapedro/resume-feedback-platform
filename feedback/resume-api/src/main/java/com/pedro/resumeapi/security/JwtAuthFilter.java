@@ -1,6 +1,6 @@
 package com.pedro.resumeapi.security;
 
-import com.pedro.resumeapi.security.dto.UserPrincipal;
+import com.pedro.resumeapi.dto.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
