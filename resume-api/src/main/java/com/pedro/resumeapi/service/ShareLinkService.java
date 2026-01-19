@@ -1,9 +1,6 @@
 package com.pedro.resumeapi.service;
 
-import com.pedro.resumeapi.api.error.ForbiddenException;
-import com.pedro.resumeapi.api.error.ShareLinkMaxUsesReachedException;
-import com.pedro.resumeapi.api.error.ShareLinkNotFoundException;
-import com.pedro.resumeapi.api.error.ShareLinkRevokedException;
+import com.pedro.resumeapi.api.error.*;
 import com.pedro.resumeapi.domain.*;
 import com.pedro.resumeapi.repository.AccessAuditRepository;
 import com.pedro.resumeapi.repository.ShareLinkRepository;
@@ -55,7 +52,7 @@ public class ShareLinkService {
     }
 
     @Transactional
-    public List<ShareLink> listForOwner(UUID resumeId, UUID ownerId) {
+    public List<ShareLink> listForOwner(UUID resumeId) {
         resumeService.getMyResume(resumeId);
         return shareLinkRepo.findByResume_IdOrderByCreatedAtDesc(resumeId);
     }
@@ -76,7 +73,7 @@ public class ShareLinkService {
 
         if (link.isExpired(now)) {
             audit(link, AccessAudit.EventType.OPEN_LINK, ip, ua, false, "expired", null);
-            throw new ShareLinkMaxUsesReachedException();
+            throw new ShareLinkExpiredException();
         }
 
         if (link.isExhausted()) {
