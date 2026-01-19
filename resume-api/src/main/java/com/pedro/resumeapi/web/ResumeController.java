@@ -4,7 +4,9 @@ import com.pedro.resumeapi.api.error.FileRequiredException;
 import com.pedro.resumeapi.domain.User;
 import com.pedro.resumeapi.dto.ResumeSummaryDTO;
 import com.pedro.resumeapi.dto.ResumeVersionDTO;
+import com.pedro.resumeapi.mapper.ResumeMapper;
 import com.pedro.resumeapi.service.ResumeService;
+import com.pedro.resumeapi.service.ResumeStorageService;
 import lombok.AllArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.core.io.Resource;
@@ -23,12 +25,14 @@ import java.util.*;
 public class ResumeController {
 
     private final ResumeService resumeService;
+    private final ResumeStorageService resumeStorageService;
+    private final ResumeMapper resumeMapper;
 
     @GetMapping
     public List<ResumeSummaryDTO> list() {
         return resumeService.listMyResumes()
                 .stream()
-                .map(resumeService::toSummaryDTO)
+                .map(resumeMapper::toSummaryDTO)
                 .toList();
     }
 
@@ -38,11 +42,11 @@ public class ResumeController {
         var versions = resumeService.listVersions(id);
 
         Map<String, Object> out = new LinkedHashMap<>();
-        out.put("resume", resumeService.toSummaryDTO(resume));
+        out.put("resume", resumeMapper.toSummaryDTO(resume));
 
         out.put("versions", versions
                 .stream()
-                .map(resumeService::toVersionDTO)
+                .map(resumeMapper::toVersionDTO)
                 .toList()
         );
 
@@ -56,7 +60,7 @@ public class ResumeController {
             throw new FileRequiredException();
 
         var resume = resumeService.createResume(title, file);
-        return resumeService.toSummaryDTO(resume);
+        return resumeMapper.toSummaryDTO(resume);
     }
 
     @PostMapping(value = "/{id}/versions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -67,7 +71,7 @@ public class ResumeController {
             throw new BadRequestException("File is required");
 
         var version = resumeService.addVersion(id, file);
-        return resumeService.toVersionDTO(version);
+        return resumeMapper.toVersionDTO(version);
     }
 
     @GetMapping("/{resumeId}/versions/{versionId}/download")
@@ -75,7 +79,7 @@ public class ResumeController {
             @PathVariable UUID resumeId,
             @PathVariable UUID versionId
     ) {
-        var payload = resumeService.downloadVersion(resumeId, versionId);
+        var payload = resumeStorageService.downloadVersion(resumeId, versionId);
 
         String safeName = payload.filename()
                 .replace("\"", "")

@@ -1,4 +1,4 @@
-package com.pedro.resumeapi.security.dto;
+package com.pedro.resumeapi.dto;
 
 import java.util.UUID;
 
