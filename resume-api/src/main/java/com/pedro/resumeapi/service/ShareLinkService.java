@@ -37,7 +37,7 @@ public class ShareLinkService {
         String token = TokenUtil.newToken();
         String tokenHash = TokenUtil.sha256Hex(token);
 
-        User ownerRef = userRepository.getReferenceById(ownerId);
+        User ownerRef = userRepository.getReferenceById(resume.getOwner().getId());
 
         ShareLink link = new ShareLink();
         link.setResume(resume);

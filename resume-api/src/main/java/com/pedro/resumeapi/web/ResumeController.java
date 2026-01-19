@@ -1,7 +1,6 @@
 package com.pedro.resumeapi.web;
 
 import com.pedro.resumeapi.api.error.FileRequiredException;
-import com.pedro.resumeapi.domain.User;
 import com.pedro.resumeapi.dto.ResumeSummaryDTO;
 import com.pedro.resumeapi.dto.ResumeVersionDTO;
 import com.pedro.resumeapi.mapper.ResumeMapper;
@@ -10,7 +9,6 @@ import com.pedro.resumeapi.service.ResumeStorageService;
 import lombok.AllArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -79,7 +77,7 @@ public class ResumeController {
             @PathVariable UUID resumeId,
             @PathVariable UUID versionId
     ) {
-        var payload = resumeStorageService.downloadVersion(resumeId, versionId);
+        var payload = resumeStorageService.downloadVersionOwner(resumeId, versionId);
 
         String safeName = payload.filename()
                 .replace("\"", "")

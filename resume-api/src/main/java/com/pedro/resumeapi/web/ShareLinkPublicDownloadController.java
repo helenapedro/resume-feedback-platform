@@ -35,7 +35,7 @@ public class ShareLinkPublicDownloadController {
             throw new IllegalArgumentException("NO_CURRENT_VERSION");
         }
 
-        var payload = resumeStorageService.downloadVersion(resume.getId(), current.getId());
+        var payload = resumeStorageService.downloadVersionPublic(resume.getId(), current.getId());
 
         shareLinkService.auditDownload(link, ip, ua, true, null, current);
 
