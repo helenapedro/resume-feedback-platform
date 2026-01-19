@@ -18,8 +18,13 @@ public class AccessAudit {
 
     public enum EventType {
         OPEN_LINK,
-        DOWNLOAD_ATTEMPT, DOWNLOAD_GRANTED, DOWNLOAD_DENIED,
-        COMMENT_ATTEMPT, COMMENT_CREATED, COMMENT_DENIED
+        DOWNLOAD,
+        DOWNLOAD_ATTEMPT,
+        DOWNLOAD_GRANTED,
+        DOWNLOAD_DENIED,
+        COMMENT_ATTEMPT,
+        COMMENT_CREATED,
+        COMMENT_DENIED
     }
 
     @Id

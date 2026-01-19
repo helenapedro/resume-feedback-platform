@@ -9,6 +9,7 @@ public class ShareLinkMapper {
 
     public static ShareLinkDTO toDTO(ShareLink link) {
         UUID createdById = (link.getCreatedBy() == null) ? null : link.getCreatedBy().getId();
+
         return new ShareLinkDTO(
                 link.getId(),
                 link.getPermission(),
