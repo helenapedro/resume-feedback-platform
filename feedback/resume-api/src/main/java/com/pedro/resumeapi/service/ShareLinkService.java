@@ -4,6 +4,7 @@ import com.pedro.resumeapi.api.error.ForbiddenException;
 import com.pedro.resumeapi.domain.*;
 import com.pedro.resumeapi.repository.AccessAuditRepository;
 import com.pedro.resumeapi.repository.ShareLinkRepository;
+import com.pedro.resumeapi.repository.UserRepository;
 import com.pedro.resumeapi.utils.TokenUtil;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -21,24 +22,22 @@ public class ShareLinkService {
     private final ShareLinkRepository shareLinkRepo;
     private final AccessAuditRepository auditRepo;
     private final ResumeService resumeService;
+    private final UserRepository userRepository;
     private final Clock clock = Clock.systemUTC();
-
-    @Transactional
-    public List<ShareLink> listForOwner(UUID resumeId) {
-        Resume resume = resumeService.getMyResume(resumeId); // garante owner
-        return shareLinkRepo.findByResume_IdOrderByCreatedAtDesc(resume.getId());
-    }
 
     @Transactional
     public CreateShareLinkResult create(UUID resumeId,
                                         ShareLink.Permission perm,
                                         Instant expiresAt,
-                                        Integer maxUses
+                                        Integer maxUses,
+                                        UUID ownerId
     ) {
         Resume resume = resumeService.getMyResume(resumeId);
 
         String token = TokenUtil.newToken();
         String tokenHash = TokenUtil.sha256Hex(token);
+
+        User ownerRef = userRepository.getReferenceById(ownerId);
 
         ShareLink link = new ShareLink();
         link.setResume(resume);
@@ -46,10 +45,16 @@ public class ShareLinkService {
         link.setExpiresAt(expiresAt);
         link.setMaxUses(maxUses);
         link.setTokenHash(tokenHash);
-        link.setCreatedBy(resume.getOwner());
+        link.setCreatedBy(ownerRef);
 
         shareLinkRepo.save(link);
         return new CreateShareLinkResult(link.getId(), token, perm, expiresAt, maxUses);
+    }
+
+    @Transactional
+    public List<ShareLink> listForOwner(UUID resumeId, UUID ownerId) {
+        resumeService.getMyResume(resumeId);
+        return shareLinkRepo.findByResume_IdOrderByCreatedAtDesc(resumeId);
     }
 
     @Transactional
@@ -57,18 +62,18 @@ public class ShareLinkService {
         String hash = TokenUtil.sha256Hex(rawToken);
 
         ShareLink link = shareLinkRepo.findByTokenHash(hash)
-                .orElseThrow(() -> new IllegalArgumentException("SHARE_LINK INVALID"));
+                .orElseThrow(() -> new IllegalArgumentException("SHARE_LINK_INVALID"));
 
         Instant now = Instant.now(clock);
 
         if (link.isRevoked()) {
             audit(link, AccessAudit.EventType.OPEN_LINK, ip, ua, false, "revoked", null);
-            throw new IllegalArgumentException("SHARE_LINK REVOKED");
+            throw new IllegalArgumentException("SHARE_LINK_REVOKED");
         }
 
         if (link.isExpired(now)) {
             audit(link, AccessAudit.EventType.OPEN_LINK, ip, ua, false, "expired", null);
-            throw new IllegalArgumentException("SHARE_LINK EXPIRED");
+            throw new IllegalArgumentException("SHARE_LINK_EXPIRED");
         }
 
         if (link.isExhausted()) {
@@ -84,14 +89,15 @@ public class ShareLinkService {
     }
 
     @Transactional
-    public void revoke(UUID resumeId, UUID linkId) {
+    public void revoke(UUID resumeId, UUID linkId, UUID ownerId) {
         Resume resume = resumeService.getMyResume(resumeId);
 
         ShareLink link = shareLinkRepo.findById(linkId)
                 .orElseThrow(() -> new IllegalArgumentException("SHARE_LINK_NOT_FOUND"));
 
-        if (!link.getResume().getId().equals(resume.getId()))
-            throw new ForbiddenException("You are not allowed to revoke this resume");
+        if (!link.getResume().getId().equals(resume.getId())) {
+            throw new ForbiddenException("You are not allowed to revoke this link");
+        }
 
         link.setRevokedAt(Instant.now(clock));
         shareLinkRepo.save(link);
