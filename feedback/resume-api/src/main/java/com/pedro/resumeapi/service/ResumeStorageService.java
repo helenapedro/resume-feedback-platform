@@ -23,13 +23,22 @@ public class ResumeStorageService {
     private final CurrentUser currentUser;
 
     @Transactional(readOnly = true)
-    public DownloadPayload downloadVersion(UUID resumeId, UUID versionId) {
+    public DownloadPayload downloadVersionOwner(UUID resumeId, UUID versionId) {
         var resume = resumeRepository.findById(resumeId)
                 .orElseThrow(VersionNotFoundException::new);
+
         if (!resume.getOwner().getId().equals(currentUser.id()))
             throw new ForbiddenException("You do not own this resume");
 
+        return getDownloadPayload(resumeId, versionId);
+    }
 
+    @Transactional(readOnly = true)
+    public DownloadPayload downloadVersionPublic(UUID resumeId, UUID versionId) {
+        return getDownloadPayload(resumeId, versionId);
+    }
+
+    private DownloadPayload getDownloadPayload(UUID resumeId, UUID versionId) {
         ResumeVersion version = resumeVersionRepository.findByIdAndResume_Id(versionId, resumeId)
                 .orElseThrow(VersionNotFoundException::new);
 
