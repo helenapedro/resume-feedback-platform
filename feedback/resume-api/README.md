@@ -50,12 +50,20 @@ Response:
 - GET /api/resumes/{resumeId}/versions/{versionId}/download (JWT)
 
 ## Share Links
+
 #### Owner (JWT):
 - POST /api/resumes/{resumeId}/share-links 
 - GET /api/resumes/{resumeId}/share-links 
 - POST /api/resumes/{resumeId}/share-links/{linkId}/revoke
+
 #### Public (token):
-- GET /api/share/{token}
+- GET /api/share/{token} (metadata do link)
+- GET /api/share/{token}/download (download current version)
+exemplo curl:
+```bash
+curl -L -o resume.pdf http://localhost:8080/api/share/<TOKEN>/download
+```
+
 #### DB schema
 Tables:
 - access_audit

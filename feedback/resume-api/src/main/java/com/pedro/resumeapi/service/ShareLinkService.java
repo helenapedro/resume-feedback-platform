@@ -103,6 +103,12 @@ public class ShareLinkService {
         shareLinkRepo.save(link);
     }
 
+    @Transactional
+    public void auditDownload(ShareLink link, String ip, String ua, boolean success,
+                              String reason, ResumeVersion version) {
+        audit(link, AccessAudit.EventType.DOWNLOAD, ip, ua, success, reason, version);
+    }
+
     private void audit(ShareLink link, AccessAudit.EventType type, String ip, String ua,
                        boolean success, String reason, ResumeVersion version) {
         AccessAudit a = new AccessAudit();
