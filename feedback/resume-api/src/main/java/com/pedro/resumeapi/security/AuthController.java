@@ -1,11 +1,11 @@
 package com.pedro.resumeapi.security;
 
 import com.pedro.resumeapi.api.error.UnauthorizedException;
-import com.pedro.resumeapi.domain.User;
-import com.pedro.resumeapi.dto.AuthResponse;
-import com.pedro.resumeapi.dto.LoginRequest;
-import com.pedro.resumeapi.dto.RegisterRequest;
-import com.pedro.resumeapi.repository.UserRepository;
+import com.pedro.resumeapi.user.domain.User;
+import com.pedro.resumeapi.auth.dto.AuthResponse;
+import com.pedro.resumeapi.auth.dto.LoginRequest;
+import com.pedro.resumeapi.auth.dto.RegisterRequest;
+import com.pedro.resumeapi.user.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
