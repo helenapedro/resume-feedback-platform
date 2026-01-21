@@ -1,0 +1,525 @@
+{
+	"info": {
+		"_postman_id": "0738e002-8007-4025-8dde-355a65b87300",
+		"name": "RF-Platform",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29223123"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"helenaexplora@hmpedro.com\",\r\n    \"password\": \"Explora@26\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "resume",
+			"item": [
+				{
+					"name": "resumes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJyZXN1bWUtYXBpIiwic3ViIjoiYTBiZjA4Y2QtNzdiZS00YThmLWJkMDMtNjViZmI0NjMwNTkyIiwiZW1haWwiOiJoZWxlbmFleHBsb3JhQGhtcGVkcm8uY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3Njg5NjE4NTYsImV4cCI6MTc2ODk2OTA1Nn0.y5CnD7uekPpfdT_eTxuvMyGYF8vpPLLhRhd1HaSZkm5WkUNV6zAoLH7_VjtsBDiX",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/resumes",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resumes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJyZXN1bWUtYXBpIiwic3ViIjoiYTBiZjA4Y2QtNzdiZS00YThmLWJkMDMtNjViZmI0NjMwNTkyIiwiZW1haWwiOiJoZWxlbmFleHBsb3JhQGhtcGVkcm8uY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3Njg5NjE4NTYsImV4cCI6MTc2ODk2OTA1Nn0.y5CnD7uekPpfdT_eTxuvMyGYF8vpPLLhRhd1HaSZkm5WkUNV6zAoLH7_VjtsBDiX",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/resumes/3f795379-1d2a-45d5-b48f-6e719c438904",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resumes",
+								"3f795379-1d2a-45d5-b48f-6e719c438904"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "comments",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJyZXN1bWUtYXBpIiwic3ViIjoiYTBiZjA4Y2QtNzdiZS00YThmLWJkMDMtNjViZmI0NjMwNTkyIiwiZW1haWwiOiJoZWxlbmFleHBsb3JhQGhtcGVkcm8uY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3Njg5NjE4NTYsImV4cCI6MTc2ODk2OTA1Nn0.y5CnD7uekPpfdT_eTxuvMyGYF8vpPLLhRhd1HaSZkm5WkUNV6zAoLH7_VjtsBDiX",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/resumes/3f795379-1d2a-45d5-b48f-6e719c438904/versions/71b3576b-09c4-4049-8059-9a84efc0c807/comments",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resumes",
+								"3f795379-1d2a-45d5-b48f-6e719c438904",
+								"versions",
+								"71b3576b-09c4-4049-8059-9a84efc0c807",
+								"comments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "resumes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJyZXN1bWUtYXBpIiwic3ViIjoiYTBiZjA4Y2QtNzdiZS00YThmLWJkMDMtNjViZmI0NjMwNTkyIiwiZW1haWwiOiJoZWxlbmFleHBsb3JhQGhtcGVkcm8uY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3Njg5NjE4NTYsImV4cCI6MTc2ODk2OTA1Nn0.y5CnD7uekPpfdT_eTxuvMyGYF8vpPLLhRhd1HaSZkm5WkUNV6zAoLH7_VjtsBDiX",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "title",
+									"value": "Test",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"description": "only pdf",
+									"type": "file",
+									"src": "/C:/Users/mbeua/resume/typeone/Pedro_HelenaMbeua.pdf"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/resumes",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resumes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "versions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJyZXN1bWUtYXBpIiwic3ViIjoiYTBiZjA4Y2QtNzdiZS00YThmLWJkMDMtNjViZmI0NjMwNTkyIiwiZW1haWwiOiJoZWxlbmFleHBsb3JhQGhtcGVkcm8uY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3Njg5NjE4NTYsImV4cCI6MTc2ODk2OTA1Nn0.y5CnD7uekPpfdT_eTxuvMyGYF8vpPLLhRhd1HaSZkm5WkUNV6zAoLH7_VjtsBDiX",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/mbeua/Downloads/Pedro-JoseFrancisco_EN.pdf"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/resumes/2ced546a-2246-49dd-9392-ff7821e5749e/versions",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resumes",
+								"2ced546a-2246-49dd-9392-ff7821e5749e",
+								"versions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "share-links",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJyZXN1bWUtYXBpIiwic3ViIjoiYTBiZjA4Y2QtNzdiZS00YThmLWJkMDMtNjViZmI0NjMwNTkyIiwiZW1haWwiOiJoZWxlbmFleHBsb3JhQGhtcGVkcm8uY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3Njg5NjE4NTYsImV4cCI6MTc2ODk2OTA1Nn0.y5CnD7uekPpfdT_eTxuvMyGYF8vpPLLhRhd1HaSZkm5WkUNV6zAoLH7_VjtsBDiX",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"permission\": \"VIEW\",\r\n  \"maxUses\": 4\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/resumes/3f795379-1d2a-45d5-b48f-6e719c438904/share-links",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resumes",
+								"3f795379-1d2a-45d5-b48f-6e719c438904",
+								"share-links"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "revoke",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJyZXN1bWUtYXBpIiwic3ViIjoiYTBiZjA4Y2QtNzdiZS00YThmLWJkMDMtNjViZmI0NjMwNTkyIiwiZW1haWwiOiJoZWxlbmFleHBsb3JhQGhtcGVkcm8uY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3Njg5NjE4NTYsImV4cCI6MTc2ODk2OTA1Nn0.y5CnD7uekPpfdT_eTxuvMyGYF8vpPLLhRhd1HaSZkm5WkUNV6zAoLH7_VjtsBDiX",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/resumes/3f795379-1d2a-45d5-b48f-6e719c438904/share-links/18ea8d90-f2c5-4d83-a0ad-d221da95b0d1/revoke",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resumes",
+								"3f795379-1d2a-45d5-b48f-6e719c438904",
+								"share-links",
+								"18ea8d90-f2c5-4d83-a0ad-d221da95b0d1",
+								"revoke"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "comments",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJyZXN1bWUtYXBpIiwic3ViIjoiYTBiZjA4Y2QtNzdiZS00YThmLWJkMDMtNjViZmI0NjMwNTkyIiwiZW1haWwiOiJoZWxlbmFleHBsb3JhQGhtcGVkcm8uY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3Njg5NjE4NTYsImV4cCI6MTc2ODk2OTA1Nn0.y5CnD7uekPpfdT_eTxuvMyGYF8vpPLLhRhd1HaSZkm5WkUNV6zAoLH7_VjtsBDiX",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"body\": \"Commenting my own resume\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/resumes/3f795379-1d2a-45d5-b48f-6e719c438904/versions/71b3576b-09c4-4049-8059-9a84efc0c807/comments",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resumes",
+								"3f795379-1d2a-45d5-b48f-6e719c438904",
+								"versions",
+								"71b3576b-09c4-4049-8059-9a84efc0c807",
+								"comments"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "version",
+			"item": [
+				{
+					"name": "download",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJyZXN1bWUtYXBpIiwic3ViIjoiYTBiZjA4Y2QtNzdiZS00YThmLWJkMDMtNjViZmI0NjMwNTkyIiwiZW1haWwiOiJoZWxlbmFleHBsb3JhQGhtcGVkcm8uY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3Njg5NjE4NTYsImV4cCI6MTc2ODk2OTA1Nn0.y5CnD7uekPpfdT_eTxuvMyGYF8vpPLLhRhd1HaSZkm5WkUNV6zAoLH7_VjtsBDiX",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/resumes/3f795379-1d2a-45d5-b48f-6e719c438904/versions/d6f6eca1-71c8-4e17-b794-a0759a8ffec5/download",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resumes",
+								"3f795379-1d2a-45d5-b48f-6e719c438904",
+								"versions",
+								"d6f6eca1-71c8-4e17-b794-a0759a8ffec5",
+								"download"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "share",
+			"item": [
+				{
+					"name": "share-links",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJyZXN1bWUtYXBpIiwic3ViIjoiYTBiZjA4Y2QtNzdiZS00YThmLWJkMDMtNjViZmI0NjMwNTkyIiwiZW1haWwiOiJoZWxlbmFleHBsb3JhQGhtcGVkcm8uY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3Njg5NjE4NTYsImV4cCI6MTc2ODk2OTA1Nn0.y5CnD7uekPpfdT_eTxuvMyGYF8vpPLLhRhd1HaSZkm5WkUNV6zAoLH7_VjtsBDiX",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/resumes/3f795379-1d2a-45d5-b48f-6e719c438904/share-links",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resumes",
+								"3f795379-1d2a-45d5-b48f-6e719c438904",
+								"share-links"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "token",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/share/623854c2-f7d7-4881-ac8c-560d86c07760-b1ee09c9-d4f5-4731-9fb7-1d5cbf4584db",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"share",
+								"623854c2-f7d7-4881-ac8c-560d86c07760-b1ee09c9-d4f5-4731-9fb7-1d5cbf4584db"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "download",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/share/623854c2-f7d7-4881-ac8c-560d86c07760-b1ee09c9-d4f5-4731-9fb7-1d5cbf4584db/download",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"share",
+								"623854c2-f7d7-4881-ac8c-560d86c07760-b1ee09c9-d4f5-4731-9fb7-1d5cbf4584db",
+								"download"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "comments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/share/623854c2-f7d7-4881-ac8c-560d86c07760-b1ee09c9-d4f5-4731-9fb7-1d5cbf4584db/comments",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"share",
+								"623854c2-f7d7-4881-ac8c-560d86c07760-b1ee09c9-d4f5-4731-9fb7-1d5cbf4584db",
+								"comments"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": ""
+		}
+	]
+}
