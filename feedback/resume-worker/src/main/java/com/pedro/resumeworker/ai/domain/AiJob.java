@@ -1,6 +1,5 @@
-package com.pedro.resumeapi.ai.domain;
+package com.pedro.resumeworker.ai.domain;
 
-import com.pedro.resumeapi.resume.domain.ResumeVersion;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +15,8 @@ import java.util.UUID;
         },
         uniqueConstraints = @UniqueConstraint(name = "uk_ai_jobs_idempotency", columnNames = "idempotency_key")
 )
-@Getter @Setter
+@Getter
+@Setter
 public class AiJob {
 
     public enum Status { PENDING, PROCESSING, DONE, FAILED }

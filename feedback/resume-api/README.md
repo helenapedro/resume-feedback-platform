@@ -74,6 +74,9 @@ curl -L -o resume.pdf http://localhost:8080/api/share/<TOKEN>/download
 - `GET /api/share/{token}/comments`
 - `POST /api/share/{token}/comments`
 
+## AI Feedback (JWT)
+- `GET /api/resumes/{resumeId}/versions/{versionId}/ai-feedback` (latest feedback)
+
 ## Database Schema (Tables)
 - `access_audit`
 - `ai_feedback_refs`
