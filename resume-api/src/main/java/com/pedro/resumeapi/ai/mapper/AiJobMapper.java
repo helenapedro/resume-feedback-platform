@@ -21,7 +21,10 @@ public class AiJobMapper {
                 job.getCreatedAt(),
                 job.getUpdatedAt(),
                 job.getStartedAt(),
-                job.getFinishedAt()
+                job.getFinishedAt(),
+                job.getErrorCode(),
+                job.getErrorDetail(),
+                job.getNextRetryAt()
         );
     }
 

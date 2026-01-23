@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: resume-worker
+  profiles:
+    default: prod
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: resume-worker
+      auto-offset-reset: earliest
+
+app:
+  ai-jobs:
+    topic: resume-ai-jobs
+    retry:
+      max-attempts: 5
+      initial-backoff: PT10S
+      max-backoff: PT5M
+      poll-interval: PT30S
+  ai-feedback:
+    model: gpt-4o-mini
+    prompt-version: v1
+
+logging:
+  level:
+    root: INFO
