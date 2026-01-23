@@ -2,8 +2,9 @@
 
 ### Use Case Diagram
 
-![Use cases](./diagrams/use-cases.jpg)
 This diagram captures the primary actors (resume owners and external reviewers) and the system boundaries, showing how authentication, resume management, and sharing flows map to user-facing capabilities and external access paths.
+
+![Use cases](./diagrams/use-cases.jpg)
 
 ### User Stories
 
