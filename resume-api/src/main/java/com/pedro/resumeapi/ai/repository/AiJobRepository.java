@@ -7,5 +7,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface AiJobRepository extends JpaRepository<AiJob, UUID> {
-    Optional<AiJob> findTopByResumeVersionIdOrderByCreatedAtDesc(UUID resumeVersionId);
+    Optional<AiJob> findTopByResumeVersion_IdOrderByCreatedAtDesc(UUID resumeVersionId);
+
 }
