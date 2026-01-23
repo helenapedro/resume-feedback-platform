@@ -9,7 +9,13 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "ai_jobs")
+@Table(name = "ai_jobs",
+        indexes = {
+                @Index(name = "idx_ai_jobs_version", columnList = "resume_version_id"),
+                @Index(name = "idx_ai_jobs_status", columnList = "status")
+        },
+        uniqueConstraints = @UniqueConstraint(name = "uk_ai_jobs_idempotency", columnNames = "idempotency_key")
+)
 @Getter @Setter
 public class AiJob {
 
@@ -19,24 +25,41 @@ public class AiJob {
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "resume_version_id", nullable = false)
     private ResumeVersion resumeVersion;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false, length = 20)
     private Status status;
 
     @Column(name = "attempt_count", nullable = false)
-    private int attemptCount;
+    private int attemptCount = 0;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "idempotency_key", length = 80, unique = true)
+    private String idempotencyKey;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @Column(name = "started_at")
+    private Instant startedAt;
+
+    @Column(name = "finished_at")
+    private Instant finishedAt;
 
     @PrePersist
     void prePersist() {
         if (id == null) id = UUID.randomUUID();
         if (createdAt == null) createdAt = Instant.now();
         if (status == null) status = Status.PENDING;
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = Instant.now();
     }
 }
