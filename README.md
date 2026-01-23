@@ -28,9 +28,10 @@ The system is intentionally split into independent modules to allow isolated sca
 
 ```powershell
 resume-feedback-platform
-├── common            # Shared utilities, error model, base abstractions
-├── resume-api        # Core REST API (auth, resumes, sharing, comments)
-└── resume-worker     # Async AI processing (queue consumers)
+└── feedback
+    ├── common            # Shared utilities, error model, base abstractions
+    ├── resume-api        # Core REST API (auth, resumes, sharing, comments)
+    └── resume-worker     # Async AI processing (queue consumers)
 ```
 
 ## Design Principles
@@ -42,7 +43,7 @@ resume-feedback-platform
 
 ## 📦 Tech Stack
 #### Backend
-- Java 21
+- Java 17
 - Spring Boot
 - Spring Security (JWT)
 - JPA / Hibernate
@@ -66,15 +67,15 @@ resume-feedback-platform
 - AI Jobs are tracked independently from user requests
 
 ## ▶️ Running Locally (Development)
-#### 1. Start infrastructure
+#### 1. Start infrastructure (from `feedback`)
 ```bash
-cd docker
+cd feedback/docker
 docker compose up -d
 ```
 #### 2. Run API
 ```bash
-cd resume-api
-./mvnw spring-boot:run
+cd feedback/resume-api
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 <The API will start using local storage for files and MySQL for metadata.>
 
@@ -87,7 +88,9 @@ cd resume-api
 ## 📚 Documentation
 - System Requirements: [docs/system-requirements.md](docs/system-requirements.md)
 - Architecture Notes: [docs/architecture](docs/architecture.md)
-- API Reference (resume-api): [feedback/resume-api](feedback/resume-api/README.md)
+- Module README (common): [feedback/common/README.md](feedback/common/README.md)
+- Module README (resume-api): [feedback/resume-api/README.md](feedback/resume-api/README.md)
+- Module README (resume-worker): [feedback/resume-worker/README.md](feedback/resume-worker/README.md)
 
 ## 🧭 Project Status
 This project is being developed incrementally with a backend-first approach.
