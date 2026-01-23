@@ -1,89 +1,89 @@
 # resume-api
 
-Backend service for resume upload/versioning, secure sharing, and AI job tracking.
+REST API for resume upload/versioning, secure sharing, and audit logging.
 
-## Tech
-- Java + Spring Boot
-- MySQL (metadata + security/audit)
-- Local storage (dev) / S3 (future)
-- JWT authentication
+## Overview
+- Handles authentication, resume metadata, versioning, and share links.
+- Stores resume metadata in MySQL and files in local storage (dev).
+- Provides secure, token-based public access for share links.
 
-## Run (dev)
-1) Start DB
+## Tech Stack
+- Java 17 + Spring Boot
+- Spring Security (JWT)
+- Flyway (schema migrations)
+- MySQL (metadata, security, audit)
+- Local filesystem storage (dev)
+
+## Local Development
+1) Start MySQL (from the `feedback` root):
 
 ```bash
 cd docker
 docker compose up -d
-
-2) Run API
-Run ResumeApiApplication with profile dev
 ```
-## Auth
+
+2) Run the API (from `feedback/resume-api`):
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+## Authentication
 ### Register
-- POST /api/auth/register
+- `POST /api/auth/register`
 
-Body:
 ```json
 {"email":"pedro@local.dev","password":"123456"}
 ```
 
-Response:
-```json
-{"accessToken":"..."}
-```
 ### Login
-- POST /api/auth/login
+- `POST /api/auth/login`
 
-Body:
 ```json
 {"email":"pedro@local.dev","password":"123456"}
 ```
-Response:
-```json
-{"accessToken":"..."}
-```
-### Resumes
-- GET /api/resumes (JWT)
-- POST /api/resumes (multipart, JWT)
-- POST /api/resumes/{id}/versions (multipart, JWT)
-- GET /api/resumes/{id} (JWT)
-- GET /api/resumes/{resumeId}/versions/{versionId}/download (JWT)
+
+## Resume Endpoints (JWT required)
+- `GET /api/resumes`
+- `POST /api/resumes` (multipart)
+- `POST /api/resumes/{id}/versions` (multipart)
+- `GET /api/resumes/{id}`
+- `GET /api/resumes/{resumeId}/versions/{versionId}/download`
 
 ## Share Links
+### Owner (JWT)
+- `POST /api/resumes/{resumeId}/share-links`
+- `GET /api/resumes/{resumeId}/share-links`
+- `POST /api/resumes/{resumeId}/share-links/{linkId}/revoke`
 
-#### Owner (JWT):
-- POST /api/resumes/{resumeId}/share-links 
-- GET /api/resumes/{resumeId}/share-links 
-- POST /api/resumes/{resumeId}/share-links/{linkId}/revoke
+### Public (token)
+- `GET /api/share/{token}` (metadata)
+- `GET /api/share/{token}/download` (download current version)
 
-#### Public (token):
-- GET /api/share/{token} (metadata do link)
-- GET /api/share/{token}/download (download current version)
-exemplo curl:
+Example:
 ```bash
 curl -L -o resume.pdf http://localhost:8080/api/share/<TOKEN>/download
 ```
 
-#### Comments
-Owner (JWT): 
-- GET /api/resumes/{resumeId}/versions/{versionId}/comments 
-- POST /api/resumes/{resumeId}/versions/{versionId}/comments
+## Comments
+### Owner (JWT)
+- `GET /api/resumes/{resumeId}/versions/{versionId}/comments`
+- `POST /api/resumes/{resumeId}/versions/{versionId}/comments`
 
-Public (token + permission COMMENT):
-- GET /api/share/{token}/comments (pega comments do current version)
-- POST /api/share/{token}/comments
+### Public (token with COMMENT permission)
+- `GET /api/share/{token}/comments`
+- `POST /api/share/{token}/comments`
 
-#### DB schema
-Tables:
-- access_audit
-- ai_feedback_refs
-- ai_jobs
-- comments
-- resume_versions,
-- resumes
-- share_links,
-- users
+## Database Schema (Tables)
+- `access_audit`
+- `ai_feedback_refs`
+- `ai_jobs`
+- `comments`
+- `resume_versions`
+- `resumes`
+- `share_links`
+- `users`
 
-#### Notes
-- Tokens are stored only as SHA-256 hashes. 
-- Share link returns token plaintext only once at creation.
+## Notes
+- Share tokens are stored only as SHA-256 hashes.
+- Share links return the plaintext token only once at creation time.
