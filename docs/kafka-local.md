@@ -1,11 +1,11 @@
-# Kafka local (Docker Desktop)
+# Local Kafka (Docker Desktop)
 
-Use estas instruções para subir um broker Kafka localmente e permitir que o
-`resume-api` publique eventos de AI jobs.
+Use these instructions to run a local Kafka broker so the `resume-api` can
+publish AI job events.
 
-## 1) Subir Kafka
+## 1) Start Kafka
 
-Crie um arquivo `docker-compose.kafka.yml` em qualquer pasta (ex.: na raiz do repo):
+Create a `docker-compose.kafka.yml` file in any folder (for example, in the repo root):
 
 ```yaml
 services:
@@ -24,35 +24,66 @@ services:
       - ALLOW_PLAINTEXT_LISTENER=yes
 ```
 
-Depois execute:
+Then run:
 
 ```bash
 docker compose -f docker-compose.kafka.yml up -d
 ```
 
-## 2) Confirmar o broker
+If you need to stop and restart it, you can use:
+
+```bash
+docker compose -f docker-compose.kafka.yml down -v
+docker compose -f docker-compose.kafka.yml up -d
+```
+
+## 2) Confirm the broker
 
 ```bash
 docker compose -f docker-compose.kafka.yml ps
 ```
 
-Você deve ver o container `kafka` em estado `Up`.
+You should see the `kafka` container with status `Up`.
 
-## 3) Configurar o resume-api
+## 3) Configure the resume-api
 
-No perfil `dev`, o `resume-api` já aponta para `localhost:9092` via `spring.kafka.bootstrap-servers`.
-Se você precisar alterar a porta ou host, ajuste em:
+In the `dev` profile, `resume-api` already points to `localhost:9092` via
+`spring.kafka.bootstrap-servers`. If you need to change the host or port, edit:
 
 ```
 feedback/resume-api/src/main/resources/application-dev.yml
 ```
 
-## 4) Subir o resume-api
+## 4) Start the resume-api
 
 ```bash
 cd feedback
-./mvnw -pl resume-api spring-boot:run
+./mvnw -pl resume-api -am spring-boot:run
 ```
 
-Quando um job for criado ou regenerado, o serviço publicará um evento no tópico
-`resume-ai-jobs` (configurável).
+When a job is created or regenerated, the service publishes an event to the
+`resume-ai-jobs` topic (configurable).
+
+## Troubleshooting
+
+### Maven cannot find `resume-api` in the reactor
+
+If you run the command from inside `feedback/resume-api`, Maven will not see the
+multi-module parent. Always run it from the `feedback` folder:
+
+```bash
+cd feedback
+./mvnw -pl resume-api -am spring-boot:run
+```
+
+### Missing `com.pedro.common.ai` or `KafkaProperties`
+
+Those errors indicate that the shared `common` module is not built (or its
+dependencies are not on the classpath). The `-am` flag builds required modules
+automatically. If needed, you can also install the module directly:
+
+```bash
+cd feedback
+./mvnw -pl common install
+./mvnw -pl resume-api -am spring-boot:run
+```
