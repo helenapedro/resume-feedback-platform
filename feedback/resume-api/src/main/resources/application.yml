@@ -8,7 +8,7 @@ spring:
     bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: com.pedro.resumeapi.ai.kafka.AiJobRequestedMessageSerializer
 
 app:
   ai-jobs:
@@ -17,4 +17,3 @@ app:
 logging:
   level:
     root: WARN
-
