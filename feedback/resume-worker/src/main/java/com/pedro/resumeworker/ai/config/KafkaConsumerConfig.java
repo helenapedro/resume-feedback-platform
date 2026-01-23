@@ -1,10 +1,9 @@
 package com.pedro.resumeworker.ai.config;
 
 import com.pedro.common.ai.AiJobRequestedMessage;
-import com.pedro.resumeworker.ai.config.AiJobRetryProperties;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
