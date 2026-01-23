@@ -1,6 +1,8 @@
 package com.pedro.resumeapi.ai.service;
 
 import com.pedro.resumeapi.ai.domain.AiJob;
+import com.pedro.resumeapi.ai.kafka.AiJobEventPublisher;
+import com.pedro.resumeapi.ai.mapper.AiJobMapper;
 import com.pedro.resumeapi.ai.repository.AiJobRepository;
 import com.pedro.resumeapi.api.error.AiJobNotFoundException;
 import com.pedro.resumeapi.api.error.ForbiddenException;
@@ -25,6 +27,7 @@ public class AiJobService {
     private final ResumeRepository resumeRepository;
     private final ResumeVersionRepository resumeVersionRepository;
     private final CurrentUser currentUser;
+    private final AiJobEventPublisher eventPublisher;
 
     @Transactional
     public AiJob createForVersion(ResumeVersion version) {
@@ -40,7 +43,9 @@ public class AiJobService {
         job.setIdempotencyKey(idempotencyKey);
 
         try {
-            return repo.save(job);
+            AiJob saved = repo.save(job);
+            eventPublisher.publish(AiJobMapper.toMessage(saved));
+            return saved;
         } catch (DataIntegrityViolationException ex) {
             return repo.findByIdempotencyKey(idempotencyKey)
                     .orElseThrow(() -> ex);
