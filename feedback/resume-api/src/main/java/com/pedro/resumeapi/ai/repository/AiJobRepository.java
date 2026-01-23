@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface AiJobRepository extends JpaRepository<AiJob, UUID> {
     Optional<AiJob> findTopByResumeVersion_IdOrderByCreatedAtDesc(UUID resumeVersionId);
 
+    Optional<AiJob> findByIdempotencyKey(String idempotencyKey);
 }
