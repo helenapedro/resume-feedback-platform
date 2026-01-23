@@ -14,7 +14,7 @@ This view translates stakeholder needs into scoped stories, highlighting the bac
 
 ### Domain Class Model
 
-The model outlines core entities (User, Resume, ResumeVersion, SharedLink, Comment, AIJob) and their relationships, clarifying ownership, versioning, and permission boundaries used throughout the service layer.
+The model outlines core entities (User, Resume, ResumeVersion, SharedLink, Comment, AIJob) and their relationships, mention many-to-one relationships (e.g., many versions to one resume) to clarify the data structure.
 
 ![Domain class](./diagrams/domain-class-model.jpg)
 
@@ -25,7 +25,7 @@ Sequence 01 traces the authenticated resume upload flow, emphasizing request val
 ![Seq 01](./diagrams/seq-01.jpg)
 
 
-Sequence 02 details how a shareable link is created and stored, including token generation, granular access controls, and the response returned to the owner.
+Sequence 02 details how a shareable link is created and stored, including token generation, expiring tokens, and the response returned to the owner.
 ![Seq 02.drawio](./diagrams/seq-02.drawio.png)
 
 
