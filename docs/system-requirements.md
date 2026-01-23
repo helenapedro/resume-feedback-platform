@@ -4,14 +4,14 @@
 
 ### Visual References (Context for Requirements)
 
-![Use cases](./diagrams/use-cases.jpg)
 This diagram maps the functional requirements to actors (resume owners and external reviewers), showing which capabilities require authentication versus shared-link access.
+![Use cases](./diagrams/use-cases.jpg)
 
-![Domain class](./diagrams/domain-class-model.jpg)
 The domain model provides the structural backbone for requirements, clarifying entity ownership, versioning semantics, and the data boundaries between relational storage and supporting services.
+![Domain class](./diagrams/domain-class-model.jpg)
 
-![Seq 01](./diagrams/seq-01.jpg)
 The upload and versioning sequence highlights the mandatory steps for consistency, including metadata persistence, version incrementing, and triggering asynchronous AI feedback jobs.
+![Seq 01](./diagrams/seq-01.jpg)
 
 ### 1. Functional Requirements
 
