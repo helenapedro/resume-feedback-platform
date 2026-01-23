@@ -11,5 +11,8 @@ public record AiJobDTO(
         Instant createdAt,
         Instant updatedAt,
         Instant startedAt,
-        Instant finishedAt
+        Instant finishedAt,
+        String errorCode,
+        String errorDetail,
+        Instant nextRetryAt
 ) {}
