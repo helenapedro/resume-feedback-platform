@@ -1,13 +1,13 @@
 package com.pedro.resumeapi.ai.kafka;
 
 import com.pedro.common.ai.AiJobRequestedMessage;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AiJobEventPublisher {
 
     private final KafkaTemplate<String, AiJobRequestedMessage> kafkaTemplate;
