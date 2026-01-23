@@ -6,12 +6,15 @@ REST API for resume upload/versioning, secure sharing, and audit logging.
 - Handles authentication, resume metadata, versioning, and share links.
 - Stores resume metadata in MySQL and files in local storage (dev).
 - Provides secure, token-based public access for share links.
+- Publishes AI job events to Kafka and exposes AI feedback read endpoints backed by MongoDB.
 
 ## Tech Stack
 - Java 17 + Spring Boot
 - Spring Security (JWT)
 - Flyway (schema migrations)
 - MySQL (metadata, security, audit)
+- MongoDB (AI feedback documents)
+- Kafka (AI job events)
 - Local filesystem storage (dev)
 
 ## Local Development
@@ -22,7 +25,11 @@ cd docker
 docker compose up -d
 ```
 
-2) Run the API (from `feedback/resume-api`):
+2) Start Kafka and MongoDB (see local guides):
+- Kafka: `docs/kafka-local.md`
+- MongoDB: `docs/mongodb-local.md`
+
+3) Run the API (from `feedback/resume-api`):
 
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
@@ -76,6 +83,10 @@ curl -L -o resume.pdf http://localhost:8080/api/share/<TOKEN>/download
 
 ## AI Feedback (JWT)
 - `GET /api/resumes/{resumeId}/versions/{versionId}/ai-feedback` (latest feedback)
+
+## AI Jobs (JWT)
+- `GET /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/latest`
+- `POST /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/regenerate`
 
 ## Database Schema (Tables)
 - `access_audit`

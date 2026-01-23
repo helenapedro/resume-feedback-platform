@@ -15,10 +15,10 @@ This repository follows a modular backend-first architecture, designed for scala
 - Full audit logging for shared access and downloads
 - Centralized error handling with consistent API responses
 - Commenting system per resume version (owner + external reviewers)
+- AI-generated resume feedback (async processing via Kafka + worker)
+- AI job retry, status tracking, and error metadata
 
 #### In Progress / Planned
-- AI-generated resume feedback (async processing)
-- AI job retry and status tracking
 - Presigned URL support for S3 downloads
 - Rate limiting for public share endpoints
 
@@ -53,7 +53,7 @@ resume-feedback-platform
 - AWS S3 – resume file storage (local filesystem in dev)
 #### Infrastructure
 - Docker / Docker Compose
-- Message queue (planned: AWS SQS or equivalent)
+- Kafka for async AI job events
 - JWT-based stateless authentication
 
 ## 📊 Data Model Highlights
@@ -72,12 +72,20 @@ resume-feedback-platform
 cd feedback/docker
 docker compose up -d
 ```
-#### 2. Run API
+#### 2. Start Kafka + MongoDB (local guides)
+- Kafka: [docs/kafka-local.md](docs/kafka-local.md)
+- MongoDB: [docs/mongodb-local.md](docs/mongodb-local.md)
+#### 3. Run API
 ```bash
 cd feedback/resume-api
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 <The API will start using local storage for files and MySQL for metadata.>
+#### 4. Run Worker
+```bash
+cd feedback/resume-worker
+./mvnw spring-boot:run
+```
 
 ## 🔐 Authentication
 - JWT-based authentication
@@ -88,6 +96,8 @@ cd feedback/resume-api
 ## 📚 Documentation
 - System Requirements: [docs/system-requirements.md](docs/system-requirements.md)
 - Architecture Notes: [docs/architecture](docs/architecture.md)
+- Kafka Local Setup: [docs/kafka-local.md](docs/kafka-local.md)
+- MongoDB Local Setup: [docs/mongodb-local.md](docs/mongodb-local.md)
 - Module README (common): [feedback/common/README.md](feedback/common/README.md)
 - Module README (resume-api): [feedback/resume-api/README.md](feedback/resume-api/README.md)
 - Module README (resume-worker): [feedback/resume-worker/README.md](feedback/resume-worker/README.md)

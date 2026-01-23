@@ -10,6 +10,10 @@ persists AI feedback in MongoDB, and updates job status in MySQL.
 - Spring Data MongoDB
 - Spring Boot Actuator
 
+## Kafka
+The worker listens to the `resume-ai-jobs` topic by default (configurable via
+`app.ai-jobs.topic` in `application.yml`).
+
 ## Local Development
 Start infrastructure (from `feedback/docker`):
 
