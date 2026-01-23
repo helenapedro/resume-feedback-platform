@@ -3,3 +3,7 @@ spring:
     name: resume-api
   profiles:
     default: dev
+
+app:
+  ai-jobs:
+    topic: resume-ai-jobs
