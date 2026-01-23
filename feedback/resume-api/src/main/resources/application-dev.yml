@@ -16,9 +16,8 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/resume_feedback_ai
+  mongodb:
+    uri: mongodb://localhost:27017/resume_feedback_ai
 
 app:
   storage:

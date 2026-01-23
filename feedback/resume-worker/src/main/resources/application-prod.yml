@@ -8,6 +8,5 @@ spring:
     hibernate:
       ddl-auto: validate
 
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/resume_feedback_ai
+  mongodb:
+    uri: mongodb://localhost:27017/resume_feedback_ai
