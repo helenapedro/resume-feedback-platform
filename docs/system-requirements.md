@@ -81,6 +81,7 @@
 - Resume files stored in S3 shall not be publicly accessible.
 - Presigned URLs shall be generated only after successful authorization.
 - The system shall apply rate limiting to shared-link endpoints.
+- Rate limiting shall be enforced consistently across API instances using a shared store (Redis).
 
 #### 2.2 Performance
 
