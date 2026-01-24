@@ -39,6 +39,12 @@ public class ShareLinkPublicDownloadController {
 
         shareLinkService.auditDownload(link, ip, ua, true, null, current);
 
+        if (payload.isPresigned()) {
+            return ResponseEntity.status(302)
+                    .header(HttpHeaders.LOCATION, payload.presignedUrl())
+                    .build();
+        }
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + payload.filename().replace("\"", "") + "\"")

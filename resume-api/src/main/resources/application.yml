@@ -10,9 +10,24 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: com.pedro.resumeapi.ai.kafka.AiJobRequestedMessageSerializer
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
 app:
   ai-jobs:
     topic: resume-ai-jobs
+  storage:
+    backend: LOCAL
+    s3:
+      presign-expiration: 10m
+  security:
+    rate-limit:
+      share:
+        enabled: true
+        requests: 120
+        window: 1m
 
 logging:
   level:
