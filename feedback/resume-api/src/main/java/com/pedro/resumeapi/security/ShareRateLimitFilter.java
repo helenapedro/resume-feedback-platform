@@ -1,5 +1,11 @@
 package com.pedro.resumeapi.security;
 
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.ConsumptionProbe;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ShareRateLimitFilter extends OncePerRequestFilter {
 
     private final ShareRateLimitProperties properties;
+    private final ProxyManager<String> proxyManager;
     private final Map<String, WindowCounter> counters = new ConcurrentHashMap<>();
 
     @Override
@@ -34,6 +41,11 @@ public class ShareRateLimitFilter extends OncePerRequestFilter {
         }
 
         String key = resolveClientKey(request);
+        Bucket bucket = resolveBucket(key);
+
+        ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+        if (!probe.isConsumed()) {
+            long retryAfter = Math.max(1, probe.getNanosToWaitForRefill() / 1_000_000_000L);
         long now = Instant.now().toEpochMilli();
         long windowMillis = properties.getWindow().toMillis();
 
@@ -70,6 +82,13 @@ public class ShareRateLimitFilter extends OncePerRequestFilter {
         return request.getRemoteAddr();
     }
 
+    private Bucket resolveBucket(String key) {
+        BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.simple(properties.getRequests(), properties.getWindow()))
+                .build();
+
+        RemoteBucketBuilder<String> builder = proxyManager.builder();
+        return builder.build(key, configuration);
     private record WindowCounter(long windowStart, AtomicInteger count) {
     }
 }

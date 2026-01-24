@@ -21,8 +21,6 @@ This repository follows a modular backend-first architecture, designed for scala
 - AI job retry, status tracking, and error metadata
 
 #### In Progress / Planned
-- Presigned URL support for S3 downloads
-- Rate limiting for public share endpoints
 - Frontend integration
 
 ## 🏗 Architecture Overview

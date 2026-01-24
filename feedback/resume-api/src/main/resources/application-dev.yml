@@ -21,6 +21,7 @@ spring:
 
 app:
   storage:
+    backend: LOCAL
     local-dir: C:/temp/resume-storage
     s3:
       region: us-east-1
