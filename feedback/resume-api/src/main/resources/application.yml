@@ -13,6 +13,15 @@ spring:
 app:
   ai-jobs:
     topic: resume-ai-jobs
+  storage:
+    s3:
+      presign-expiration: 10m
+  security:
+    rate-limit:
+      share:
+        enabled: true
+        requests: 120
+        window: 1m
 
 logging:
   level:
