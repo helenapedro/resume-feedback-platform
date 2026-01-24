@@ -1,10 +1,6 @@
 package com.pedro.resumeworker.ai.config;
 
 import com.pedro.common.ai.AiJobRequestedMessage;
-import com.pedro.resumeworker.ai.config.AiJobRetryProperties;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
@@ -14,7 +10,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,14 +25,19 @@ public class KafkaConsumerConfig {
             KafkaProperties kafkaProperties
     ) {
         Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties());
+
+        // Use JacksonJsonDeserializer for both property config and manual instantiation
         props.putIfAbsent(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.putIfAbsent(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-        props.putIfAbsent(JsonDeserializer.TRUSTED_PACKAGES, "com.pedro.common.ai");
-        props.putIfAbsent(JsonDeserializer.VALUE_DEFAULT_TYPE, AiJobRequestedMessage.class.getName());
+        props.putIfAbsent(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
+
+        // Configuration keys for JacksonJsonDeserializer
+        props.putIfAbsent(JacksonJsonDeserializer.TRUSTED_PACKAGES, "com.pedro.common.ai");
+        props.putIfAbsent(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, AiJobRequestedMessage.class.getName());
+
         return new DefaultKafkaConsumerFactory<>(
                 props,
                 new StringDeserializer(),
-                new JsonDeserializer<>(AiJobRequestedMessage.class, false)
+                new JacksonJsonDeserializer<>(AiJobRequestedMessage.class) // Corrected constructor
         );
     }
 }
