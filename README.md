@@ -7,6 +7,7 @@ This repository follows a modular backend-first architecture, designed for scala
 - Resume upload with immutable versioning
 - Owner-based access control for all resume operations
 - Secure resume download (owner & public)
+- Presigned URL support for S3 downloads (production profile)
 - Shareable resume links with:
   - Unguessable tokens (SHA-256 hashed)
   - Expiration support
@@ -14,6 +15,7 @@ This repository follows a modular backend-first architecture, designed for scala
   - Usage limits
 - Full audit logging for shared access and downloads
 - Centralized error handling with consistent API responses
+- Redis-backed rate limiting for public share endpoints
 - Commenting system per resume version (owner + external reviewers)
 - AI-generated resume feedback (async processing via Kafka + worker)
 - AI job retry, status tracking, and error metadata
@@ -21,6 +23,7 @@ This repository follows a modular backend-first architecture, designed for scala
 #### In Progress / Planned
 - Presigned URL support for S3 downloads
 - Rate limiting for public share endpoints
+- Frontend integration
 
 ## 🏗 Architecture Overview
 
@@ -51,6 +54,7 @@ resume-feedback-platform
 - MySQL – source of truth for users, resumes, versions, sharing, audits
 - MongoDB – AI feedback documents (versioned, semi-structured)
 - AWS S3 – resume file storage (local filesystem in dev)
+- Redis – shared rate limiting for public share endpoints
 #### Infrastructure
 - Docker / Docker Compose
 - Kafka for async AI job events
@@ -75,6 +79,7 @@ docker compose up -d
 #### 2. Start Kafka + MongoDB (local guides)
 - Kafka: [docs/kafka-local.md](docs/kafka-local.md)
 - MongoDB: [docs/mongodb-local.md](docs/mongodb-local.md)
+- Redis: [docs/redis-local.md](docs/redis-local.md)
 #### 3. Run API
 ```bash
 cd feedback/resume-api
@@ -113,3 +118,6 @@ The resume-api module is currently the primary focus, with an emphasis on:
 - production-ready patterns
 
 Frontend integration and AI processing are intentionally deferred until the backend contract is stable.
+
+## 👤 Maintainer
+- Helena (LinkedIn): https://www.linkedin.com/in/helena-software-engineer
