@@ -72,6 +72,12 @@ public class ResumeStorageService {
             if (StringUtils.hasText(version.getS3Bucket()) || StringUtils.hasText(version.getS3ObjectKey())) {
                 throw new IllegalStateException("S3 download requested but presigned URL is unavailable");
             }
+        var presigned = presignService.presignDownload(version, safeName, contentType)
+                .map(Object::toString)
+                .orElse(null);
+
+        if (StringUtils.hasText(presigned)) {
+            return new DownloadPayload(null, filename, contentType, presigned);
         }
 
         Resource resource = storage.loadAsResource(version.getStorageKey());
