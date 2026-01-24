@@ -21,6 +21,7 @@ spring:
 
 app:
   storage:
+    backend: LOCAL
     local-dir: C:/temp/resume-storage
   jwt:
     secret: mySecretKeyMySecretKeyMySecretKeyMySecretKeyMySecretKey

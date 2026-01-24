@@ -79,6 +79,12 @@ public class ResumeController {
     ) {
         var payload = resumeStorageService.downloadVersionOwner(resumeId, versionId);
 
+        if (payload.isPresigned()) {
+            return ResponseEntity.status(302)
+                    .header(org.springframework.http.HttpHeaders.LOCATION, payload.presignedUrl())
+                    .build();
+        }
+
         String safeName = payload.filename()
                 .replace("\"", "")
                 .replace("\r", "")
