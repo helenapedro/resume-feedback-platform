@@ -7,10 +7,12 @@ import com.pedro.resumeapi.resume.repository.ResumeRepository;
 import com.pedro.resumeapi.resume.repository.ResumeVersionRepository;
 import com.pedro.resumeapi.security.CurrentUser;
 import com.pedro.resumeapi.storage.LocalStorageService;
+import com.pedro.resumeapi.storage.S3PresignService;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.UUID;
 
@@ -20,6 +22,7 @@ public class ResumeStorageService {
     private final ResumeRepository resumeRepository;
     private final ResumeVersionRepository resumeVersionRepository;
     private final LocalStorageService storage;
+    private final S3PresignService presignService;
     private final CurrentUser currentUser;
 
     @Transactional(readOnly = true)
@@ -42,20 +45,43 @@ public class ResumeStorageService {
         ResumeVersion version = resumeVersionRepository.findByIdAndResume_Id(versionId, resumeId)
                 .orElseThrow(VersionNotFoundException::new);
 
-        Resource resource = storage.loadAsResource(version.getStorageKey());
-
         String filename = (version.getOriginalFilename() == null ||
                 version.getOriginalFilename().isBlank())
                 ? "resume.pdf"
                 : version.getOriginalFilename();
+
+        String safeName = sanitizeFilename(filename);
 
         String contentType = (version.getContentType() == null ||
                 version.getContentType().isBlank())
                 ? "application/octet-stream"
                 : version.getContentType();
 
-        return new DownloadPayload(resource, filename, contentType);
+        var presigned = presignService.presignDownload(version, safeName, contentType)
+                .map(Object::toString)
+                .orElse(null);
+
+        if (StringUtils.hasText(presigned)) {
+            return new DownloadPayload(null, filename, contentType, presigned);
+        }
+
+        Resource resource = storage.loadAsResource(version.getStorageKey());
+
+        return new DownloadPayload(resource, filename, contentType, null);
     }
 
-    public record DownloadPayload(Resource resource, String filename, String contentType) {}
+    private String sanitizeFilename(String filename) {
+        return filename
+                .replace("\"", "")
+                .replace("\r", "")
+                .replace("\n", "")
+                .replace("\\", "_")
+                .replace("/", "_");
+    }
+
+    public record DownloadPayload(Resource resource, String filename, String contentType, String presignedUrl) {
+        public boolean isPresigned() {
+            return StringUtils.hasText(presignedUrl);
+        }
+    }
 }

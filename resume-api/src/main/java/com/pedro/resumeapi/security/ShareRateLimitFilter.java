@@ -1,0 +1,75 @@
+package com.pedro.resumeapi.security;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+@Component
+@RequiredArgsConstructor
+public class ShareRateLimitFilter extends OncePerRequestFilter {
+
+    private final ShareRateLimitProperties properties;
+    private final Map<String, WindowCounter> counters = new ConcurrentHashMap<>();
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
+        if (!properties.isEnabled() || !request.getRequestURI().startsWith("/api/share/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String key = resolveClientKey(request);
+        long now = Instant.now().toEpochMilli();
+        long windowMillis = properties.getWindow().toMillis();
+
+        WindowCounter counter = counters.compute(key, (ignored, existing) -> {
+            if (existing == null || now - existing.windowStart >= windowMillis) {
+                return new WindowCounter(now, new AtomicInteger(1));
+            }
+            existing.count.incrementAndGet();
+            return existing;
+        });
+
+        if (counter.count.get() > properties.getRequests()) {
+            long retryAfter = Math.max(1, (counter.windowStart + windowMillis - now) / 1000);
+            response.setStatus(HttpServletResponse.SC_TOO_MANY_REQUESTS);
+            response.setHeader("Retry-After", String.valueOf(retryAfter));
+            return;
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private String resolveClientKey(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (StringUtils.hasText(forwardedFor)) {
+            String first = forwardedFor.split(",")[0].trim();
+            if (StringUtils.hasText(first)) {
+                return first;
+            }
+        }
+        String realIp = request.getHeader("X-Real-IP");
+        if (StringUtils.hasText(realIp)) {
+            return realIp.trim();
+        }
+        return request.getRemoteAddr();
+    }
+
+    private record WindowCounter(long windowStart, AtomicInteger count) {
+    }
+}
