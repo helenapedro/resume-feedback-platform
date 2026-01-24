@@ -24,6 +24,14 @@ public class S3StorageConfig {
 
     @Bean
     @ConditionalOnProperty(name = "app.storage.backend", havingValue = "S3")
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+
+@Configuration
+@EnableConfigurationProperties(S3StorageProperties.class)
+public class S3StorageConfig {
+
+    @Bean
+    @ConditionalOnProperty(name = "app.storage.s3.region")
     public S3Presigner s3Presigner(S3StorageProperties properties) {
         return S3Presigner.builder()
                 .region(Region.of(properties.getRegion()))
