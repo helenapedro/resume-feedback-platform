@@ -86,6 +86,7 @@ cd feedback/resume-api
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 <The API will start using local storage for files and MySQL for metadata.>
+
 #### 4. Run Worker
 ```bash
 cd feedback/resume-worker
