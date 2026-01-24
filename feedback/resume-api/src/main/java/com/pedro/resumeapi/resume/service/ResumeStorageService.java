@@ -8,6 +8,8 @@ import com.pedro.resumeapi.resume.repository.ResumeVersionRepository;
 import com.pedro.resumeapi.security.CurrentUser;
 import com.pedro.resumeapi.storage.LocalStorageService;
 import com.pedro.resumeapi.storage.S3PresignService;
+import com.pedro.resumeapi.storage.StorageBackend;
+import com.pedro.resumeapi.storage.StorageProperties;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ public class ResumeStorageService {
     private final ResumeVersionRepository resumeVersionRepository;
     private final LocalStorageService storage;
     private final S3PresignService presignService;
+    private final StorageProperties storageProperties;
     private final CurrentUser currentUser;
 
     @Transactional(readOnly = true)
@@ -57,6 +60,18 @@ public class ResumeStorageService {
                 ? "application/octet-stream"
                 : version.getContentType();
 
+        if (storageProperties.getBackend() == StorageBackend.S3) {
+            var presigned = presignService.presignDownload(version, safeName, contentType)
+                    .map(Object::toString)
+                    .orElse(null);
+
+            if (StringUtils.hasText(presigned)) {
+                return new DownloadPayload(null, filename, contentType, presigned);
+            }
+
+            if (StringUtils.hasText(version.getS3Bucket()) || StringUtils.hasText(version.getS3ObjectKey())) {
+                throw new IllegalStateException("S3 download requested but presigned URL is unavailable");
+            }
         var presigned = presignService.presignDownload(version, safeName, contentType)
                 .map(Object::toString)
                 .orElse(null);
