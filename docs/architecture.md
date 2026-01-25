@@ -1,5 +1,10 @@
 # resume-feedback-platform
 
+### Architecture Diagram (Data Flow)
+
+High-level data flow across the API, Kafka, worker, and persistence layers, including storage for AI feedback documents and job metadata.
+![Architecture and data flow diagram](https://resume-feedback-platform.s3.us-east-1.amazonaws.com/archtectureanddataflow.png)
+
 ### Use Case Diagram
 
 This diagram captures the primary actors (resume owners and external reviewers) and the system boundaries, showing how authentication, resume management, and sharing flows map to user-facing capabilities and external access paths.
@@ -49,4 +54,3 @@ Sequence 06 illustrates resume version history access, including pagination of v
 
 The state diagrams summarize lifecycle transitions for resumes, shared links, and AI jobs, capturing terminal states and error paths needed for robust orchestration.
 ![State diagrams](./diagrams/statediagrams.jpg)
-
