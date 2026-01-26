@@ -22,7 +22,7 @@ spring:
 app:
   storage:
     backend: LOCAL
-    local-dir: C:/temp/resume-storage
+    local-dir: ./data/resume-storage
     s3:
       region: us-east-1
       presign-expiration: 10m

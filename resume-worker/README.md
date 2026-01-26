@@ -14,6 +14,19 @@ persists AI feedback in MongoDB, and updates job status in MySQL.
 The worker listens to the `resume-ai-jobs` topic by default (configurable via
 `app.ai-jobs.topic` in `application.yml`).
 
+## LLM (Google Gemini)
+The worker can generate AI feedback using Google Gemini. Configuration lives under:
+
+```yaml
+app:
+  ai-feedback:
+    gemini:
+      enabled: false
+      api-key: ${GEMINI_API_KEY:}
+```
+
+See the step-by-step guide in [docs/llm-gemini.md](../../docs/llm-gemini.md).
+
 ## Local Development
 Start infrastructure (from `feedback/docker`):
 

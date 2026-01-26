@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 @Configuration
@@ -13,7 +14,16 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 public class S3StorageConfig {
 
     @Bean
-    @ConditionalOnProperty(name = "app.storage.s3.region")
+    @ConditionalOnProperty(name = "app.storage.backend", havingValue = "S3")
+    public S3Client s3Client(S3StorageProperties properties) {
+        return S3Client.builder()
+                .region(Region.of(properties.getRegion()))
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "app.storage.backend", havingValue = "S3")
     public S3Presigner s3Presigner(S3StorageProperties properties) {
         return S3Presigner.builder()
                 .region(Region.of(properties.getRegion()))
