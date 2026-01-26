@@ -19,6 +19,7 @@ This repository follows a modular backend-first architecture, designed for scala
 - Commenting system per resume version (owner + external reviewers)
 - AI-generated resume feedback (async processing via Kafka + worker)
 - AI job retry, status tracking, and error metadata
+- Google Gemini integration (LLM-ready, configurable in worker)
 
 #### In Progress / Planned
 - Frontend integration
@@ -105,6 +106,7 @@ cd feedback/resume-worker
 - Module README (common): [feedback/common/README.md](feedback/common/README.md)
 - Module README (resume-api): [feedback/resume-api/README.md](feedback/resume-api/README.md)
 - Module README (resume-worker): [feedback/resume-worker/README.md](feedback/resume-worker/README.md)
+- Gemini LLM Guide: [docs/llm-gemini.md](docs/llm-gemini.md)
 
 ## 🧭 Project Status
 This project is being developed incrementally with a backend-first approach.

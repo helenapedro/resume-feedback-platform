@@ -16,6 +16,7 @@ REST API for resume upload/versioning, secure sharing, and audit logging.
 - MongoDB (AI feedback documents)
 - Kafka (AI job events)
 - Local filesystem storage (dev)
+- S3 storage (production profile)
 
 ## Local Development
 1) Start MySQL (from the `feedback` root):
@@ -34,6 +35,9 @@ docker compose up -d
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
+
+By default, local uploads are stored at `./data/resume-storage` (configurable via
+`app.storage.local-dir` in `application.yml` or `application-dev.yml`).
 
 ## Authentication
 ### Register

@@ -16,10 +16,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.time.Duration;
 
 @Component
 @RequiredArgsConstructor
@@ -27,7 +24,6 @@ public class ShareRateLimitFilter extends OncePerRequestFilter {
 
     private final ShareRateLimitProperties properties;
     private final ProxyManager<String> proxyManager;
-    private final Map<String, WindowCounter> counters = new ConcurrentHashMap<>();
 
     @Override
     protected void doFilterInternal(
@@ -45,20 +41,8 @@ public class ShareRateLimitFilter extends OncePerRequestFilter {
 
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
         if (!probe.isConsumed()) {
-            long retryAfter = Math.max(1, probe.getNanosToWaitForRefill() / 1_000_000_000L);
-        long now = Instant.now().toEpochMilli();
-        long windowMillis = properties.getWindow().toMillis();
-
-        WindowCounter counter = counters.compute(key, (ignored, existing) -> {
-            if (existing == null || now - existing.windowStart >= windowMillis) {
-                return new WindowCounter(now, new AtomicInteger(1));
-            }
-            existing.count.incrementAndGet();
-            return existing;
-        });
-
-        if (counter.count.get() > properties.getRequests()) {
-            long retryAfter = Math.max(1, (counter.windowStart + windowMillis - now) / 1000);
+            Duration wait = Duration.ofNanos(probe.getNanosToWaitForRefill());
+            long retryAfter = Math.max(1, wait.getSeconds());
             response.setStatus(HttpServletResponse.SC_TOO_MANY_REQUESTS);
             response.setHeader("Retry-After", String.valueOf(retryAfter));
             return;
@@ -89,6 +73,5 @@ public class ShareRateLimitFilter extends OncePerRequestFilter {
 
         RemoteBucketBuilder<String> builder = proxyManager.builder();
         return builder.build(key, configuration);
-    private record WindowCounter(long windowStart, AtomicInteger count) {
     }
 }

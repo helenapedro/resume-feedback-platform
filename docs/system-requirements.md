@@ -15,7 +15,8 @@
 - Each resume shall represent a logical document owned by a user.
 - The system shall allow a resume to be updated, creating a new version.
 - The system shall store resume metadata in a relational database.
-- The system shall store resume files in AWS S3 using object versioning.
+- The system shall store resume files in AWS S3 using object versioning (production).
+- The system shall support local filesystem storage for development environments.
 
 #### 1.3 Resume Versioning
 
@@ -57,6 +58,7 @@
 - The system shall associate AI feedback with the specific resume version.
 - The system shall store AI feedback as versioned documents in MongoDB.
 - The system shall allow resume owners to request regeneration of AI feedback.
+- The system shall integrate with Google Gemini for LLM-based feedback generation.
 
 #### 1.8 AI Job Processing and Status Tracking
 
@@ -102,6 +104,7 @@
 - Failures in AI feedback generation shall not impact resume access functionality.
 - The system shall support retry and recovery mechanisms for asynchronous processing.
 - The system shall tolerate temporary unavailability of external AI services.
+- The system shall allow retries/backoff when Gemini requests fail.
 
 #### 2.5 Maintainability
 
