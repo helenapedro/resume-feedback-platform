@@ -5,6 +5,15 @@
 High-level data flow across the API, Kafka, worker, and persistence layers, including storage for AI feedback documents and job metadata.
 ![Architecture and data flow diagram](https://resume-feedback-platform.s3.us-east-1.amazonaws.com/archtectureanddataflow.png)
 
+### LLM Integration (Google Gemini)
+
+The AI feedback pipeline is designed to plug into Google Gemini from the worker:
+- `resume-api` creates an AI job and publishes it to Kafka.
+- `resume-worker` consumes the job, fetches or derives resume content, and calls Gemini.
+- The generated feedback is stored in MongoDB and linked in MySQL.
+
+Implementation details and setup steps are documented in [docs/llm-gemini.md](./llm-gemini.md).
+
 ### Use Case Diagram
 
 This diagram captures the primary actors (resume owners and external reviewers) and the system boundaries, showing how authentication, resume management, and sharing flows map to user-facing capabilities and external access paths.

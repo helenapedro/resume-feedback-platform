@@ -18,8 +18,15 @@ app:
       max-backoff: PT5M
       poll-interval: PT30S
   ai-feedback:
-    model: gpt-4o-mini
+    model: gemini-1.5-flash
     prompt-version: v1
+    gemini:
+      enabled: false
+      api-key: ${GEMINI_API_KEY:}
+      base-url: https://generativelanguage.googleapis.com
+      model: gemini-1.5-flash
+      temperature: 0.4
+      max-output-tokens: 600
 
 logging:
   level:

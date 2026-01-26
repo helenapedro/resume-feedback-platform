@@ -10,3 +10,9 @@ spring:
 
   mongodb:
     uri: mongodb://localhost:27017/resume_feedback_ai
+
+app:
+  ai-feedback:
+    gemini:
+      enabled: true
+      api-key: ${GEMINI_API_KEY:}

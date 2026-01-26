@@ -20,6 +20,7 @@ app:
     topic: resume-ai-jobs
   storage:
     backend: LOCAL
+    local-dir: ./data/resume-storage
     s3:
       presign-expiration: 10m
   security:
