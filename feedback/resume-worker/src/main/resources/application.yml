@@ -21,7 +21,7 @@ app:
     model: gemini-1.5-flash
     prompt-version: v1
     gemini:
-      enabled: false
+      enabled: true
       api-key: ${GEMINI_API_KEY:}
       base-url: https://generativelanguage.googleapis.com
       model: gemini-1.5-flash
