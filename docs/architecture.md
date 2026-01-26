@@ -3,7 +3,7 @@
 ### Architecture Diagram (Data Flow)
 
 High-level data flow across the API, Kafka, worker, and persistence layers, including storage for AI feedback documents and job metadata.
-![Architecture and data flow diagram](https://resume-feedback-platform.s3.us-east-1.amazonaws.com/archtectureanddataflow.png)
+![Architecture and data flow diagram](/docs/diagrams/archtectureanddataflow.png)
 
 
 ### LLM Integration (Google Gemini)
