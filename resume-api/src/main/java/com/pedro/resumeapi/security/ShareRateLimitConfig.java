@@ -8,9 +8,9 @@ import io.lettuce.core.codec.RedisCodec;
 import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.codec.ByteArrayCodec;
 import io.lettuce.core.api.StatefulRedisConnection;
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 
 import java.nio.ByteBuffer;
 
