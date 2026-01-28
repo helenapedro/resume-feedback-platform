@@ -1,45 +1,45 @@
 # Google Gemini (LLM) Integration Guide
 
-Este guia descreve o passo a passo para habilitar o uso do **Google Gemini** no `resume-worker` e para evoluir o pipeline com conteúdo real do currículo.
+This guide describes the step-by-step process to enable **Google Gemini** in the `resume-worker` and to evolve the pipeline with real resume content.
 
 ---
 
-## 1) Pré-requisitos
+## 1) Prerequisites
 
-1. **Conta Google Cloud** com o serviço **Generative Language API** habilitado.
-2. **API Key** (não use credenciais de usuário em produção).
+1. **Google Cloud account** with the **Generative Language API** enabled.
+2. **API Key** (do not use user credentials in production).
 
-> Referência oficial: https://ai.google.dev/
-
----
-
-## 2) Gerar a API Key
-
-1. Acesse o console da Google Cloud.
-2. Vá em **APIs & Services → Credentials**.
-3. Clique em **Create Credentials → API Key**.
-4. Restrinja a chave (opcional, mas recomendado) para a API **Generative Language**.
+> Official reference: https://ai.google.dev/
 
 ---
 
-## 3) Configurar variáveis de ambiente
+## 2) Generate the API Key
 
-No ambiente do **resume-worker**:
+1. Access the Google Cloud console.
+2. Go to **APIs & Services → Credentials**.
+3. Click **Create Credentials → API Key**.
+4. Restrict the key (optional, but recommended) to the **Generative Language** API.
+
+---
+
+## 3) Configure environment variables
+
+In the **resume-worker** environment:
 
 ```bash
-export GEMINI_API_KEY="sua_api_key"
+export GEMINI_API_KEY="your_api_key"
 ```
 
-Em Docker/Kubernetes, adicione a variável no `env` do container ou no Secret Manager.
+In Docker/Kubernetes, add the variable to the container `env` or to Secret Manager.
 
 ---
 
-## 4) Habilitar o Gemini no worker
+## 4) Enable Gemini in the worker
 
-No `resume-worker`, o Gemini já está preparado, mas desabilitado por padrão.
+In `resume-worker`, Gemini is already prepared, but disabled by default.
 
-### Em desenvolvimento
-Edite `feedback/resume-worker/src/main/resources/application.yml`:
+### Development
+Edit `feedback/resume-worker/src/main/resources/application.yml`:
 
 ```yaml
 app:
@@ -49,8 +49,8 @@ app:
       api-key: ${GEMINI_API_KEY:}
 ```
 
-### Em produção
-O `application-prod.yml` já habilita Gemini se houver `GEMINI_API_KEY`:
+### Production
+`application-prod.yml` already enables Gemini if `GEMINI_API_KEY` is present:
 
 ```yaml
 app:
@@ -62,9 +62,9 @@ app:
 
 ---
 
-## 5) Ajustar modelo e parâmetros
+## 5) Adjust model and parameters
 
-Os parâmetros são configuráveis via YAML:
+Parameters are configurable via YAML:
 
 ```yaml
 app:
@@ -78,28 +78,28 @@ app:
 
 ---
 
-## 6) Enviar conteúdo real do currículo (passo essencial)
+## 6) Send real resume content (essential step)
 
-Hoje o worker não recebe o texto do currículo, apenas IDs. Para gerar feedback real:
+Today the worker does not receive the resume text, only IDs. To generate real feedback:
 
-### Opção A — Buscar conteúdo via API interna
-1. Criar um endpoint **interno** no `resume-api` que:
-   - Receba `resumeVersionId`
-   - Retorne o texto extraído do PDF (ou o arquivo bruto).
-2. O `resume-worker` chama esse endpoint e envia o texto para o Gemini.
+### Option A — Fetch content via internal API
+1. Create an **internal** endpoint in `resume-api` that:
+   - Receives `resumeVersionId`
+   - Returns the text extracted from the PDF (or the raw file).
+2. `resume-worker` calls this endpoint and sends the text to Gemini.
 
-### Opção B — Buscar direto do storage
-1. Adicionar no `AiJobRequestedMessage` o `storageKey` (ou `s3Bucket/s3ObjectKey`).
-2. No worker:
-   - Se `LOCAL`: ler arquivo local.
-   - Se `S3`: baixar arquivo usando SDK AWS.
-3. Extrair texto do PDF e montar o prompt.
+### Option B — Fetch directly from storage
+1. Add `storageKey` (or `s3Bucket/s3ObjectKey`) to `AiJobRequestedMessage`.
+2. In the worker:
+   - If `LOCAL`: read a local file.
+   - If `S3`: download the file using the AWS SDK.
+3. Extract text from the PDF and build the prompt.
 
 ---
 
-## 7) Extração de texto de PDF (sugestão)
+## 7) PDF text extraction (suggestion)
 
-Adicionar o Apache PDFBox ao `resume-worker`:
+Add Apache PDFBox to `resume-worker`:
 
 ```xml
 <dependency>
@@ -109,7 +109,7 @@ Adicionar o Apache PDFBox ao `resume-worker`:
 </dependency>
 ```
 
-Uso básico:
+Basic usage:
 
 ```java
 try (PDDocument doc = PDDocument.load(inputStream)) {
@@ -120,33 +120,33 @@ try (PDDocument doc = PDDocument.load(inputStream)) {
 
 ---
 
-## 8) Formato esperado pelo Gemini
+## 8) Expected format for Gemini
 
-O worker envia um prompt e espera **JSON válido** de resposta:
+The worker sends a prompt and expects **valid JSON** in response:
 
 ```json
 {
-  "summary": "resumo curto",
-  "strengths": ["ponto forte 1", "ponto forte 2"],
-  "improvements": ["melhoria 1", "melhoria 2"]
+  "summary": "short summary",
+  "strengths": ["strength 1", "strength 2"],
+  "improvements": ["improvement 1", "improvement 2"]
 }
 ```
 
-Se o Gemini retornar texto fora do JSON, o worker ignora e cai no fallback.
+If Gemini returns text outside of JSON, the worker ignores it and falls back.
 
 ---
 
-## 9) Checklist final
+## 9) Final checklist
 
-✅ API Key configurada  
-✅ Gemini habilitado no YAML  
-✅ Conteúdo do currículo disponível para o worker  
-✅ Teste ponta-a-ponta com Kafka + MongoDB  
+✅ API Key configured  
+✅ Gemini enabled in YAML  
+✅ Resume content available to the worker  
+✅ End-to-end test with Kafka + MongoDB  
 
 ---
 
-## 10) Próximos aprimoramentos (opcional)
+## 10) Next improvements (optional)
 
-- Guardar o **texto extraído** em cache para reprocessamentos.
-- Ajustar prompt por segmento (ex.: tecnologia, finanças, saúde).
-- Adicionar avaliação de score por categoria (ex.: clareza, impacto).
+- Store the **extracted text** in cache for reprocessing.
+- Adjust the prompt by segment (e.g., technology, finance, healthcare).
+- Add a score evaluation by category (e.g., clarity, impact).
