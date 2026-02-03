@@ -4,32 +4,46 @@ import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.codec.ByteArrayCodec;
 import io.lettuce.core.codec.RedisCodec;
 import io.lettuce.core.codec.StringCodec;
-import io.lettuce.core.codec.ByteArrayCodec;
 import io.lettuce.core.api.StatefulRedisConnection;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 
 import java.nio.ByteBuffer;
 
 @Configuration
 public class ShareRateLimitConfig {
 
-    @Bean(destroyMethod = "shutdown")
-    public RedisClient shareRateLimitRedisClient(RedisProperties properties) {
-        RedisURI.Builder builder = RedisURI.builder()
-                .withHost(properties.getHost())
-                .withPort(properties.getPort());
+    @Value("${spring.data.redis.host:localhost}")
+    private String host;
 
-        if (properties.getPassword() != null) {
-            builder.withPassword(properties.getPassword().toCharArray());
+    @Value("${spring.data.redis.port:6379}")
+    private int port;
+
+    @Value("${spring.data.redis.password:}")
+    private String password;
+
+    @Value("${spring.data.redis.database:0}")
+    private int database;
+
+    @Value("${spring.data.redis.ssl.enabled:false}")
+    private boolean ssl;
+
+    @Bean(destroyMethod = "shutdown")
+    public RedisClient shareRateLimitRedisClient() {
+        RedisURI.Builder builder = RedisURI.builder()
+                .withHost(host)
+                .withPort(port)
+                .withDatabase(database);
+
+        if (password != null && !password.isBlank()) {
+            builder.withPassword(password.toCharArray());
         }
 
-        builder.withDatabase(properties.getDatabase());
-
-        if (properties.getSsl().isEnabled()) {
+        if (ssl) {
             builder.withSsl(true);
         }
 
