@@ -15,19 +15,15 @@ public class CorsConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of(
-                "http://localhost:8081/",
-                "https://zp1v56uxy8rdx5ypatb0ockcb9tr6a-oci3--5173--b894c784.local-credentialless.webcontainer-api.io/"
-        ));
+        config.setAllowedOriginPatterns(List.of("*"));
 
         config.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
         ));
 
-        config.setAllowedHeaders(List.of(
-                "Authorization",
-                "Content-Type"
-        ));
+        config.setAllowedHeaders(List.of("*"));
+
+        config.setExposedHeaders(List.of("*"));
 
         config.setAllowCredentials(true);
 
