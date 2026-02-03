@@ -26,18 +26,16 @@ public class KafkaConsumerConfig {
     ) {
         Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties());
 
-        // Use JacksonJsonDeserializer for both property config and manual instantiation
         props.putIfAbsent(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.putIfAbsent(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
 
-        // Configuration keys for JacksonJsonDeserializer
         props.putIfAbsent(JacksonJsonDeserializer.TRUSTED_PACKAGES, "com.pedro.common.ai");
         props.putIfAbsent(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, AiJobRequestedMessage.class.getName());
 
         return new DefaultKafkaConsumerFactory<>(
                 props,
                 new StringDeserializer(),
-                new JacksonJsonDeserializer<>(AiJobRequestedMessage.class) // Corrected constructor
+                new JacksonJsonDeserializer<>(AiJobRequestedMessage.class)
         );
     }
 }

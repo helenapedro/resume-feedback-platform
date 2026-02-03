@@ -11,6 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -43,7 +44,8 @@ public class ShareRateLimitFilter extends OncePerRequestFilter {
         if (!probe.isConsumed()) {
             Duration wait = Duration.ofNanos(probe.getNanosToWaitForRefill());
             long retryAfter = Math.max(1, wait.getSeconds());
-            response.setStatus(HttpServletResponse.SC_TOO_MANY_REQUESTS);
+
+            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setHeader("Retry-After", String.valueOf(retryAfter));
             return;
         }
