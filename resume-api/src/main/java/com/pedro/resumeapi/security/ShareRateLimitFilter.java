@@ -11,6 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -21,6 +22,7 @@ import java.time.Duration;
 
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "app.security.rate-limit.share", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ShareRateLimitFilter extends OncePerRequestFilter {
 
     private final ShareRateLimitProperties properties;
