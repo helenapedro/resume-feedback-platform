@@ -6,12 +6,12 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
-      group-id: resume-worker
+      group-id: ${KAFKA_PREFIX:}resume-worker
       auto-offset-reset: earliest
 
 app:
   ai-jobs:
-    topic: resume-ai-jobs
+    topic: ${KAFKA_PREFIX:}resume-ai-jobs
     retry:
       max-attempts: 5
       initial-backoff: PT10S

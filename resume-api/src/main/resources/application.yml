@@ -17,7 +17,7 @@ spring:
 
 app:
   ai-jobs:
-    topic: resume-ai-jobs
+    topic: ${KAFKA_PREFIX:}resume-ai-jobs
   storage:
     backend: LOCAL
     local-dir: ./data/resume-storage
