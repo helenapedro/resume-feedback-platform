@@ -12,8 +12,8 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_URL}
+      port: ${SPRING_DATA_REDIS_PORT}
 
 app:
   ai-jobs:
