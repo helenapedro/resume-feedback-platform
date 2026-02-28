@@ -42,6 +42,7 @@ This repository is a multi-module Spring Boot monorepo with:
 - [Documentation Index](docs/README.md)
 - [Architecture](docs/architecture.md)
 - [Requirements](docs/requirements.md)
+- [Operations](docs/operations.md)
 
 ---
 
@@ -120,38 +121,10 @@ Detailed architecture documentation is available at:
 
 ---
 
-## Local Development and Operations
+## Operations
 
-### Environment Variables (core)
-| Variable | Required | Module | Notes |
-|---|---|---|---|
-| `SPRING_DATASOURCE_URL` | Yes | API/Worker | MySQL connection |
-| `SPRING_DATASOURCE_USERNAME` | Yes | API/Worker | MySQL user |
-| `SPRING_DATASOURCE_PASSWORD` | Yes | API/Worker | MySQL password |
-| `SPRING_DATA_MONGODB_URI` | Yes | API/Worker | MongoDB URI |
-| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | Yes | API/Worker | Kafka brokers |
-| `GEMINI_API_KEY` | Yes (for AI) | Worker | Gemini key |
-
-### Tests
-- Unit/integration tests exist per module.
-- Run all tests:
-```bash
-./mvnw test
-```
-- Run module tests:
-```bash
-./mvnw -pl resume-api test
-./mvnw -pl resume-worker test
-./mvnw -pl common test
-```
-
-### Deployment
-- Heroku deployment is configured from GitHub `main`.
-- API and worker process types are defined through `Procfile`.
-
-### Monitoring
-- Use Heroku logs for API/worker diagnosis.
-- Monitor AI job state transitions (`PENDING -> PROCESSING -> DONE/FAILED`).
+Detailed runtime, environment, testing, deployment, and troubleshooting guidance is available at:
+- [docs/operations.md](docs/operations.md)
 
 ---
 

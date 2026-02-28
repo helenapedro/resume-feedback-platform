@@ -13,3 +13,8 @@ This folder contains detailed technical documentation that complements the root 
   - Functional requirements and use cases
   - Non-functional requirements
   - Business rules and key flows
+- [Operations](operations.md)
+  - Local development setup
+  - Environment variables
+  - Testing and deployment
+  - Monitoring and troubleshooting
