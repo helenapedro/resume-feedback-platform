@@ -13,4 +13,6 @@ public interface ResumeVersionRepository extends JpaRepository<ResumeVersion, UU
     Optional<ResumeVersion> findTopByResume_IdOrderByVersionNumberDesc(UUID resumeId);
 
     Optional<ResumeVersion> findByIdAndResume_Id(UUID id, UUID resumeId);
+
+    void deleteByResume_Id(UUID resumeId);
 }

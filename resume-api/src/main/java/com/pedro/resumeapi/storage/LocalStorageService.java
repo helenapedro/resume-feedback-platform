@@ -49,4 +49,12 @@ public class LocalStorageService {
             throw new IllegalArgumentException("Invalid storageKey: " + storageKey, e);
         }
     }
+
+    public void deleteByStorageKey(String storageKey) throws IOException {
+        if (!StringUtils.hasText(storageKey)) {
+            return;
+        }
+        Path path = Paths.get(storageKey).normalize().toAbsolutePath();
+        Files.deleteIfExists(path);
+    }
 }

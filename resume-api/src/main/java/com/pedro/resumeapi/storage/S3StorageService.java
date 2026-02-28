@@ -7,6 +7,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
@@ -57,5 +58,18 @@ public class S3StorageService {
                 .replace("\n", "")
                 .replace("\\", "_")
                 .replace("/", "_");
+    }
+
+    public void deleteObject(String bucket, String objectKey, String versionId) {
+        if (!StringUtils.hasText(bucket) || !StringUtils.hasText(objectKey)) {
+            return;
+        }
+        DeleteObjectRequest.Builder request = DeleteObjectRequest.builder()
+                .bucket(bucket)
+                .key(objectKey);
+        if (StringUtils.hasText(versionId)) {
+            request.versionId(versionId);
+        }
+        s3Client.deleteObject(request.build());
     }
 }

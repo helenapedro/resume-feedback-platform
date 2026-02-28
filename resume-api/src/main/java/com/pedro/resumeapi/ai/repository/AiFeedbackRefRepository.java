@@ -8,4 +8,8 @@ import java.util.UUID;
 
 public interface AiFeedbackRefRepository extends JpaRepository<AiFeedbackRef, UUID> {
     List<AiFeedbackRef> findByResumeVersion_IdOrderByFeedbackVersionDesc(UUID versionId);
+
+    List<AiFeedbackRef> findByResumeVersion_Resume_Id(UUID resumeId);
+
+    void deleteByResumeVersion_Resume_Id(UUID resumeId);
 }

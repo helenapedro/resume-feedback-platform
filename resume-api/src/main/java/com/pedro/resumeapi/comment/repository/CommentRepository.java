@@ -12,4 +12,6 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
     List<Comment> findByResumeVersion_IdOrderByCreatedAtAsc(UUID resumeVersionId);
 
     Optional<Comment> findByIdAndResumeVersion_Id(UUID id, UUID resumeVersionId);
+
+    void deleteByResumeVersion_Resume_Id(UUID resumeId);
 }

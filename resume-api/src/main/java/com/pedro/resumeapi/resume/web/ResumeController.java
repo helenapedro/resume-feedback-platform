@@ -51,6 +51,12 @@ public class ResumeController {
         return out;
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        resumeService.deleteResume(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResumeSummaryDTO create(@RequestParam(required = false) String title,
                                    @RequestPart("file") MultipartFile file) throws IOException {
