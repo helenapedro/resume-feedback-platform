@@ -41,6 +41,7 @@ This repository is a multi-module Spring Boot monorepo with:
 
 - [Documentation Index](docs/README.md)
 - [Architecture](docs/architecture.md)
+- [Requirements](docs/requirements.md)
 
 ---
 
@@ -76,60 +77,10 @@ It separates user-facing API latency from AI processing latency by moving feedba
 
 ---
 
-## Core Functional Capabilities
+## Requirements
 
-### Main Capabilities
-- `Auth`: register and login with JWT
-- `Resume`: create, version, download, and list resumes
-- `Share`: issue and revoke secure share links
-- `Comments`: owner and token-based public comments
-- `AI`: create jobs, poll status, regenerate, and fetch feedback
-
-### Main Happy Path
-1. User authenticates and uploads resume.
-2. API stores metadata and file, creates `PENDING` AI job, and publishes Kafka event.
-3. Worker consumes event, processes feedback with Gemini, stores result, updates job status.
-4. API returns latest job status and feedback when available.
-
-### Important Alternative/Error Flows
-- Duplicate/idempotent AI job creation returns existing job.
-- Worker retries failed jobs with backoff (up to configured max attempts).
-- If AI provider is unavailable, job moves to `FAILED` and records error details.
-
----
-
-## Non-Functional Requirements
-
-### Performance
-- API endpoints remain responsive by offloading AI processing to worker/Kafka.
-- Upload/request path should not depend on LLM response time.
-
-### Scalability
-- API and worker are stateless at service level and can scale horizontally.
-- Kafka partitions allow parallel AI job consumption.
-
-### Availability and Reliability
-- Decoupled API/worker architecture improves resilience.
-- Retry scheduler for failed jobs with configurable backoff.
-
-### Data Consistency
-- Relational data in MySQL (transactional consistency for core entities).
-- Event-driven eventual consistency between job creation and feedback availability.
-
-### Security
-- JWT authentication for protected API routes.
-- Tokenized public share links with controlled permissions.
-- Security and Kafka TLS settings via environment variables.
-
-### Observability
-- Structured logs from API/worker.
-- Actuator health endpoints.
-- Error details stored at AI job level (`errorCode`, `errorDetail`).
-
-### Maintainability and Extensibility
-- Multi-module separation by responsibility.
-- Shared contracts in `common`.
-- Clear boundaries between synchronous API logic and asynchronous processing.
+Detailed functional and non-functional requirements are available at:
+- [docs/requirements.md](docs/requirements.md)
 
 ---
 
