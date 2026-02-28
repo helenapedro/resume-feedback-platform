@@ -37,6 +37,11 @@ This repository is a multi-module Spring Boot monorepo with:
 - Upload resume: `POST /api/resumes` (multipart: `file`, `title`)
 - Check latest AI job: `GET /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/latest`
 
+## Documentation
+
+- [Documentation Index](docs/README.md)
+- [Architecture](docs/architecture.md)
+
 ---
 
 ## Business Context and Scope
@@ -130,45 +135,8 @@ It separates user-facing API latency from AI processing latency by moving feedba
 
 ## Architecture
 
-### Architectural Style
-- Layered modular monolith at repository level
-- Event-driven asynchronous processing for AI pipeline
-
-### High-Level Components
-- `resume-api`
-  - Auth, resume, sharing, comments, AI job orchestration
-  - Publishes `AiJobRequestedMessage` to Kafka
-- `resume-worker`
-  - Consumes AI jobs, calls Gemini, stores feedback, updates job status
-- `common`
-  - Shared message contracts and models
-- Datastores
-  - MySQL: users, resumes, versions, jobs, audit, refs
-  - MongoDB: AI feedback documents
-  - Redis: rate-limit support
-  - Kafka: AI jobs topic
-
-### Data Flow
-```mermaid
-flowchart LR
-  U[User / Client] --> API[resume-api]
-  API --> MYSQL[(MySQL)]
-  API --> KAFKA[(Kafka topic: resume-ai-jobs)]
-  KAFKA --> WORKER[resume-worker]
-  WORKER --> GEMINI[Gemini API]
-  WORKER --> MONGO[(MongoDB)]
-  WORKER --> MYSQL
-  API --> MONGO
-  API --> U
-```
-
-### Integration Strategy
-- REST for user-facing operations
-- Kafka messaging for asynchronous AI jobs
-
-### Persistence Strategy
-- MySQL for transactional entities and job state
-- MongoDB for AI feedback payloads
+Detailed architecture documentation is available at:
+- [docs/architecture.md](docs/architecture.md)
 
 ---
 
@@ -250,4 +218,3 @@ flowchart LR
 - [API Module](resume-api/README.md)
 - [Worker Module](resume-worker/README.md)
 - [Common Module](common/README.md)
-
