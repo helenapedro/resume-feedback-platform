@@ -25,7 +25,9 @@ public class CorsConfig {
 
         config.setExposedHeaders(List.of("*"));
 
-        config.setAllowCredentials(true);
+        // Temporary open CORS policy for frontend integration phase.
+        // We are using Authorization headers (Bearer), not cookie credentials.
+        config.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();

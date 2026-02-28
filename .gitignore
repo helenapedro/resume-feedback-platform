@@ -32,3 +32,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Local-only handoff docs (do not commit)
+docs/frontend-handoff.local.md
