@@ -1,5 +1,10 @@
 # Architecture
 
+Related docs:
+- [Requirements](requirements.md)
+- [Operations](operations.md)
+- [Root README](../README.md)
+
 ## Architectural Style
 
 - Layered modular monolith at repository level
@@ -45,3 +50,7 @@ flowchart LR
 - MySQL for transactional entities and job state
 - MongoDB for AI feedback payloads
 
+## Notes
+
+- The API publishes AI events after transaction commit to avoid race conditions with worker consumption.
+- AI job lifecycle is tracked in MySQL while feedback payloads are stored in MongoDB.

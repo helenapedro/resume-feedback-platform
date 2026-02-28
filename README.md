@@ -12,10 +12,7 @@ This repository is a multi-module Spring Boot monorepo with:
 ### 1) Prerequisites
 - Java 17
 - Maven Wrapper (`mvnw` / `mvnw.cmd`)
-- MySQL
-- MongoDB
-- Kafka
-- Redis (for rate-limit features)
+- Docker Desktop (recommended for local dependencies)
 
 ### 2) Build all modules
 ```bash
@@ -36,6 +33,8 @@ This repository is a multi-module Spring Boot monorepo with:
 - Login: `POST /api/auth/login`
 - Upload resume: `POST /api/resumes` (multipart: `file`, `title`)
 - Check latest AI job: `GET /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/latest`
+
+For full local infra/bootstrap details, see [docs/operations.md](docs/operations.md).
 
 ## Documentation
 

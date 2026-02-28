@@ -1,5 +1,10 @@
 # Requirements
 
+Related docs:
+- [Architecture](architecture.md)
+- [Operations](operations.md)
+- [Root README](../README.md)
+
 ## Functional Requirements
 
 ### Core Capabilities
@@ -42,6 +47,13 @@
 - Kafka/serialization/provider issues move job to `FAILED` with error details.
 - Worker retry scheduler reprocesses due failed jobs up to max attempts.
 - Unauthorized access to owner endpoints returns forbidden errors.
+
+### Out of Scope (Current)
+
+- Multi-tenant organization model
+- Real-time push notifications for AI job completion
+- Prompt management UI and governance workflows
+- Full SLO dashboard-as-code setup
 
 ## Non-Functional Requirements
 
@@ -88,4 +100,3 @@
 
 - AI provider integration isolated in worker-side client/factory layers.
 - Event-driven flow can be extended with additional consumers/workflows.
-

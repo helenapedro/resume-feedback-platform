@@ -1,20 +1,32 @@
 # Documentation Index
 
-This folder contains detailed technical documentation that complements the root README.
+Detailed project documentation lives here.
 
-## Available Docs
+## Recommended Reading Order
 
-- [Architecture](architecture.md)
-  - High-level system design
-  - Component responsibilities
-  - Data flow and integration strategy
-  - Persistence strategy
-- [Requirements](requirements.md)
-  - Functional requirements and use cases
-  - Non-functional requirements
-  - Business rules and key flows
-- [Operations](operations.md)
-  - Local development setup
-  - Environment variables
-  - Testing and deployment
-  - Monitoring and troubleshooting
+1. [Requirements](requirements.md)
+2. [Architecture](architecture.md)
+3. [Operations](operations.md)
+
+## Documents
+
+### [Requirements](requirements.md)
+- Functional capabilities and use cases
+- Non-functional expectations
+- Business rules and main flows
+
+### [Architecture](architecture.md)
+- Architectural style and component boundaries
+- Data flow and integration strategy
+- Persistence strategy
+
+### [Operations](operations.md)
+- Local setup and runtime configuration
+- Testing and deployment workflow
+- Monitoring and troubleshooting checklist
+
+## Module Docs
+
+- [API Module](../resume-api/README.md)
+- [Worker Module](../resume-worker/README.md)
+- [Common Module](../common/README.md)

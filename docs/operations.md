@@ -1,15 +1,29 @@
 # Operations
 
+Related docs:
+- [Requirements](requirements.md)
+- [Architecture](architecture.md)
+- [Root README](../README.md)
+
 ## Local Development
 
 ### Prerequisites
 
 - Java 17
 - Maven Wrapper (`mvnw` / `mvnw.cmd`)
-- MySQL
-- MongoDB
-- Kafka
-- Redis
+- Docker Desktop (recommended for local infra)
+
+### Local Infrastructure with Docker Desktop
+
+From repo root:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker/docker-compose.kafka.yml up -d
+```
+
+This brings up local dependencies used during development (MySQL/Redis and Kafka stack).
+If you use local Mongo as well, run it in Docker or provide `SPRING_DATA_MONGODB_URI`.
 
 ### Build
 
@@ -75,6 +89,14 @@ Run module tests:
 
 - Primary flow: GitHub `main` -> Heroku automatic deploy
 - Process types are defined in `Procfile` (`web` and `worker`)
+- Prefer committing directly on `main` for release consistency (current team workflow)
+
+### Current Production Topology
+
+- App runtime: Heroku (`web` + `worker`)
+- Relational database: Hostinger MySQL
+- Document database: MongoDB (managed cluster)
+- Messaging/cache: Heroku Kafka and Heroku Redis
 
 Recommended release validation:
 
@@ -102,4 +124,3 @@ Recommended release validation:
 - Serialization issues (for example `Instant`) in Kafka payloads
 - Event published before transaction commit (resolved by after-commit publication)
 - Broker SSL/auth misconfiguration
-
