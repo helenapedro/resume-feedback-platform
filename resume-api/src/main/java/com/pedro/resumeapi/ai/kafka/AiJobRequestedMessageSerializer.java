@@ -8,7 +8,7 @@ import org.apache.kafka.common.serialization.Serializer;
 
 public class AiJobRequestedMessageSerializer implements Serializer<AiJobRequestedMessage> {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     @Override
     public byte[] serialize(String topic, AiJobRequestedMessage data) {
