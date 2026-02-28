@@ -8,7 +8,13 @@ spring:
     consumer:
       group-id: ${KAFKA_PREFIX:}resume-worker
       auto-offset-reset: earliest
-
+    properties:
+      security.protocol: ${SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL:SSL}
+      ssl.keystore.type: ${SPRING_KAFKA_PROPERTIES_SSL_KEYSTORE_TYPE:PEM}
+      ssl.truststore.type: ${SPRING_KAFKA_PROPERTIES_SSL_TRUSTSTORE_TYPE:PEM}
+      ssl.keystore.key: ${SPRING_KAFKA_PROPERTIES_SSL_KEYSTORE_KEY:${KAFKA_CLIENT_CERT_KEY:}}
+      ssl.keystore.certificate.chain: ${SPRING_KAFKA_PROPERTIES_SSL_KEYSTORE_CERTIFICATE_CHAIN:${KAFKA_CLIENT_CERT:}}
+      ssl.truststore.certificates: ${SPRING_KAFKA_PROPERTIES_SSL_TRUSTSTORE_CERTIFICATES:${KAFKA_TRUSTED_CERT:}}
 app:
   ai-jobs:
     topic: ${KAFKA_PREFIX:}resume-ai-jobs
