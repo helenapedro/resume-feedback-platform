@@ -98,4 +98,31 @@ public class ResumeController {
                         "attachment; filename=\"" + safeName + "\"")
                 .body(payload.resource());
     }
+
+    @GetMapping("/{resumeId}/versions/{versionId}/preview")
+    public ResponseEntity<Resource> preview(
+            @PathVariable UUID resumeId,
+            @PathVariable UUID versionId
+    ) {
+        var payload = resumeStorageService.previewVersionOwner(resumeId, versionId);
+
+        if (payload.isPresigned()) {
+            return ResponseEntity.status(302)
+                    .header(org.springframework.http.HttpHeaders.LOCATION, payload.presignedUrl())
+                    .build();
+        }
+
+        String safeName = payload.filename()
+                .replace("\"", "")
+                .replace("\r", "")
+                .replace("\n", "")
+                .replace("\\", "_")
+                .replace("/", "_");
+
+        return ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.parseMediaType(payload.contentType()))
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" + safeName + "\"")
+                .body(payload.resource());
+    }
 }

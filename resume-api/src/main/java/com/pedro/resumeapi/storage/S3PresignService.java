@@ -21,6 +21,14 @@ public class S3PresignService {
     private final S3StorageProperties properties;
 
     public Optional<URL> presignDownload(ResumeVersion version, String safeFilename, String contentType) {
+        return presign(version, safeFilename, contentType, true);
+    }
+
+    public Optional<URL> presignPreview(ResumeVersion version, String safeFilename, String contentType) {
+        return presign(version, safeFilename, contentType, false);
+    }
+
+    private Optional<URL> presign(ResumeVersion version, String safeFilename, String contentType, boolean attachment) {
         if (!StringUtils.hasText(version.getS3Bucket()) || !StringUtils.hasText(version.getS3ObjectKey())) {
             return Optional.empty();
         }
@@ -30,10 +38,11 @@ public class S3PresignService {
             return Optional.empty();
         }
 
+        String dispositionType = attachment ? "attachment" : "inline";
         GetObjectRequest.Builder getObjectRequest = GetObjectRequest.builder()
                 .bucket(version.getS3Bucket())
                 .key(version.getS3ObjectKey())
-                .responseContentDisposition("attachment; filename=\"" + safeFilename + "\"")
+                .responseContentDisposition(dispositionType + "; filename=\"" + safeFilename + "\"")
                 .responseContentType(contentType);
 
         if (StringUtils.hasText(version.getS3VersionId())) {

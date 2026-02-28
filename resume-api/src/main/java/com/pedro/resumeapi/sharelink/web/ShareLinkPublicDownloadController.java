@@ -51,4 +51,37 @@ public class ShareLinkPublicDownloadController {
                 .header(HttpHeaders.CONTENT_TYPE, payload.contentType())
                 .body(payload.resource());
     }
+
+    @GetMapping("/{token}/preview")
+    public ResponseEntity<Resource> preview(@PathVariable String token, HttpServletRequest request) {
+
+        String ip = request.getRemoteAddr();
+        String ua = request.getHeader("User-Agent");
+
+        var link = shareLinkService.resolveValidLinkOrThrow(token, ip, ua);
+
+        Resume resume = link.getResume();
+        ResumeVersion current = resume.getCurrentVersion();
+
+        if (current == null) {
+            shareLinkService.auditDownload(link, ip, ua, false, "no_current_version", null);
+            throw new IllegalArgumentException("NO_CURRENT_VERSION");
+        }
+
+        var payload = resumeStorageService.previewVersionPublic(resume.getId(), current.getId());
+
+        shareLinkService.auditDownload(link, ip, ua, true, null, current);
+
+        if (payload.isPresigned()) {
+            return ResponseEntity.status(302)
+                    .header(HttpHeaders.LOCATION, payload.presignedUrl())
+                    .build();
+        }
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" + payload.filename().replace("\"", "") + "\"")
+                .header(HttpHeaders.CONTENT_TYPE, payload.contentType())
+                .body(payload.resource());
+    }
 }

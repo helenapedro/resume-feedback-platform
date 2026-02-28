@@ -36,15 +36,31 @@ public class ResumeStorageService {
         if (!resume.getOwner().getId().equals(currentUser.id()))
             throw new ForbiddenException("You do not own this resume");
 
-        return getDownloadPayload(resumeId, versionId);
+        return getPayload(resumeId, versionId, true);
     }
 
     @Transactional(readOnly = true)
     public DownloadPayload downloadVersionPublic(UUID resumeId, UUID versionId) {
-        return getDownloadPayload(resumeId, versionId);
+        return getPayload(resumeId, versionId, true);
     }
 
-    private DownloadPayload getDownloadPayload(UUID resumeId, UUID versionId) {
+    @Transactional(readOnly = true)
+    public DownloadPayload previewVersionOwner(UUID resumeId, UUID versionId) {
+        var resume = resumeRepository.findById(resumeId)
+                .orElseThrow(VersionNotFoundException::new);
+
+        if (!resume.getOwner().getId().equals(currentUser.id()))
+            throw new ForbiddenException("You do not own this resume");
+
+        return getPayload(resumeId, versionId, false);
+    }
+
+    @Transactional(readOnly = true)
+    public DownloadPayload previewVersionPublic(UUID resumeId, UUID versionId) {
+        return getPayload(resumeId, versionId, false);
+    }
+
+    private DownloadPayload getPayload(UUID resumeId, UUID versionId, boolean attachment) {
         ResumeVersion version = resumeVersionRepository.findByIdAndResume_Id(versionId, resumeId)
                 .orElseThrow(VersionNotFoundException::new);
 
@@ -61,7 +77,9 @@ public class ResumeStorageService {
                 : version.getContentType();
 
         if (storageProperties.getBackend() == StorageBackend.S3) {
-            var presigned = presignService.presignDownload(version, safeName, contentType)
+            var presigned = (attachment
+                    ? presignService.presignDownload(version, safeName, contentType)
+                    : presignService.presignPreview(version, safeName, contentType))
                     .map(Object::toString)
                     .orElse(null);
 
