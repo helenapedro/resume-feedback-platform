@@ -19,19 +19,19 @@ import java.nio.ByteBuffer;
 @ConditionalOnProperty(prefix = "app.security.rate-limit.share", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ShareRateLimitConfig {
 
-    @Value("${spring.data.redis.host:localhost}")
+    @Value("${REDIS_URL}")
     private String host;
 
-    @Value("${spring.data.redis.port:6379}")
+    @Value("${SPRING_DATA_REDIS_PORT}")
     private int port;
 
-    @Value("${spring.data.redis.password:}")
+    @Value("${SPRING_DATA_REDIS_PASSWORD}")
     private String password;
 
     @Value("${spring.data.redis.database:0}")
     private int database;
 
-    @Value("${spring.data.redis.ssl.enabled:false}")
+    @Value("${spring.data.redis.ssl.enabled:true}")
     private boolean ssl;
 
     @Bean(destroyMethod = "shutdown")

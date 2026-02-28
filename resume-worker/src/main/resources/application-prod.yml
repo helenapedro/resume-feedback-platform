@@ -7,6 +7,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
 
   mongodb:
     uri: ${SPRING_DATA_MONGODB_URI}
