@@ -1,49 +1,70 @@
 # resume-worker
 
-Background worker service for asynchronous processing (AI feedback generation, job
-tracking, and queue consumption). This module consumes AI job events from Kafka,
-persists AI feedback in MongoDB, and updates job status in MySQL.
+Asynchronous worker module for AI job processing.
 
-## Tech Stack
-- Java 17 + Spring Boot
-- Spring Data JPA
+For platform context and architecture, see the [root README](../README.md).
+
+## Purpose
+
+`resume-worker` consumes AI job events from Kafka, generates resume feedback (Gemini), stores outputs, and updates job state.
+
+## Responsibilities
+
+- Consume `AiJobRequestedMessage` events from Kafka
+- Transition job lifecycle (`PENDING -> PROCESSING -> DONE/FAILED`)
+- Generate AI feedback from prompt payloads
+- Persist AI feedback documents in MongoDB
+- Persist feedback references and job state in MySQL
+- Retry failed jobs using scheduled backoff policy
+
+## Key Dependencies
+
+- Spring Boot
+- Spring Kafka
+- Spring Data JPA (MySQL)
 - Spring Data MongoDB
 - Spring Boot Actuator
 
-## Kafka
-The worker listens to the `resume-ai-jobs` topic by default (configurable via
-`app.ai-jobs.topic` in `application.yml`).
+## Local Run
 
-## LLM (Google Gemini)
-The worker can generate AI feedback using Google Gemini. Configuration lives under:
-
-```yaml
-app:
-  ai-feedback:
-    gemini:
-      enabled: false
-      api-key: ${GEMINI_API_KEY:}
-```
-
-See the step-by-step guide in [docs/llm-gemini.md](../../docs/llm-gemini.md).
-
-## Local Development
-Start infrastructure (from `feedback/docker`):
+From repo root:
 
 ```bash
-docker compose up -d
+./mvnw -pl resume-worker spring-boot:run
 ```
 
-Start Kafka using the local guide in `docs/kafka-local.md`, and MongoDB using
-`docs/mongodb-local.md`, then run the worker locally (from
-`feedback/resume-worker`):
+## Configuration (Important)
 
-```bash
-./mvnw spring-boot:run
-```
+Core variables:
 
-If you need to run only module tests from the `feedback` root:
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+- `SPRING_DATA_MONGODB_URI`
+- `SPRING_KAFKA_BOOTSTRAP_SERVERS`
+- `KAFKA_PREFIX` (optional)
+
+Gemini:
+
+- `GEMINI_API_KEY` (required for real AI responses)
+- `app.ai-feedback.gemini.enabled` (default true in current config)
+- `app.ai-feedback.gemini.model`
+- `app.ai-feedback.gemini.temperature`
+- `app.ai-feedback.gemini.max-output-tokens`
+
+## Runtime Behavior
+
+- Topic: `${KAFKA_PREFIX}resume-ai-jobs` (default)
+- Consumer group: `${KAFKA_PREFIX}resume-worker` (default)
+- Failed jobs are retried on schedule until max attempts are reached.
+
+## Tests
 
 ```bash
 ./mvnw -pl resume-worker test
 ```
+
+## Notes
+
+- If `GEMINI_API_KEY` is missing or Gemini fails, fallback feedback content may be generated depending on current implementation.
+- Monitor logs for consumer errors and job status transitions.

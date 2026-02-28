@@ -1,21 +1,44 @@
 # common
 
-Shared foundation module for the Resume Feedback Platform. This module is intended to
-hold cross-cutting abstractions (shared DTOs, error models, utilities, etc.) that are
-reused by `resume-api` and `resume-worker`, including Kafka message payloads for AI jobs.
+Shared contracts and cross-module models.
 
-## Tech Stack
-- Java 17 + Spring Boot
+For platform context and architecture, see the [root README](../README.md).
 
-## Local Development
-Run tests from this module:
+## Purpose
+
+`common` centralizes reusable types consumed by both `resume-api` and `resume-worker`.
+
+## Responsibilities
+
+- Shared Kafka payload contracts (for AI jobs)
+- Shared DTO-like records and utility models
+- Reduce duplication and keep integration contracts consistent
+
+## Key Dependencies
+
+- Java 17
+- Spring Boot base dependencies
+
+## Usage
+
+Imported as a module dependency by:
+- `resume-api`
+- `resume-worker`
+
+## Tests
+
+From repo root:
+
+```bash
+./mvnw -pl common test
+```
+
+Or inside module:
 
 ```bash
 ./mvnw test
 ```
 
-Or from the `feedback` root:
+## Notes
 
-```bash
-./mvnw -pl common test
-```
+- Backward compatibility of shared contracts should be treated carefully, especially Kafka message schemas.

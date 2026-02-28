@@ -1,107 +1,102 @@
 # resume-api
 
-REST API for resume upload/versioning, secure sharing, and audit logging.
+Synchronous REST API module for authentication, resumes, share links, comments, and AI job orchestration.
 
-## Overview
-- Handles authentication, resume metadata, versioning, and share links.
-- Stores resume metadata in MySQL and files in local storage (dev).
-- Provides secure, token-based public access for share links.
-- Publishes AI job events to Kafka and exposes AI feedback read endpoints backed by MongoDB.
+For platform context and architecture, see the [root README](../README.md).
 
-## Tech Stack
-- Java 17 + Spring Boot
+## Purpose
+
+`resume-api` is the entry point for client applications. It handles user-facing operations and publishes AI processing requests to Kafka.
+
+## Responsibilities
+
+- User registration and login (JWT)
+- Resume CRUD and versioning
+- Secure share-link lifecycle (create/list/revoke)
+- Owner/public comments
+- AI job creation/status/regeneration endpoints
+- AI feedback read endpoints
+- Audit and access logging
+
+## Key Dependencies
+
+- Spring Boot Web MVC
 - Spring Security (JWT)
-- Flyway (schema migrations)
-- MySQL (metadata, security, audit)
-- MongoDB (AI feedback documents)
-- Kafka (AI job events)
-- Local filesystem storage (dev)
-- S3 storage (production profile)
+- Spring Data JPA (MySQL)
+- Spring Data MongoDB
+- Spring Data Redis
+- Spring Kafka
+- Flyway
+- AWS SDK S3
 
-## Local Development
-1) Start MySQL (from the `feedback` root):
+## Local Run
 
-```bash
-cd docker
-docker compose up -d
-```
-
-2) Start Kafka and MongoDB (see local guides):
-- Kafka: `docs/kafka-local.md`
-- MongoDB: `docs/mongodb-local.md`
-
-3) Run the API (from `feedback/resume-api`):
+From repo root:
 
 ```bash
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+./mvnw -pl resume-api spring-boot:run
 ```
 
-By default, local uploads are stored at `./data/resume-storage` (configurable via
-`app.storage.local-dir` in `application.yml` or `application-dev.yml`).
+Common profile usage:
 
-## Authentication
-### Register
+```bash
+./mvnw -pl resume-api spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+## Configuration (Important)
+
+Core dependencies are provided via environment variables:
+
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+- `SPRING_DATA_MONGODB_URI`
+- `SPRING_KAFKA_BOOTSTRAP_SERVERS`
+- `KAFKA_PREFIX` (optional topic/group prefix)
+
+Storage:
+
+- `app.storage.backend` (`LOCAL` or `S3`)
+- local path: `app.storage.local-dir`
+
+## API Surface (High-Level)
+
+Auth:
 - `POST /api/auth/register`
-
-```json
-{"email":"pedro@local.dev","password":"123456"}
-```
-
-### Login
 - `POST /api/auth/login`
 
-```json
-{"email":"pedro@local.dev","password":"123456"}
-```
-
-## Resume Endpoints (JWT required)
+Resumes:
 - `GET /api/resumes`
 - `POST /api/resumes` (multipart)
 - `POST /api/resumes/{id}/versions` (multipart)
 - `GET /api/resumes/{id}`
 - `GET /api/resumes/{resumeId}/versions/{versionId}/download`
 
-## Share Links
-### Owner (JWT)
+Share Links:
 - `POST /api/resumes/{resumeId}/share-links`
 - `GET /api/resumes/{resumeId}/share-links`
 - `POST /api/resumes/{resumeId}/share-links/{linkId}/revoke`
+- `GET /api/share/{token}`
+- `GET /api/share/{token}/download`
 
-### Public (token)
-- `GET /api/share/{token}` (metadata)
-- `GET /api/share/{token}/download` (download current version)
-
-Example:
-```bash
-curl -L -o resume.pdf http://localhost:8080/api/share/<TOKEN>/download
-```
-
-## Comments
-### Owner (JWT)
+Comments:
 - `GET /api/resumes/{resumeId}/versions/{versionId}/comments`
 - `POST /api/resumes/{resumeId}/versions/{versionId}/comments`
-
-### Public (token with COMMENT permission)
 - `GET /api/share/{token}/comments`
 - `POST /api/share/{token}/comments`
 
-## AI Feedback (JWT)
-- `GET /api/resumes/{resumeId}/versions/{versionId}/ai-feedback` (latest feedback)
-
-## AI Jobs (JWT)
+AI:
+- `GET /api/resumes/{resumeId}/versions/{versionId}/ai-feedback`
 - `GET /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/latest`
 - `POST /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/regenerate`
 
-## Database Schema (Tables)
-- `access_audit`
-- `ai_feedback_refs`
-- `ai_jobs`
-- `comments`
-- `resume_versions`
-- `resumes`
-- `share_links`
-- `users`
+## Tests
+
+```bash
+./mvnw -pl resume-api test
+```
 
 ## Notes
-- Share tokens are stored only as SHA-256 hashes.
-- Share links return the plaintext token only once at creation time.
+
+- Share tokens are persisted as hashes (plaintext returned only at creation time).
+- AI events are published after transaction commit to avoid race conditions with worker consumption.
