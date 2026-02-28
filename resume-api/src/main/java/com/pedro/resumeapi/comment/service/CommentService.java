@@ -82,6 +82,19 @@ public class CommentService {
     }
 
     @Transactional
+    public void deleteOwner(UUID resumeId, UUID versionId, UUID commentId) {
+        resumeService.getMyResume(resumeId);
+
+        resumeVersionRepo.findByIdAndResume_Id(versionId, resumeId)
+                .orElseThrow(() -> new IllegalArgumentException("VERSION_NOT_FOUND"));
+
+        Comment comment = commentRepo.findByIdAndResumeVersion_Id(commentId, versionId)
+                .orElseThrow(() -> new IllegalArgumentException("COMMENT_NOT_FOUND"));
+
+        deleteCommentThread(comment);
+    }
+
+    @Transactional
     public List<Comment> listPublic(String token, String ip, String ua) {
         ShareLink link = shareLinkService.resolveValidLinkOrThrow(token, ip, ua);
 
@@ -200,5 +213,13 @@ public class CommentService {
         );
 
         return saved;
+    }
+
+    private void deleteCommentThread(Comment root) {
+        List<Comment> children = commentRepo.findByParentComment_Id(root.getId());
+        for (Comment child : children) {
+            deleteCommentThread(child);
+        }
+        commentRepo.delete(root);
     }
 }

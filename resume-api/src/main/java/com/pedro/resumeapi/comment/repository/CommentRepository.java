@@ -13,5 +13,7 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
 
     Optional<Comment> findByIdAndResumeVersion_Id(UUID id, UUID resumeVersionId);
 
+    List<Comment> findByParentComment_Id(UUID parentCommentId);
+
     void deleteByResumeVersion_Resume_Id(UUID resumeId);
 }

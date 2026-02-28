@@ -7,6 +7,7 @@ import com.pedro.resumeapi.comment.service.CommentService;
 import com.pedro.resumeapi.security.CurrentUser;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,5 +40,15 @@ public class CommentOwnerController {
     ) {
         var saved = commentService.createOwner(resumeId, versionId, currentUser.id(), req);
         return CommentMapper.toDTO(saved);
+    }
+
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<Void> delete(
+            @PathVariable UUID resumeId,
+            @PathVariable UUID versionId,
+            @PathVariable UUID commentId
+    ) {
+        commentService.deleteOwner(resumeId, versionId, commentId);
+        return ResponseEntity.noContent().build();
     }
 }
