@@ -62,13 +62,36 @@ public class AiJobKafkaConfig {
         props.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, "PEM");
         props.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "PEM");
 
-        putIfPresent(props, SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG, "KAFKA_TRUSTED_CERT");
-        putIfPresent(props, SslConfigs.SSL_KEYSTORE_CERTIFICATE_CHAIN_CONFIG, "KAFKA_CLIENT_CERT");
-        putIfPresent(props, SslConfigs.SSL_KEYSTORE_KEY_CONFIG, "KAFKA_CLIENT_CERT_KEY");
+        putIfPresentWithFallback(
+                props,
+                SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG,
+                "SPRING_KAFKA_PROPERTIES_SSL_TRUSTSTORE_CERTIFICATES",
+                "KAFKA_TRUSTED_CERT"
+        );
+        putIfPresentWithFallback(
+                props,
+                SslConfigs.SSL_KEYSTORE_CERTIFICATE_CHAIN_CONFIG,
+                "SPRING_KAFKA_PROPERTIES_SSL_KEYSTORE_CERTIFICATE_CHAIN",
+                "KAFKA_CLIENT_CERT"
+        );
+        putIfPresentWithFallback(
+                props,
+                SslConfigs.SSL_KEYSTORE_KEY_CONFIG,
+                "SPRING_KAFKA_PROPERTIES_SSL_KEYSTORE_KEY",
+                "KAFKA_CLIENT_CERT_KEY"
+        );
     }
 
-    private void putIfPresent(Map<String, Object> props, String propName, String envName) {
-        String value = System.getenv(envName);
+    private void putIfPresentWithFallback(
+            Map<String, Object> props,
+            String propName,
+            String preferredEnvName,
+            String fallbackEnvName
+    ) {
+        String value = System.getenv(preferredEnvName);
+        if (value == null || value.isBlank()) {
+            value = System.getenv(fallbackEnvName);
+        }
         if (value != null && !value.isBlank()) {
             props.put(propName, value);
         }
