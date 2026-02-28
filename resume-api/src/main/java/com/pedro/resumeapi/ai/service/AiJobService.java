@@ -17,6 +17,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.UUID;
 
@@ -44,7 +46,7 @@ public class AiJobService {
 
         try {
             AiJob saved = repo.save(job);
-            eventPublisher.publish(AiJobMapper.toMessage(saved));
+            publishAfterCommit(saved);
             return saved;
         } catch (DataIntegrityViolationException ex) {
             return repo.findByIdempotencyKey(idempotencyKey)
@@ -74,5 +76,18 @@ public class AiJobService {
         }
         return resumeVersionRepository.findByIdAndResume_Id(versionId, resumeId)
                 .orElseThrow(VersionNotFoundException::new);
+    }
+
+    private void publishAfterCommit(AiJob saved) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            eventPublisher.publish(AiJobMapper.toMessage(saved));
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                eventPublisher.publish(AiJobMapper.toMessage(saved));
+            }
+        });
     }
 }
