@@ -42,6 +42,18 @@ public class User {
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 
+    @Column(name = "full_name", length = 120)
+    private String fullName;
+
+    @Column(name = "phone", length = 40)
+    private String phone;
+
+    @Column(name = "bio", length = 1000)
+    private String bio;
+
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
     @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
     private List<Resume> resumes;
 
