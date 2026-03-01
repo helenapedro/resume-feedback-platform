@@ -5,6 +5,7 @@ import com.pedro.resumeapi.api.error.ForbiddenException;
 import com.pedro.resumeapi.api.error.VersionNotFoundException;
 import com.pedro.resumeapi.comment.domain.Comment;
 import com.pedro.resumeapi.comment.dto.CreateCommentRequest;
+import com.pedro.resumeapi.comment.dto.UpdateCommentRequest;
 import com.pedro.resumeapi.comment.repository.CommentRepository;
 import com.pedro.resumeapi.resume.domain.Resume;
 import com.pedro.resumeapi.resume.domain.ResumeVersion;
@@ -95,8 +96,9 @@ public class CommentService {
     }
 
     @Transactional
-    public List<Comment> listPublic(String token, String ip, String ua) {
+    public List<Comment> listPublic(String token, String ip, String ua, UUID requesterId) {
         ShareLink link = shareLinkService.resolveValidLinkOrThrow(token, ip, ua);
+        requireCommentPermission(link, ip, ua);
 
         ResumeVersion current = link.getResume().getCurrentVersion();
         if (current == null) {
@@ -116,8 +118,9 @@ public class CommentService {
     }
 
     @Transactional
-    public Comment createPublic(String token, String ip, String ua, CreateCommentRequest req) {
+    public Comment createPublic(String token, String ip, String ua, UUID requesterId, CreateCommentRequest req) {
         ShareLink link = shareLinkService.resolveValidLinkOrThrow(token, ip, ua);
+        requireCommentPermission(link, ip, ua);
 
         ResumeVersion current = link.getResume().getCurrentVersion();
         if (current == null) {
@@ -143,27 +146,13 @@ public class CommentService {
                 current
         );
 
-        if (link.getPermission() != ShareLink.Permission.COMMENT) {
-            shareLinkService.auditComment(
-                    link,
-                    AccessAudit.EventType.COMMENT_DENIED,
-                    ip,
-                    ua,
-                    false,
-                    "permission_denied",
-                    current
-            );
-            throw new ForbiddenException("Share link does not allow commenting");
-        }
-
-        String label = (req.guestLabel() == null || req.guestLabel().isBlank())
-                ? "Guest"
-                : req.guestLabel().trim();
+        User author = userRepo.findById(requesterId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
 
         Comment c = new Comment();
         c.setResumeVersion(current);
-        c.setAuthorUser(null);
-        c.setAuthorLabel(label);
+        c.setAuthorUser(author);
+        c.setAuthorLabel(author.getEmail());
         c.setBody(req.body());
         c.setAnchorRef(req.anchorRef());
 
@@ -215,11 +204,76 @@ public class CommentService {
         return saved;
     }
 
+    @Transactional
+    public Comment updatePublic(String token, UUID commentId, UUID requesterId, String ip, String ua, UpdateCommentRequest req) {
+        ShareLink link = shareLinkService.resolveValidLinkOrThrow(token, ip, ua);
+        requireCommentPermission(link, ip, ua);
+
+        ResumeVersion current = link.getResume().getCurrentVersion();
+        if (current == null) {
+            throw new IllegalArgumentException("NO_CURRENT_VERSION");
+        }
+
+        Comment comment = commentRepo.findByIdAndResumeVersion_Id(commentId, current.getId())
+                .orElseThrow(() -> new IllegalArgumentException("COMMENT_NOT_FOUND"));
+
+        if (!canManageComment(link, comment, requesterId)) {
+            throw new ForbiddenException("You cannot update this comment");
+        }
+
+        comment.setBody(req.body());
+        comment.setAnchorRef(req.anchorRef());
+        return commentRepo.save(comment);
+    }
+
+    @Transactional
+    public void deletePublic(String token, UUID commentId, UUID requesterId, String ip, String ua) {
+        ShareLink link = shareLinkService.resolveValidLinkOrThrow(token, ip, ua);
+        requireCommentPermission(link, ip, ua);
+
+        ResumeVersion current = link.getResume().getCurrentVersion();
+        if (current == null) {
+            throw new IllegalArgumentException("NO_CURRENT_VERSION");
+        }
+
+        Comment comment = commentRepo.findByIdAndResumeVersion_Id(commentId, current.getId())
+                .orElseThrow(() -> new IllegalArgumentException("COMMENT_NOT_FOUND"));
+
+        if (!canManageComment(link, comment, requesterId)) {
+            throw new ForbiddenException("You cannot delete this comment");
+        }
+
+        deleteCommentThread(comment);
+    }
+
     private void deleteCommentThread(Comment root) {
         List<Comment> children = commentRepo.findByParentComment_Id(root.getId());
         for (Comment child : children) {
             deleteCommentThread(child);
         }
         commentRepo.delete(root);
+    }
+
+    private void requireCommentPermission(ShareLink link, String ip, String ua) {
+        if (link.getPermission() != ShareLink.Permission.COMMENT) {
+            shareLinkService.auditComment(
+                    link,
+                    AccessAudit.EventType.COMMENT_DENIED,
+                    ip,
+                    ua,
+                    false,
+                    "permission_denied",
+                    link.getResume().getCurrentVersion()
+            );
+            throw new ForbiddenException("Share link does not allow comments");
+        }
+    }
+
+    private boolean canManageComment(ShareLink link, Comment comment, UUID requesterId) {
+        UUID ownerId = link.getResume().getOwner().getId();
+        if (ownerId.equals(requesterId)) {
+            return true;
+        }
+        return comment.getAuthorUser() != null && requesterId.equals(comment.getAuthorUser().getId());
     }
 }
