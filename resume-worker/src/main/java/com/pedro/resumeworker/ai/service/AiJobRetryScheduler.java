@@ -5,6 +5,7 @@ import com.pedro.resumeworker.ai.config.AiJobRetryProperties;
 import com.pedro.resumeworker.ai.domain.AiJob;
 import com.pedro.resumeworker.ai.domain.ResumeVersion;
 import com.pedro.resumeworker.ai.repository.AiJobRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,25 +24,36 @@ public class AiJobRetryScheduler {
     private final AiJobRetryProperties retryProperties;
 
     @Scheduled(fixedDelayString = "${app.ai-jobs.retry.poll-interval:PT30S}")
+    @Transactional
     public void retryFailedJobs() {
-        List<AiJob> dueJobs = aiJobRepository.findByStatusAndNextRetryAtBefore(
+        List<AiJob> pendingJobs = aiJobRepository.findTop50ByStatusOrderByCreatedAtAsc(
+                AiJob.Status.PENDING
+        );
+        for (AiJob job : pendingJobs) {
+            processJob(job);
+        }
+
+        List<AiJob> dueJobs = aiJobRepository.findTop50ByStatusAndNextRetryAtBeforeOrderByNextRetryAtAsc(
                 AiJob.Status.FAILED,
                 Instant.now()
         );
-
         for (AiJob job : dueJobs) {
             if (job.getAttemptCount() >= retryProperties.maxAttempts()) {
                 continue;
             }
-            ResumeVersion version = job.getResumeVersion();
-            AiJobRequestedMessage message = new AiJobRequestedMessage(
-                    job.getId(),
-                    version.getResumeId(),
-                    version.getId(),
-                    version.getCreatedBy(),
-                    job.getCreatedAt()
-            );
-            processor.process(message);
+            processJob(job);
         }
+    }
+
+    private void processJob(AiJob job) {
+        ResumeVersion version = job.getResumeVersion();
+        AiJobRequestedMessage message = new AiJobRequestedMessage(
+                job.getId(),
+                version.getResumeId(),
+                version.getId(),
+                version.getCreatedBy(),
+                job.getCreatedAt()
+        );
+        processor.process(message);
     }
 }

@@ -17,6 +17,7 @@ spring:
       ssl.truststore.certificates: ${SPRING_KAFKA_PROPERTIES_SSL_TRUSTSTORE_CERTIFICATES:${KAFKA_TRUSTED_CERT:}}
 app:
   ai-jobs:
+    kafka-enabled: ${APP_AI_JOBS_KAFKA_ENABLED:false}
     topic: ${KAFKA_PREFIX:}resume-ai-jobs
     retry:
       max-attempts: 5

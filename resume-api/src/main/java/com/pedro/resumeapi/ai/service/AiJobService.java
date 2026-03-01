@@ -1,8 +1,6 @@
 package com.pedro.resumeapi.ai.service;
 
 import com.pedro.resumeapi.ai.domain.AiJob;
-import com.pedro.resumeapi.ai.kafka.AiJobEventPublisher;
-import com.pedro.resumeapi.ai.mapper.AiJobMapper;
 import com.pedro.resumeapi.ai.repository.AiJobRepository;
 import com.pedro.resumeapi.api.error.AiJobNotFoundException;
 import com.pedro.resumeapi.api.error.ForbiddenException;
@@ -17,8 +15,6 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.UUID;
 
@@ -29,7 +25,6 @@ public class AiJobService {
     private final ResumeRepository resumeRepository;
     private final ResumeVersionRepository resumeVersionRepository;
     private final CurrentUser currentUser;
-    private final AiJobEventPublisher eventPublisher;
 
     @Transactional
     public AiJob createForVersion(ResumeVersion version) {
@@ -45,9 +40,7 @@ public class AiJobService {
         job.setIdempotencyKey(idempotencyKey);
 
         try {
-            AiJob saved = repo.save(job);
-            publishAfterCommit(saved);
-            return saved;
+            return repo.save(job);
         } catch (DataIntegrityViolationException ex) {
             return repo.findByIdempotencyKey(idempotencyKey)
                     .orElseThrow(() -> ex);
@@ -76,18 +69,5 @@ public class AiJobService {
         }
         return resumeVersionRepository.findByIdAndResume_Id(versionId, resumeId)
                 .orElseThrow(VersionNotFoundException::new);
-    }
-
-    private void publishAfterCommit(AiJob saved) {
-        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-            eventPublisher.publish(AiJobMapper.toMessage(saved));
-            return;
-        }
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                eventPublisher.publish(AiJobMapper.toMessage(saved));
-            }
-        });
     }
 }

@@ -4,10 +4,12 @@ import com.pedro.common.ai.AiJobRequestedMessage;
 import com.pedro.resumeworker.ai.service.AiJobProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(name = "app.ai-jobs.kafka-enabled", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 public class AiJobListener {
