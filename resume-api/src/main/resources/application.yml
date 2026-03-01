@@ -11,6 +11,8 @@ spring:
       value-serializer: com.pedro.resumeapi.ai.kafka.AiJobRequestedMessageSerializer
 
   data:
+    mongodb:
+      uuid-representation: standard
     redis:
       host: ${REDIS_URL}
       port: ${SPRING_DATA_REDIS_PORT}
