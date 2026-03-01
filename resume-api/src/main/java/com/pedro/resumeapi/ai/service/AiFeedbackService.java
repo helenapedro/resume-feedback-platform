@@ -2,7 +2,7 @@ package com.pedro.resumeapi.ai.service;
 
 import com.pedro.resumeapi.ai.domain.AiFeedbackRef;
 import com.pedro.resumeapi.ai.dto.AiFeedbackDTO;
-import com.pedro.resumeapi.ai.mongo.AiFeedbackDocument;
+import com.pedro.common.ai.mongo.AiFeedbackDocument;
 import com.pedro.resumeapi.ai.mongo.AiFeedbackMongoRepository;
 import com.pedro.resumeapi.ai.repository.AiFeedbackRefRepository;
 import com.pedro.resumeapi.api.error.ForbiddenException;

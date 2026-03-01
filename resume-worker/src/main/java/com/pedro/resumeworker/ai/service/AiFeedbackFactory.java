@@ -1,8 +1,8 @@
 package com.pedro.resumeworker.ai.service;
 
 import com.pedro.common.ai.AiJobRequestedMessage;
+import com.pedro.common.ai.mongo.AiFeedbackDocument;
 import com.pedro.resumeworker.ai.gemini.GeminiClient;
-import com.pedro.resumeworker.ai.mongo.AiFeedbackDocument;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 

@@ -5,7 +5,7 @@ import com.pedro.resumeworker.ai.config.AiJobRetryProperties;
 import com.pedro.resumeworker.ai.domain.AiFeedbackRef;
 import com.pedro.resumeworker.ai.domain.AiJob;
 import com.pedro.resumeworker.ai.domain.ResumeVersion;
-import com.pedro.resumeworker.ai.mongo.AiFeedbackDocument;
+import com.pedro.common.ai.mongo.AiFeedbackDocument;
 import com.pedro.resumeworker.ai.mongo.AiFeedbackMongoRepository;
 import com.pedro.resumeworker.ai.repository.AiFeedbackRefRepository;
 import com.pedro.resumeworker.ai.repository.AiJobRepository;
