@@ -1,16 +1,25 @@
 $kind: http-request
-name: 'Upload Resume (Initial)'
+name: Upload Resume (Initial)
 method: POST
-url: '{{baseUrl}}/api/resumes'
+url: "{{baseUrl}}/api/resumes"
+auth:
+  type: bearer
+  credentials:
+    token: eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJyZXN1bWUtYXBpIiwic3ViIjoiZmE3YWZiZjMtOTkxNC00NzhlLWI2NmQtYTZhYmNhNTc4ZGRlIiwiZW1haWwiOiJ1c2VyQHRlc3QuY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NzI0NzI5MTEsImV4cCI6MTc3MjQ4MDExMX0.X2nLOsXS2zrrsnygbHlYFEGhVQDqsSkT-T5tIkcoJnY3zz7jJGHDSlrsWwZ3JZHE
 order: 3000
 body:
   type: formdata
   content:
-    - key: file
-      type: file
-      src: ''
+    - type: file
+      key: file
+      src:
+        - ""
+        - /C:/Users/mbeua/Área de
+          Trabalho/Year2026/resumes/ZePedro/Jose_Pedro_ConstructionEngineer.pdf
       description: Resume file
-    - key: title
-      type: text
-      value: ''
+      disabled: false
+    - type: text
+      key: title
+      value: ""
       description: Optional title
+      disabled: false

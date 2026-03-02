@@ -1,5 +1,9 @@
 $kind: http-request
 name: Get Me
 method: GET
-url: '{{baseUrl}}/api/users/me'
+url: "{{baseUrl}}/api/users/me"
+auth:
+  type: bearer
+  credentials:
+    token: eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJyZXN1bWUtYXBpIiwic3ViIjoiZmE3YWZiZjMtOTkxNC00NzhlLWI2NmQtYTZhYmNhNTc4ZGRlIiwiZW1haWwiOiJ1c2VyQHRlc3QuY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NzI0NzI5MTEsImV4cCI6MTc3MjQ4MDExMX0.X2nLOsXS2zrrsnygbHlYFEGhVQDqsSkT-T5tIkcoJnY3zz7jJGHDSlrsWwZ3JZHE
 order: 1000
