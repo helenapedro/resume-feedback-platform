@@ -14,6 +14,7 @@ import com.pedro.resumeapi.resume.repository.ResumeRepository;
 import com.pedro.resumeapi.resume.repository.ResumeVersionRepository;
 import com.pedro.resumeapi.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AiFeedbackService {
 
     private final ResumeRepository resumeRepository;
@@ -46,8 +48,18 @@ public class AiFeedbackService {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("AI_FEEDBACK_NOT_FOUND"));
 
-        AiFeedbackDocument doc = aiFeedbackMongoRepository.findById(ref.getMongoDocId())
-                .orElseThrow(() -> new IllegalArgumentException("AI_FEEDBACK_DOC_NOT_FOUND"));
+        String mongoDocId = ref.getMongoDocId() == null ? null : ref.getMongoDocId().trim();
+
+        AiFeedbackDocument doc = (mongoDocId == null || mongoDocId.isBlank())
+                ? null
+                : aiFeedbackMongoRepository.findById(mongoDocId).orElse(null);
+
+        if (doc == null) {
+            doc = aiFeedbackMongoRepository.findTopByResumeVersionIdOrderByCreatedAtDesc(version.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("AI_FEEDBACK_DOC_NOT_FOUND"));
+            log.warn("AI feedback ref/doc mismatch for resumeVersionId={} (ref mongoDocId={}, fallback mongoDocId={})",
+                    version.getId(), ref.getMongoDocId(), doc.getId());
+        }
 
         return new AiFeedbackDTO(
                 resume.getId(),
