@@ -1,0 +1,5 @@
+$kind: http-request
+name: Regenerate AI Job
+method: POST
+url: '{{baseUrl}}/api/resumes/{{resumeId}}/versions/{{versionId}}/ai-jobs/regenerate'
+order: 2000

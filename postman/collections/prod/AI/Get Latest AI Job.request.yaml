@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get Latest AI Job
+method: GET
+url: '{{baseUrl}}/api/resumes/{{resumeId}}/versions/{{versionId}}/ai-jobs/latest'
+order: 1000

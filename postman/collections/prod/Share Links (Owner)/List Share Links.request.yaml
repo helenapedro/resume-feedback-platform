@@ -1,0 +1,5 @@
+$kind: http-request
+name: List Share Links
+method: GET
+url: '{{baseUrl}}/api/resumes/{{resumeId}}/share-links'
+order: 2000

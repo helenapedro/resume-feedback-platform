@@ -1,0 +1,5 @@
+$kind: http-request
+name: Preview Shared Current Version
+method: GET
+url: '{{baseUrl}}/api/share/{{token}}/preview'
+order: 3000

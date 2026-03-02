@@ -1,0 +1,15 @@
+$kind: http-request
+name: Patch Shared Comment
+method: PATCH
+url: '{{baseUrl}}/api/share/{{token}}/comments/{{commentId}}'
+order: 3000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "body": "Updated text",
+      "anchorRef": "page:1#xywh=10,10,100,20"
+    }

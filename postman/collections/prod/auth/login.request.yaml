@@ -1,0 +1,48 @@
+$kind: http-request
+name: Login
+method: POST
+url: '{{baseUrl}}/api/auth/login'
+order: 2000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "user@test.com",
+      "password": "1234"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      /**
+       * Captures the access token from the login response and stores it in the
+       * active environment as {{accessToken}}.
+       *
+       * Supported response shapes:
+       * - { "accessToken": "..." }
+       * - { "token": "..." }
+       * - { "data": { "accessToken": "..." } }
+       */
+      pm.test('Login: response is 2xx', function () {
+        pm.expect(pm.response.code).to.be.within(200, 299);
+      });
+
+      let json;
+      try {
+        json = pm.response.json();
+      } catch (e) {
+        json = null;
+      }
+
+      const token = json?.accessToken || json?.token || json?.data?.accessToken;
+
+      pm.test('Login: access token present in response', function () {
+        pm.expect(token, 'accessToken/token field').to.be.a('string').and.not.be.empty;
+      });
+
+      if (token) {
+        pm.environment.set('accessToken', token);
+      }

@@ -1,0 +1,5 @@
+$kind: http-request
+name: Revoke Share Link
+method: POST
+url: '{{baseUrl}}/api/resumes/{{resumeId}}/share-links/{{linkId}}/revoke'
+order: 3000

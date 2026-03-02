@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get Shared Resume
+method: GET
+url: '{{baseUrl}}/api/share/{{token}}'
+order: 1000

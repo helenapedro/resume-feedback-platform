@@ -1,0 +1,5 @@
+$kind: http-request
+name: Delete Version Comment
+method: DELETE
+url: '{{baseUrl}}/api/resumes/{{resumeId}}/versions/{{versionId}}/comments/{{commentId}}'
+order: 3000

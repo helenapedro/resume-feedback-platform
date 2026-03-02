@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: 7227926b-3cfb-40a3-96d2-b4b6070c1c53
+
+localResources:
+  collections:
+    - ..\resume-api\RF-Platform.postman_collection.json

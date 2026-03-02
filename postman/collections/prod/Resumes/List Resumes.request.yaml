@@ -1,0 +1,5 @@
+$kind: http-request
+name: List Resumes
+method: GET
+url: '{{baseUrl}}/api/resumes'
+order: 1000

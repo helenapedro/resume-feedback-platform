@@ -1,0 +1,5 @@
+$kind: http-request
+name: List Version Comments
+method: GET
+url: '{{baseUrl}}/api/resumes/{{resumeId}}/versions/{{versionId}}/comments'
+order: 1000

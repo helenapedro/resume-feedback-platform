@@ -1,0 +1,11 @@
+$kind: collection
+name: prod
+description: |-
+  Resume Feedback Platform — Production API
+
+  Base URL: {{baseUrl}} (fallback: {{baseUrlFallback}})
+
+variables:
+  - key: baseUrl
+    value: '{{baseUrl}}'
+    disabled: true

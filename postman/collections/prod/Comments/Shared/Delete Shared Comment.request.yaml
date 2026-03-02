@@ -1,0 +1,5 @@
+$kind: http-request
+name: Delete Shared Comment
+method: DELETE
+url: '{{baseUrl}}/api/share/{{token}}/comments/{{commentId}}'
+order: 4000

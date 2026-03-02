@@ -1,0 +1,16 @@
+$kind: http-request
+name: 'Upload Resume (Initial)'
+method: POST
+url: '{{baseUrl}}/api/resumes'
+order: 3000
+body:
+  type: formdata
+  content:
+    - key: file
+      type: file
+      src: ''
+      description: Resume file
+    - key: title
+      type: text
+      value: ''
+      description: Optional title

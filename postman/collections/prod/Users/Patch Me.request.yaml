@@ -1,0 +1,17 @@
+$kind: http-request
+name: Patch Me
+method: PATCH
+url: '{{baseUrl}}/api/users/me'
+order: 2000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "fullName": "Helena Pedro",
+      "phone": "+1 555 123 4567",
+      "bio": "Backend engineer focused on resume intelligence.",
+      "avatarUrl": "https://cdn.example.com/avatars/helena.jpg"
+    }

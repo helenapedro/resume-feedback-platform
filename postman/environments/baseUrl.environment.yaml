@@ -1,0 +1,14 @@
+name: baseUrl
+values:
+  - key: baseUrl
+    value: 'https://resumefeedback-api.hmpedro.com'
+    enabled: true
+    type: default
+  - key: baseUrlFallback
+    value: 'https://feedback-api-async-859fb63e69b5.herokuapp.com'
+    enabled: true
+    type: default
+  - key: accessToken
+    value: ''
+    enabled: true
+    type: default

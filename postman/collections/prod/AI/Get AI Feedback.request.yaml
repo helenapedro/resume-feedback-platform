@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get AI Feedback
+method: GET
+url: '{{baseUrl}}/api/resumes/{{resumeId}}/versions/{{versionId}}/ai-feedback'
+order: 3000

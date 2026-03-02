@@ -1,0 +1,5 @@
+$kind: http-request
+name: Preview Version
+method: GET
+url: '{{baseUrl}}/api/resumes/{{resumeId}}/versions/{{versionId}}/preview'
+order: 6000

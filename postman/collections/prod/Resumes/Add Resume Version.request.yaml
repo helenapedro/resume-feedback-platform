@@ -1,0 +1,12 @@
+$kind: http-request
+name: Add Resume Version
+method: POST
+url: '{{baseUrl}}/api/resumes/{{resumeId}}/versions'
+order: 4000
+body:
+  type: formdata
+  content:
+    - key: file
+      type: file
+      src: ''
+      description: New version file

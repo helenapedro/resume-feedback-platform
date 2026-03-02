@@ -1,0 +1,5 @@
+$kind: http-request
+name: Download Shared Current Version
+method: GET
+url: '{{baseUrl}}/api/share/{{token}}/download'
+order: 2000
