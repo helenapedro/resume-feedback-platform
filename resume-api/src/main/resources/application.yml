@@ -37,8 +37,7 @@ app:
     topic: ${KAFKA_PREFIX:}resume-ai-jobs
   storage:
     backend: S3
-    # backend: LOCAL
-    # local-dir: ./data/resume-storage
+    local-dir: ${APP_STORAGE_LOCAL_DIR:/tmp/resume-storage}
     s3:
       region: ${AWS_REGION}
       bucket: ${AWS_BUCKET}
