@@ -260,10 +260,15 @@ public class GeminiClient {
                 if (candidate == null || candidate.content == null || candidate.content.parts == null) {
                     continue;
                 }
+                StringBuilder combined = new StringBuilder();
                 for (Part part : candidate.content.parts) {
                     if (part != null && StringUtils.hasText(part.text)) {
-                        return part.text;
+                        combined.append(part.text);
                     }
+                }
+                String text = combined.toString().trim();
+                if (!text.isEmpty()) {
+                    return text;
                 }
             }
             return null;
