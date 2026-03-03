@@ -3,6 +3,7 @@ package com.pedro.resumeworker.ai.gemini;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -15,8 +16,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
+@Slf4j
 public class GeminiClient {
 
     private final GeminiProperties properties;
@@ -55,9 +59,13 @@ public class GeminiClient {
                 return Optional.empty();
             }
 
-            GeminiFeedback feedback = objectMapper.readValue(text, GeminiFeedback.class);
+            GeminiFeedback feedback = objectMapper.readValue(extractJsonObject(text), GeminiFeedback.class);
+            if (!isUsable(feedback)) {
+                return Optional.empty();
+            }
             return Optional.ofNullable(feedback);
         } catch (IOException ex) {
+            log.warn("Gemini feedback parse failed: {}", ex.getMessage());
             return Optional.empty();
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
@@ -96,6 +104,36 @@ public class GeminiClient {
         root.set("generationConfig", config);
 
         return objectMapper.writeValueAsString(root);
+    }
+
+    private boolean isUsable(GeminiFeedback feedback) {
+        return feedback != null
+                && StringUtils.hasText(feedback.summary())
+                && feedback.strengths() != null
+                && !feedback.strengths().isEmpty()
+                && feedback.improvements() != null
+                && !feedback.improvements().isEmpty();
+    }
+
+    private String extractJsonObject(String rawText) {
+        String trimmed = rawText == null ? "" : rawText.trim();
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            return trimmed;
+        }
+
+        Pattern fenced = Pattern.compile("```(?:json)?\\s*(\\{.*?})\\s*```", Pattern.DOTALL);
+        Matcher fencedMatcher = fenced.matcher(trimmed);
+        if (fencedMatcher.find()) {
+            return fencedMatcher.group(1);
+        }
+
+        int firstBrace = trimmed.indexOf('{');
+        int lastBrace = trimmed.lastIndexOf('}');
+        if (firstBrace >= 0 && lastBrace > firstBrace) {
+            return trimmed.substring(firstBrace, lastBrace + 1);
+        }
+
+        return trimmed;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

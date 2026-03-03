@@ -3,6 +3,7 @@ package com.pedro.resumeworker.ai.service;
 import com.pedro.common.ai.AiJobRequestedMessage;
 import com.pedro.common.ai.mongo.AiFeedbackDocument;
 import com.pedro.resumeworker.ai.gemini.GeminiClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,7 @@ import java.time.Instant;
 import java.util.List;
 
 @Component
+@Slf4j
 public class AiFeedbackFactory {
 
     private final String model;
@@ -44,14 +46,16 @@ public class AiFeedbackFactory {
             doc.setStrengths(feedback.strengths());
             doc.setImprovements(feedback.improvements());
         } else {
-            doc.setSummary("Feedback gerado automaticamente para o currículo enviado.");
+            log.warn("Using fallback AI feedback template for jobId={} resumeVersionId={}",
+                    message.jobId(), message.resumeVersionId());
+            doc.setSummary("Feedback gerado automaticamente para o curriculo enviado.");
             doc.setStrengths(List.of(
                     "Estrutura clara e objetiva.",
-                    "Histórico profissional com evolução temporal."
+                    "Historico profissional com evolucao temporal."
             ));
             doc.setImprovements(List.of(
-                    "Adicionar métricas de impacto nas experiências.",
-                    "Revisar palavras-chave específicas da vaga."
+                    "Adicionar metricas de impacto nas experiencias.",
+                    "Revisar palavras-chave especificas da vaga."
             ));
         }
         return doc;
@@ -59,15 +63,19 @@ public class AiFeedbackFactory {
 
     private String buildPrompt(AiJobRequestedMessage message) {
         return """
-                Você é um revisor de currículos. Gere feedback conciso em português, com base no conteúdo disponível.
-                Caso não haja conteúdo do currículo, responda com sugestões gerais.
-
-                Responda SOMENTE com JSON válido no formato:
+                Voce e um revisor especializado em curriculos para mercado tech.
+                Escreva em portugues do Brasil, objetivo, sem frases genericas e sem repetir sempre os mesmos pontos.
+                Nao use markdown. Nao use bloco ```json```.
+                Responda SOMENTE com JSON valido no formato:
                 {
-                  "summary": "resumo curto",
-                  "strengths": ["ponto forte 1", "ponto forte 2"],
-                  "improvements": ["melhoria 1", "melhoria 2"]
+                  "summary": "resumo em 1 frase",
+                  "strengths": ["3 pontos fortes especificos", "...", "..."],
+                  "improvements": ["3 melhorias acionaveis", "...", "..."]
                 }
+                Regras:
+                - Cada item deve ser concreto e diferente dos demais.
+                - Evite cliches como "estrutura clara" ou "adicionar metricas" se nao houver evidencia.
+                - Quando houver pouca informacao, diga isso no summary e ainda proponha melhorias praticas.
 
                 Metadados:
                 - jobId: %s
