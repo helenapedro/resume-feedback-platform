@@ -14,19 +14,16 @@ import java.time.Instant;
 @Slf4j
 public class AiFeedbackFactory {
 
-    private final String model;
     private final String promptVersion;
     private final int maxResumeChars;
     private final GeminiClient geminiClient;
     private final ResumeTextExtractor resumeTextExtractor;
 
     public AiFeedbackFactory(
-            @Value("${app.ai-feedback.model:gpt-4o-mini}") String model,
             @Value("${app.ai-feedback.prompt-version:v1}") String promptVersion,
             @Value("${app.ai-feedback.max-resume-chars:12000}") int maxResumeChars,
             GeminiClient geminiClient,
             ResumeTextExtractor resumeTextExtractor) {
-        this.model = model;
         this.promptVersion = promptVersion;
         this.maxResumeChars = maxResumeChars;
         this.geminiClient = geminiClient;
@@ -56,7 +53,7 @@ public class AiFeedbackFactory {
         doc.setResumeVersionId(message.resumeVersionId());
         doc.setOwnerId(message.ownerId());
         doc.setCreatedAt(Instant.now());
-        doc.setModel(model);
+        doc.setModel(geminiClient.effectiveModel());
         doc.setPromptVersion(promptVersion);
         doc.setSummary(feedback.summary());
         doc.setStrengths(feedback.strengths());

@@ -80,6 +80,12 @@ public class GeminiClient {
         return fallbackAttempt.errorCode() != null ? fallbackAttempt : strictAttempt;
     }
 
+    public String effectiveModel() {
+        return StringUtils.hasText(properties.model())
+                ? properties.model()
+                : "gemini-1.5-flash";
+    }
+
     private GeminiCallResult requestFeedback(String prompt, boolean useResponseSchema, boolean allowRepair) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -148,9 +154,7 @@ public class GeminiClient {
         String baseUrl = StringUtils.hasText(properties.baseUrl())
                 ? properties.baseUrl()
                 : "https://generativelanguage.googleapis.com";
-        String model = StringUtils.hasText(properties.model())
-                ? properties.model()
-                : "gemini-1.5-flash";
+        String model = effectiveModel();
 
         return URI.create(String.format(
                 "%s/v1beta/models/%s:generateContent?key=%s",
