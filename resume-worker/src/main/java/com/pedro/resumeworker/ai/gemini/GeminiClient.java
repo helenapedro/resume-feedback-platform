@@ -15,6 +15,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -41,17 +42,28 @@ public class GeminiClient {
             return Optional.empty();
         }
 
+        Optional<GeminiFeedback> strictAttempt = requestFeedback(prompt, true);
+        if (strictAttempt.isPresent()) {
+            return strictAttempt;
+        }
+
+        // Fallback attempt: remove schema constraints to recover from provider-side structured output issues.
+        return requestFeedback(prompt, false);
+    }
+
+    private Optional<GeminiFeedback> requestFeedback(String prompt, boolean useResponseSchema) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(buildUri())
                     .timeout(Duration.ofSeconds(30))
                     .header("Content-Type", "application/json; charset=utf-8")
-                    .POST(HttpRequest.BodyPublishers.ofString(buildPayload(prompt)))
+                    .POST(HttpRequest.BodyPublishers.ofString(buildPayload(prompt, useResponseSchema)))
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                log.warn("Gemini HTTP error status={} body={}",
+                log.warn("Gemini HTTP error (schema={}) status={} body={}",
+                        useResponseSchema,
                         response.statusCode(),
                         truncateForLog(response.body()));
                 return Optional.empty();
@@ -60,18 +72,22 @@ public class GeminiClient {
             GeminiResponse geminiResponse = objectMapper.readValue(response.body(), GeminiResponse.class);
             String text = geminiResponse.firstText();
             if (!StringUtils.hasText(text)) {
-                log.warn("Gemini returned empty content body={}", truncateForLog(response.body()));
+                log.warn("Gemini returned empty content (schema={}) body={}",
+                        useResponseSchema,
+                        truncateForLog(response.body()));
                 return Optional.empty();
             }
 
-            GeminiFeedback feedback = objectMapper.readValue(extractJsonObject(text), GeminiFeedback.class);
+            GeminiFeedback feedback = normalize(objectMapper.readValue(extractJsonObject(text), GeminiFeedback.class));
             if (!isUsable(feedback)) {
-                log.warn("Gemini returned unusable feedback text={}", truncateForLog(text));
+                log.warn("Gemini returned unusable feedback (schema={}) text={}",
+                        useResponseSchema,
+                        truncateForLog(text));
                 return Optional.empty();
             }
-            return Optional.ofNullable(feedback);
+            return Optional.of(feedback);
         } catch (IOException ex) {
-            log.warn("Gemini feedback parse failed: {}", ex.getMessage());
+            log.warn("Gemini feedback parse failed (schema={}): {}", useResponseSchema, ex.getMessage());
             return Optional.empty();
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
@@ -95,7 +111,7 @@ public class GeminiClient {
         ));
     }
 
-    private String buildPayload(String prompt) throws IOException {
+    private String buildPayload(String prompt, boolean useResponseSchema) throws IOException {
         ObjectNode root = objectMapper.createObjectNode();
         ObjectNode content = objectMapper.createObjectNode();
         content.put("role", "user");
@@ -108,7 +124,9 @@ public class GeminiClient {
         config.put("temperature", properties.temperature());
         config.put("maxOutputTokens", properties.maxOutputTokens());
         config.put("responseMimeType", "application/json");
-        config.set("responseSchema", buildResponseSchema());
+        if (useResponseSchema) {
+            config.set("responseSchema", buildResponseSchema());
+        }
         root.set("generationConfig", config);
 
         return objectMapper.writeValueAsString(root);
@@ -150,11 +168,7 @@ public class GeminiClient {
 
     private boolean isUsable(GeminiFeedback feedback) {
         return feedback != null
-                && StringUtils.hasText(feedback.summary())
-                && feedback.strengths() != null
-                && !feedback.strengths().isEmpty()
-                && feedback.improvements() != null
-                && !feedback.improvements().isEmpty();
+                && StringUtils.hasText(feedback.summary());
     }
 
     private String extractJsonObject(String rawText) {
@@ -185,6 +199,28 @@ public class GeminiClient {
         String normalized = input.replaceAll("\\s+", " ").trim();
         int max = 400;
         return normalized.length() > max ? normalized.substring(0, max) + "..." : normalized;
+    }
+
+    private GeminiFeedback normalize(GeminiFeedback feedback) {
+        if (feedback == null) {
+            return null;
+        }
+        String summary = feedback.summary() == null ? "" : feedback.summary().trim();
+        List<String> strengths = sanitizeList(feedback.strengths());
+        List<String> improvements = sanitizeList(feedback.improvements());
+        return new GeminiFeedback(summary, strengths, improvements);
+    }
+
+    private List<String> sanitizeList(List<String> input) {
+        if (input == null || input.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return input.stream()
+                .filter(StringUtils::hasText)
+                .map(String::trim)
+                .distinct()
+                .limit(5)
+                .toList();
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
