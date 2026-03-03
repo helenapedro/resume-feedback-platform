@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.util.List;
 
 @Component
 @Slf4j
@@ -40,6 +39,10 @@ public class AiFeedbackFactory {
         GeminiClient.GeminiFeedback feedback = geminiClient
                 .generateFeedback(buildPrompt(message, resumeText))
                 .orElse(null);
+        if (feedback == null) {
+            throw new IllegalStateException("GEMINI_FEEDBACK_INVALID_OR_EMPTY: jobId=%s resumeVersionId=%s extractedText=%s"
+                    .formatted(message.jobId(), message.resumeVersionId(), !resumeText.isBlank()));
+        }
 
         AiFeedbackDocument doc = new AiFeedbackDocument();
         doc.setJobId(message.jobId());
@@ -49,21 +52,9 @@ public class AiFeedbackFactory {
         doc.setCreatedAt(Instant.now());
         doc.setModel(model);
         doc.setPromptVersion(promptVersion);
-        if (feedback != null) {
-            doc.setSummary(feedback.summary());
-            doc.setStrengths(feedback.strengths());
-            doc.setImprovements(feedback.improvements());
-        } else {
-            log.warn("Using fallback AI feedback template for jobId={} resumeVersionId={}",
-                    message.jobId(), message.resumeVersionId());
-            doc.setSummary("Feedback gerado automaticamente para o curriculo enviado.");
-            doc.setStrengths(List.of(
-                    "Estrutura clara e objetiva.",
-                    "Historico profissional com evolucao temporal."));
-            doc.setImprovements(List.of(
-                    "Adicionar metricas de impacto nas experiencias.",
-                    "Revisar palavras-chave especificas da vaga."));
-        }
+        doc.setSummary(feedback.summary());
+        doc.setStrengths(feedback.strengths());
+        doc.setImprovements(feedback.improvements());
         return doc;
     }
 
