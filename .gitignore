@@ -35,3 +35,5 @@ build/
 
 # Local-only handoff docs (do not commit)
 docs/frontend-handoff.local.md
+/docs/API.md
+docs/MYNOTES.md

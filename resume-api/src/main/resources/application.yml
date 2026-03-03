@@ -1,37 +1,63 @@
 spring:
   application:
     name: resume-api
-  profiles:
-    default: dev
+  # profiles:
+  #   default: dev
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: com.pedro.resumeapi.ai.kafka.AiJobRequestedMessageSerializer
 
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   data:
     mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI}
       uuid-representation: standard
-    redis:
-      host: ${REDIS_URL}
-      port: ${SPRING_DATA_REDIS_PORT}
 
 app:
   ai-jobs:
     topic: ${KAFKA_PREFIX:}resume-ai-jobs
   storage:
-    backend: LOCAL
-    local-dir: ./data/resume-storage
+    backend: S3
+    # backend: LOCAL
+    # local-dir: ./data/resume-storage
     s3:
-      presign-expiration: 10m
+      region: ${AWS_REGION}
+      bucket: ${AWS_BUCKET}
+      cloudfront-url: ${CLOUDFRONT_URL}
+      presign-expiration: ${APP_STORAGE_S3_PRESIGN_EXPIRATION}
+  jwt:
+    secret: ${APP_JWT_SECRET}
+    issuer: ${APP_JWT_ISSUER}
+    expMinutes: ${APP_JWT_EXPMINUTES}
+  # secret: mySecretKeyMySecretKeyMySecretKeyMySecretKeyMySecretKey
+
   security:
     rate-limit:
       share:
-        enabled: true
+        enabled: false
         requests: 120
         window: 1m
 
 logging:
   level:
     root: WARN
+    # org.springframework.security: DEBUG
