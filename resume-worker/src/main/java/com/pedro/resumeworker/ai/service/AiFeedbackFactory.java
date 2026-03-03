@@ -36,14 +36,18 @@ public class AiFeedbackFactory {
     public AiFeedbackDocument build(AiJobRequestedMessage message, ResumeVersion resumeVersion) {
         String resumeText = resumeTextExtractor.extract(resumeVersion).orElse("");
 
-        GeminiClient.GeminiFeedback feedback = geminiClient
-                .generateFeedback(buildPrompt(message, resumeText))
-                .orElse(null);
+        GeminiClient.GeminiCallResult result = geminiClient
+                .generateFeedbackWithDiagnostics(buildPrompt(message, resumeText));
+        GeminiClient.GeminiFeedback feedback = result.feedback().orElse(null);
         if (feedback == null) {
             throw new AiJobDomainException(
-                    "AI_PROVIDER_EMPTY_RESPONSE",
-                    "Gemini returned empty/invalid feedback. jobId=%s resumeVersionId=%s extractedText=%s"
-                            .formatted(message.jobId(), message.resumeVersionId(), !resumeText.isBlank()));
+                    result.errorCode() == null ? "AI_PROVIDER_EMPTY_RESPONSE" : result.errorCode(),
+                    "Gemini feedback failure. jobId=%s resumeVersionId=%s extractedText=%s detail=%s"
+                            .formatted(
+                                    message.jobId(),
+                                    message.resumeVersionId(),
+                                    !resumeText.isBlank(),
+                                    result.errorDetail()));
         }
 
         AiFeedbackDocument doc = new AiFeedbackDocument();

@@ -38,20 +38,31 @@ public class GeminiClient {
     }
 
     public Optional<GeminiFeedback> generateFeedback(String prompt) {
+        return generateFeedbackWithDiagnostics(prompt).feedback();
+    }
+
+    public GeminiCallResult generateFeedbackWithDiagnostics(String prompt) {
         if (!properties.enabled() || !StringUtils.hasText(properties.apiKey())) {
-            return Optional.empty();
+            return GeminiCallResult.failure("AI_PROVIDER_DISABLED", "Gemini is disabled or API key is missing");
         }
 
-        Optional<GeminiFeedback> strictAttempt = requestFeedback(prompt, true);
-        if (strictAttempt.isPresent()) {
+        GeminiCallResult strictAttempt = requestFeedback(prompt, true);
+        if (strictAttempt.feedback().isPresent()) {
+            return strictAttempt;
+        }
+        if ("AI_PROVIDER_BLOCKED".equals(strictAttempt.errorCode())) {
             return strictAttempt;
         }
 
         // Fallback attempt: remove schema constraints to recover from provider-side structured output issues.
-        return requestFeedback(prompt, false);
+        GeminiCallResult fallbackAttempt = requestFeedback(prompt, false);
+        if (fallbackAttempt.feedback().isPresent()) {
+            return fallbackAttempt;
+        }
+        return fallbackAttempt.errorCode() != null ? fallbackAttempt : strictAttempt;
     }
 
-    private Optional<GeminiFeedback> requestFeedback(String prompt, boolean useResponseSchema) {
+    private GeminiCallResult requestFeedback(String prompt, boolean useResponseSchema) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(buildUri())
@@ -66,16 +77,32 @@ public class GeminiClient {
                         useResponseSchema,
                         response.statusCode(),
                         truncateForLog(response.body()));
-                return Optional.empty();
+                return GeminiCallResult.failure(
+                        "AI_PROVIDER_HTTP_ERROR",
+                        "status=%s body=%s".formatted(response.statusCode(), truncateForLog(response.body())));
             }
 
             GeminiResponse geminiResponse = objectMapper.readValue(response.body(), GeminiResponse.class);
+            if (geminiResponse.promptFeedback != null && StringUtils.hasText(geminiResponse.promptFeedback.blockReason)) {
+                String detail = "blockReason=%s message=%s".formatted(
+                        geminiResponse.promptFeedback.blockReason,
+                        geminiResponse.promptFeedback.blockReasonMessage);
+                log.warn("Gemini request blocked (schema={}): {}", useResponseSchema, detail);
+                return GeminiCallResult.failure("AI_PROVIDER_BLOCKED", detail);
+            }
+
             String text = geminiResponse.firstText();
             if (!StringUtils.hasText(text)) {
+                String finishReason = geminiResponse.firstFinishReason();
                 log.warn("Gemini returned empty content (schema={}) body={}",
                         useResponseSchema,
                         truncateForLog(response.body()));
-                return Optional.empty();
+                if ("MAX_TOKENS".equalsIgnoreCase(finishReason)) {
+                    return GeminiCallResult.failure("AI_PROVIDER_MAX_TOKENS", "finishReason=MAX_TOKENS");
+                }
+                return GeminiCallResult.failure(
+                        "AI_PROVIDER_EMPTY_RESPONSE",
+                        "No text in candidates. finishReason=" + finishReason);
             }
 
             GeminiFeedback feedback = normalize(objectMapper.readValue(extractJsonObject(text), GeminiFeedback.class));
@@ -83,15 +110,15 @@ public class GeminiClient {
                 log.warn("Gemini returned unusable feedback (schema={}) text={}",
                         useResponseSchema,
                         truncateForLog(text));
-                return Optional.empty();
+                return GeminiCallResult.failure("AI_PROVIDER_UNUSABLE_JSON", truncateForLog(text));
             }
-            return Optional.of(feedback);
+            return GeminiCallResult.success(feedback);
         } catch (IOException ex) {
             log.warn("Gemini feedback parse failed (schema={}): {}", useResponseSchema, ex.getMessage());
-            return Optional.empty();
+            return GeminiCallResult.failure("AI_PROVIDER_INVALID_JSON", ex.getMessage());
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            return Optional.empty();
+            return GeminiCallResult.failure("AI_PROVIDER_INTERRUPTED", ex.getMessage());
         }
     }
 
@@ -224,21 +251,35 @@ public class GeminiClient {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record GeminiResponse(List<Candidate> candidates) {
+    record GeminiResponse(List<Candidate> candidates, PromptFeedback promptFeedback) {
         String firstText() {
             if (candidates == null || candidates.isEmpty()) {
                 return null;
             }
-            Candidate candidate = candidates.get(0);
-            if (candidate.content == null || candidate.content.parts == null || candidate.content.parts.isEmpty()) {
+            for (Candidate candidate : candidates) {
+                if (candidate == null || candidate.content == null || candidate.content.parts == null) {
+                    continue;
+                }
+                for (Part part : candidate.content.parts) {
+                    if (part != null && StringUtils.hasText(part.text)) {
+                        return part.text;
+                    }
+                }
+            }
+            return null;
+        }
+
+        String firstFinishReason() {
+            if (candidates == null || candidates.isEmpty()) {
                 return null;
             }
-            return candidate.content.parts.get(0).text;
+            Candidate candidate = candidates.get(0);
+            return candidate == null ? null : candidate.finishReason;
         }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record Candidate(Content content) {}
+    record Candidate(Content content, String finishReason) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record Content(List<Part> parts) {}
@@ -247,9 +288,22 @@ public class GeminiClient {
     record Part(String text) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    record PromptFeedback(String blockReason, String blockReasonMessage) {}
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public record GeminiFeedback(
             String summary,
             List<String> strengths,
             List<String> improvements
     ) {}
+
+    public record GeminiCallResult(Optional<GeminiFeedback> feedback, String errorCode, String errorDetail) {
+        static GeminiCallResult success(GeminiFeedback feedback) {
+            return new GeminiCallResult(Optional.ofNullable(feedback), null, null);
+        }
+
+        static GeminiCallResult failure(String errorCode, String errorDetail) {
+            return new GeminiCallResult(Optional.empty(), errorCode, errorDetail);
+        }
+    }
 }
