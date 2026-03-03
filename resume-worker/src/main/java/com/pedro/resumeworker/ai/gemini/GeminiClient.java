@@ -54,7 +54,7 @@ public class GeminiClient {
             return GeminiCallResult.failure("AI_PROVIDER_DISABLED", "Gemini is disabled or API key is missing");
         }
 
-        GeminiCallResult strictAttempt = requestFeedback(prompt, true);
+        GeminiCallResult strictAttempt = requestFeedback(prompt, true, true);
         if (strictAttempt.feedback().isPresent()) {
             return strictAttempt;
         }
@@ -63,14 +63,15 @@ public class GeminiClient {
         }
 
         // Fallback attempt: remove schema constraints to recover from provider-side structured output issues.
-        GeminiCallResult fallbackAttempt = requestFeedback(prompt, false);
+        GeminiCallResult fallbackAttempt = requestFeedback(prompt, false, true);
         if (fallbackAttempt.feedback().isPresent()) {
             return fallbackAttempt;
         }
         if ("AI_PROVIDER_INVALID_JSON".equals(fallbackAttempt.errorCode())) {
             GeminiCallResult compactJsonAttempt = requestFeedback(
                     prompt + "\n\nIMPORTANT: Return strictly valid JSON in ONE LINE only. No markdown. No comments.",
-                    false);
+                    false,
+                    true);
             if (compactJsonAttempt.feedback().isPresent()) {
                 return compactJsonAttempt;
             }
@@ -79,7 +80,7 @@ public class GeminiClient {
         return fallbackAttempt.errorCode() != null ? fallbackAttempt : strictAttempt;
     }
 
-    private GeminiCallResult requestFeedback(String prompt, boolean useResponseSchema) {
+    private GeminiCallResult requestFeedback(String prompt, boolean useResponseSchema, boolean allowRepair) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(buildUri())
@@ -122,14 +123,18 @@ public class GeminiClient {
                         "No text in candidates. finishReason=" + finishReason);
             }
 
-            GeminiFeedback feedback = parseFeedback(text);
-            if (!isUsable(feedback)) {
-                log.warn("Gemini returned unusable feedback (schema={}) text={}",
-                        useResponseSchema,
-                        truncateForLog(text));
-                return GeminiCallResult.failure("AI_PROVIDER_UNUSABLE_JSON", truncateForLog(text));
+            GeminiCallResult parsed = parseFeedbackResult(text, useResponseSchema);
+            if (parsed.feedback().isPresent()) {
+                return parsed;
             }
-            return GeminiCallResult.success(feedback);
+
+            if (allowRepair && "AI_PROVIDER_INVALID_JSON".equals(parsed.errorCode())) {
+                GeminiCallResult repaired = requestJsonRepair(text);
+                if (repaired.feedback().isPresent()) {
+                    return repaired;
+                }
+            }
+            return parsed;
         } catch (IOException ex) {
             log.warn("Gemini feedback parse failed (schema={}): {}", useResponseSchema, ex.getMessage());
             return GeminiCallResult.failure("AI_PROVIDER_INVALID_JSON", ex.getMessage());
@@ -165,7 +170,7 @@ public class GeminiClient {
         root.set("contents", objectMapper.valueToTree(List.of(content)));
 
         ObjectNode config = objectMapper.createObjectNode();
-        config.put("temperature", properties.temperature());
+        config.put("temperature", 0.1d);
         config.put("maxOutputTokens", properties.maxOutputTokens());
         config.put("responseMimeType", "application/json");
         if (useResponseSchema) {
@@ -243,6 +248,38 @@ public class GeminiClient {
         String normalized = input.replaceAll("\\s+", " ").trim();
         int max = 400;
         return normalized.length() > max ? normalized.substring(0, max) + "..." : normalized;
+    }
+
+    private GeminiCallResult parseFeedbackResult(String text, boolean useResponseSchema) {
+        try {
+            GeminiFeedback feedback = parseFeedback(text);
+            if (!isUsable(feedback)) {
+                log.warn("Gemini returned unusable feedback (schema={}) text={}",
+                        useResponseSchema,
+                        truncateForLog(text));
+                return GeminiCallResult.failure("AI_PROVIDER_UNUSABLE_JSON", truncateForLog(text));
+            }
+            return GeminiCallResult.success(feedback);
+        } catch (IOException ex) {
+            log.warn("Gemini feedback parse failed (schema={}): {}", useResponseSchema, ex.getMessage());
+            return GeminiCallResult.failure("AI_PROVIDER_INVALID_JSON", ex.getMessage());
+        }
+    }
+
+    private GeminiCallResult requestJsonRepair(String malformedResponse) {
+        String repairPrompt = """
+                Converta o texto abaixo para JSON valido em UMA LINHA, sem markdown, sem comentarios.
+                Saida obrigatoria:
+                {"summary":"...","strengths":["..."],"improvements":["..."]}
+                Regras:
+                - Escape aspas internas corretamente.
+                - Remova quebras de linha dentro de strings.
+                - Se faltar algum campo, complete com texto curto e objetivo.
+
+                Texto a corrigir:
+                %s
+                """.formatted(malformedResponse);
+        return requestFeedback(repairPrompt, false, false);
     }
 
     private GeminiFeedback parseFeedback(String rawText) throws IOException {

@@ -79,6 +79,7 @@ public class AiFeedbackFactory {
                 Voce e um revisor especializado em curriculos.
                 Escreva em portugues de Portugal, objetivo, sem frases genericas e sem repetir sempre os mesmos pontos.
                 Nao use markdown. Nao use bloco ```json```.
+                RETORNE O JSON EM UMA UNICA LINHA.
                 Responda SOMENTE com JSON valido no formato:
                 {
                   "summary": "resumo em 1 frase",
@@ -89,6 +90,9 @@ public class AiFeedbackFactory {
                 - Cada item deve ser concreto e diferente dos demais.
                 - Evite cliches como "estrutura clara" ou "adicionar metricas" se nao houver evidencia.
                 - Quando houver pouca informacao, diga isso no summary e ainda proponha melhorias praticas.
+                - Nao use aspas duplas dentro dos valores de texto.
+                - Nao inclua quebra de linha nos valores.
+                - Escape corretamente quaisquer caracteres especiais.
 
                 Metadados:
                 - jobId: %s
