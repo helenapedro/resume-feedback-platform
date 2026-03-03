@@ -2,6 +2,7 @@ package com.pedro.resumeworker.ai.gemini;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -50,17 +51,22 @@ public class GeminiClient {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                log.warn("Gemini HTTP error status={} body={}",
+                        response.statusCode(),
+                        truncateForLog(response.body()));
                 return Optional.empty();
             }
 
             GeminiResponse geminiResponse = objectMapper.readValue(response.body(), GeminiResponse.class);
             String text = geminiResponse.firstText();
             if (!StringUtils.hasText(text)) {
+                log.warn("Gemini returned empty content body={}", truncateForLog(response.body()));
                 return Optional.empty();
             }
 
             GeminiFeedback feedback = objectMapper.readValue(extractJsonObject(text), GeminiFeedback.class);
             if (!isUsable(feedback)) {
+                log.warn("Gemini returned unusable feedback text={}", truncateForLog(text));
                 return Optional.empty();
             }
             return Optional.ofNullable(feedback);
@@ -101,9 +107,45 @@ public class GeminiClient {
         ObjectNode config = objectMapper.createObjectNode();
         config.put("temperature", properties.temperature());
         config.put("maxOutputTokens", properties.maxOutputTokens());
+        config.put("responseMimeType", "application/json");
+        config.set("responseSchema", buildResponseSchema());
         root.set("generationConfig", config);
 
         return objectMapper.writeValueAsString(root);
+    }
+
+    private ObjectNode buildResponseSchema() {
+        ObjectNode schema = objectMapper.createObjectNode();
+        schema.put("type", "OBJECT");
+
+        ObjectNode propertiesNode = objectMapper.createObjectNode();
+
+        ObjectNode summary = objectMapper.createObjectNode();
+        summary.put("type", "STRING");
+        propertiesNode.set("summary", summary);
+
+        ObjectNode strengths = objectMapper.createObjectNode();
+        strengths.put("type", "ARRAY");
+        ObjectNode strengthsItems = objectMapper.createObjectNode();
+        strengthsItems.put("type", "STRING");
+        strengths.set("items", strengthsItems);
+        propertiesNode.set("strengths", strengths);
+
+        ObjectNode improvements = objectMapper.createObjectNode();
+        improvements.put("type", "ARRAY");
+        ObjectNode improvementsItems = objectMapper.createObjectNode();
+        improvementsItems.put("type", "STRING");
+        improvements.set("items", improvementsItems);
+        propertiesNode.set("improvements", improvements);
+
+        schema.set("properties", propertiesNode);
+
+        ArrayNode required = objectMapper.createArrayNode();
+        required.add("summary");
+        required.add("strengths");
+        required.add("improvements");
+        schema.set("required", required);
+        return schema;
     }
 
     private boolean isUsable(GeminiFeedback feedback) {
@@ -134,6 +176,15 @@ public class GeminiClient {
         }
 
         return trimmed;
+    }
+
+    private String truncateForLog(String input) {
+        if (input == null) {
+            return null;
+        }
+        String normalized = input.replaceAll("\\s+", " ").trim();
+        int max = 400;
+        return normalized.length() > max ? normalized.substring(0, max) + "..." : normalized;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
