@@ -21,8 +21,7 @@ public class AiFeedbackFactory {
     public AiFeedbackFactory(
             @Value("${app.ai-feedback.model:gpt-4o-mini}") String model,
             @Value("${app.ai-feedback.prompt-version:v1}") String promptVersion,
-            GeminiClient geminiClient
-    ) {
+            GeminiClient geminiClient) {
         this.model = model;
         this.promptVersion = promptVersion;
         this.geminiClient = geminiClient;
@@ -51,20 +50,18 @@ public class AiFeedbackFactory {
             doc.setSummary("Feedback gerado automaticamente para o curriculo enviado.");
             doc.setStrengths(List.of(
                     "Estrutura clara e objetiva.",
-                    "Historico profissional com evolucao temporal."
-            ));
+                    "Historico profissional com evolucao temporal."));
             doc.setImprovements(List.of(
                     "Adicionar metricas de impacto nas experiencias.",
-                    "Revisar palavras-chave especificas da vaga."
-            ));
+                    "Revisar palavras-chave especificas da vaga."));
         }
         return doc;
     }
 
     private String buildPrompt(AiJobRequestedMessage message) {
         return """
-                Voce e um revisor especializado em curriculos para mercado tech.
-                Escreva em portugues do Brasil, objetivo, sem frases genericas e sem repetir sempre os mesmos pontos.
+                Voce e um revisor especializado em curriculos.
+                Escreva em portugues de Portugal, objetivo, sem frases genericas e sem repetir sempre os mesmos pontos.
                 Nao use markdown. Nao use bloco ```json```.
                 Responda SOMENTE com JSON valido no formato:
                 {
@@ -86,7 +83,6 @@ public class AiFeedbackFactory {
                 message.jobId(),
                 message.resumeId(),
                 message.resumeVersionId(),
-                message.ownerId()
-        );
+                message.ownerId());
     }
 }
