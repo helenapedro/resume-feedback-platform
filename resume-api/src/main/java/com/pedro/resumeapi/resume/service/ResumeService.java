@@ -49,7 +49,7 @@ public class ResumeService {
     private final ResumeVersionFactory versionFactory;
     private final AiJobService aiJobService;
     private final StorageProperties storageProperties;
-    private final LocalStorageService localStorageService;
+    private final ObjectProvider<LocalStorageService> localStorageService;
     private final ObjectProvider<S3StorageService> s3StorageService;
 
     public List<Resume> listMyResumes() {
@@ -152,7 +152,11 @@ public class ResumeService {
                         s3.deleteObject(version.getS3Bucket(), version.getS3ObjectKey(), version.getS3VersionId());
                     }
                 } else {
-                    localStorageService.deleteByStorageKey(version.getStorageKey());
+                    LocalStorageService local = localStorageService.getIfAvailable();
+                    if (local == null) {
+                        throw new IllegalStateException("LOCAL storage backend configured but service is unavailable");
+                    }
+                    local.deleteByStorageKey(version.getStorageKey());
                 }
             } catch (Exception ex) {
                 log.warn("Failed to delete stored file for version {}: {}", version.getId(), ex.getMessage());

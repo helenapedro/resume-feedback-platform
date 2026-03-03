@@ -11,6 +11,7 @@ import com.pedro.resumeapi.storage.S3PresignService;
 import com.pedro.resumeapi.storage.StorageBackend;
 import com.pedro.resumeapi.storage.StorageProperties;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +24,7 @@ import java.util.UUID;
 public class ResumeStorageService {
     private final ResumeRepository resumeRepository;
     private final ResumeVersionRepository resumeVersionRepository;
-    private final LocalStorageService storage;
+    private final ObjectProvider<LocalStorageService> storage;
     private final S3PresignService presignService;
     private final StorageProperties storageProperties;
     private final CurrentUser currentUser;
@@ -92,7 +93,12 @@ public class ResumeStorageService {
             }
         }
 
-        Resource resource = storage.loadAsResource(version.getStorageKey());
+        LocalStorageService localStorage = storage.getIfAvailable();
+        if (localStorage == null) {
+            throw new IllegalStateException("LOCAL storage service is unavailable");
+        }
+
+        Resource resource = localStorage.loadAsResource(version.getStorageKey());
 
         return new DownloadPayload(resource, filename, contentType, null);
     }

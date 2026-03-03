@@ -2,6 +2,7 @@ package com.pedro.resumeapi.storage;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -12,8 +13,8 @@ import java.net.MalformedURLException;
 import java.nio.file.*;
 import java.util.UUID;
 
-
 @Service
+@ConditionalOnProperty(name = "app.storage.backend", havingValue = "LOCAL", matchIfMissing = true)
 public class LocalStorageService {
 
     private final Path baseDir;
@@ -40,10 +41,13 @@ public class LocalStorageService {
     public Resource loadAsResource(String storageKey) {
         try {
             Path path = Paths.get(storageKey).normalize().toAbsolutePath();
+
             Resource resource = new UrlResource(path.toUri());
+
             if (!resource.exists() || !resource.isReadable()) {
                 throw new IllegalArgumentException("File not found: " + storageKey);
             }
+
             return resource;
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Invalid storageKey: " + storageKey, e);
@@ -54,7 +58,9 @@ public class LocalStorageService {
         if (!StringUtils.hasText(storageKey)) {
             return;
         }
+
         Path path = Paths.get(storageKey).normalize().toAbsolutePath();
+
         Files.deleteIfExists(path);
     }
 }
