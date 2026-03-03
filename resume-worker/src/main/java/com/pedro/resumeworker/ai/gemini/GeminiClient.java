@@ -2,8 +2,10 @@ package com.pedro.resumeworker.ai.gemini;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -27,11 +29,17 @@ public class GeminiClient {
 
     private final GeminiProperties properties;
     private final ObjectMapper objectMapper;
+    private final ObjectMapper lenientObjectMapper;
     private final HttpClient httpClient;
 
     public GeminiClient(GeminiProperties properties, ObjectMapper objectMapper) {
         this.properties = properties;
         this.objectMapper = objectMapper;
+        this.lenientObjectMapper = JsonMapper.builder()
+                .enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS)
+                .enable(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER)
+                .enable(JsonReadFeature.ALLOW_SINGLE_QUOTES)
+                .build();
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
@@ -58,6 +66,15 @@ public class GeminiClient {
         GeminiCallResult fallbackAttempt = requestFeedback(prompt, false);
         if (fallbackAttempt.feedback().isPresent()) {
             return fallbackAttempt;
+        }
+        if ("AI_PROVIDER_INVALID_JSON".equals(fallbackAttempt.errorCode())) {
+            GeminiCallResult compactJsonAttempt = requestFeedback(
+                    prompt + "\n\nIMPORTANT: Return strictly valid JSON in ONE LINE only. No markdown. No comments.",
+                    false);
+            if (compactJsonAttempt.feedback().isPresent()) {
+                return compactJsonAttempt;
+            }
+            return compactJsonAttempt.errorCode() != null ? compactJsonAttempt : fallbackAttempt;
         }
         return fallbackAttempt.errorCode() != null ? fallbackAttempt : strictAttempt;
     }
@@ -105,7 +122,7 @@ public class GeminiClient {
                         "No text in candidates. finishReason=" + finishReason);
             }
 
-            GeminiFeedback feedback = normalize(objectMapper.readValue(extractJsonObject(text), GeminiFeedback.class));
+            GeminiFeedback feedback = parseFeedback(text);
             if (!isUsable(feedback)) {
                 log.warn("Gemini returned unusable feedback (schema={}) text={}",
                         useResponseSchema,
@@ -226,6 +243,21 @@ public class GeminiClient {
         String normalized = input.replaceAll("\\s+", " ").trim();
         int max = 400;
         return normalized.length() > max ? normalized.substring(0, max) + "..." : normalized;
+    }
+
+    private GeminiFeedback parseFeedback(String rawText) throws IOException {
+        String extractedJson = extractJsonObject(rawText);
+        try {
+            return normalize(objectMapper.readValue(extractedJson, GeminiFeedback.class));
+        } catch (IOException first) {
+            // Common malformed case from providers: unescaped line breaks inside quoted strings.
+            String flattened = extractedJson.replace('\r', ' ').replace('\n', ' ');
+            try {
+                return normalize(lenientObjectMapper.readValue(flattened, GeminiFeedback.class));
+            } catch (IOException second) {
+                throw second;
+            }
+        }
     }
 
     private GeminiFeedback normalize(GeminiFeedback feedback) {
