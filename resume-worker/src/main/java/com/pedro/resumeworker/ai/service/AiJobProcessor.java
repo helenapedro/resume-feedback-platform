@@ -106,7 +106,11 @@ public class AiJobProcessor {
     void markFailed(AiJob job, Exception ex) {
         job.setStatus(AiJob.Status.FAILED);
         job.setFinishedAt(Instant.now());
-        job.setErrorCode(ex.getClass().getSimpleName());
+        if (ex instanceof AiJobDomainException domainEx) {
+            job.setErrorCode(domainEx.getErrorCode());
+        } else {
+            job.setErrorCode(ex.getClass().getSimpleName());
+        }
         job.setErrorDetail(truncateErrorDetail(ex.getMessage()));
         job.setNextRetryAt(calculateNextRetryAt(job));
         aiJobRepository.save(job);

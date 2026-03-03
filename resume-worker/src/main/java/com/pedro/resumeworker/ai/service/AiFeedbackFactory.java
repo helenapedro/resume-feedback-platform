@@ -40,8 +40,10 @@ public class AiFeedbackFactory {
                 .generateFeedback(buildPrompt(message, resumeText))
                 .orElse(null);
         if (feedback == null) {
-            throw new IllegalStateException("GEMINI_FEEDBACK_INVALID_OR_EMPTY: jobId=%s resumeVersionId=%s extractedText=%s"
-                    .formatted(message.jobId(), message.resumeVersionId(), !resumeText.isBlank()));
+            throw new AiJobDomainException(
+                    "AI_PROVIDER_EMPTY_RESPONSE",
+                    "Gemini returned empty/invalid feedback. jobId=%s resumeVersionId=%s extractedText=%s"
+                            .formatted(message.jobId(), message.resumeVersionId(), !resumeText.isBlank()));
         }
 
         AiFeedbackDocument doc = new AiFeedbackDocument();
