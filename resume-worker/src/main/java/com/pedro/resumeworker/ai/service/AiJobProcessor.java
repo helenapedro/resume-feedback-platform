@@ -59,11 +59,13 @@ public class AiJobProcessor {
         }
 
         try {
-            markProcessing(job);
-            AiFeedbackDocument document = feedbackFactory.build(message);
-            AiFeedbackDocument savedDoc = feedbackMongoRepository.save(document);
+            ResumeVersion resumeVersion = resumeVersionRepository.findById(message.resumeVersionId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Resume version not found: " + message.resumeVersionId()));
 
-            ResumeVersion resumeVersion = resumeVersionRepository.getReferenceById(message.resumeVersionId());
+            markProcessing(job);
+            AiFeedbackDocument document = feedbackFactory.build(message, resumeVersion);
+            AiFeedbackDocument savedDoc = feedbackMongoRepository.save(document);
             int nextVersion = nextFeedbackVersion(message.resumeVersionId());
 
             AiFeedbackRef ref = new AiFeedbackRef();

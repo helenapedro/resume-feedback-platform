@@ -32,6 +32,10 @@ spring:
       ssl.keystore.certificate.chain: ${SPRING_KAFKA_PROPERTIES_SSL_KEYSTORE_CERTIFICATE_CHAIN:${KAFKA_CLIENT_CERT:}}
       ssl.truststore.certificates: ${SPRING_KAFKA_PROPERTIES_SSL_TRUSTSTORE_CERTIFICATES:${KAFKA_TRUSTED_CERT:}}
 app:
+  storage:
+    backend: ${APP_STORAGE_BACKEND:S3}
+    s3:
+      region: ${AWS_REGION:us-east-1}
   ai-jobs:
     kafka-enabled: ${APP_AI_JOBS_KAFKA_ENABLED:false}
     topic: ${KAFKA_PREFIX:}resume-ai-jobs
@@ -43,6 +47,7 @@ app:
   ai-feedback:
     model: gemini-1.5-flash
     prompt-version: v1
+    max-resume-chars: 12000
     gemini:
       enabled: true
       api-key: ${GEMINI_API_KEY:}

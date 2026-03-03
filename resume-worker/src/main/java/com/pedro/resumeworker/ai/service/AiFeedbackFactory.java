@@ -2,6 +2,7 @@ package com.pedro.resumeworker.ai.service;
 
 import com.pedro.common.ai.AiJobRequestedMessage;
 import com.pedro.common.ai.mongo.AiFeedbackDocument;
+import com.pedro.resumeworker.ai.domain.ResumeVersion;
 import com.pedro.resumeworker.ai.gemini.GeminiClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,20 +17,28 @@ public class AiFeedbackFactory {
 
     private final String model;
     private final String promptVersion;
+    private final int maxResumeChars;
     private final GeminiClient geminiClient;
+    private final ResumeTextExtractor resumeTextExtractor;
 
     public AiFeedbackFactory(
             @Value("${app.ai-feedback.model:gpt-4o-mini}") String model,
             @Value("${app.ai-feedback.prompt-version:v1}") String promptVersion,
-            GeminiClient geminiClient) {
+            @Value("${app.ai-feedback.max-resume-chars:12000}") int maxResumeChars,
+            GeminiClient geminiClient,
+            ResumeTextExtractor resumeTextExtractor) {
         this.model = model;
         this.promptVersion = promptVersion;
+        this.maxResumeChars = maxResumeChars;
         this.geminiClient = geminiClient;
+        this.resumeTextExtractor = resumeTextExtractor;
     }
 
-    public AiFeedbackDocument build(AiJobRequestedMessage message) {
+    public AiFeedbackDocument build(AiJobRequestedMessage message, ResumeVersion resumeVersion) {
+        String resumeText = resumeTextExtractor.extract(resumeVersion).orElse("");
+
         GeminiClient.GeminiFeedback feedback = geminiClient
-                .generateFeedback(buildPrompt(message))
+                .generateFeedback(buildPrompt(message, resumeText))
                 .orElse(null);
 
         AiFeedbackDocument doc = new AiFeedbackDocument();
@@ -58,7 +67,17 @@ public class AiFeedbackFactory {
         return doc;
     }
 
-    private String buildPrompt(AiJobRequestedMessage message) {
+    private String buildPrompt(AiJobRequestedMessage message, String resumeText) {
+        String contentSection;
+        if (resumeText == null || resumeText.isBlank()) {
+            contentSection = "Curriculo extraido: NAO DISPONIVEL";
+        } else {
+            contentSection = """
+                    Curriculo extraido (texto bruto):
+                    %s
+                    """.formatted(resumeText);
+        }
+
         return """
                 Voce e um revisor especializado em curriculos.
                 Escreva em portugues de Portugal, objetivo, sem frases genericas e sem repetir sempre os mesmos pontos.
@@ -79,10 +98,15 @@ public class AiFeedbackFactory {
                 - resumeId: %s
                 - resumeVersionId: %s
                 - ownerId: %s
+                - limite de caracteres analisados: %s
+
+                %s
                 """.formatted(
                 message.jobId(),
                 message.resumeId(),
                 message.resumeVersionId(),
-                message.ownerId());
+                message.ownerId(),
+                maxResumeChars,
+                contentSection);
     }
 }
