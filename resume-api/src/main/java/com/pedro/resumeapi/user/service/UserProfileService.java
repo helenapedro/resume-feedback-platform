@@ -1,6 +1,7 @@
 package com.pedro.resumeapi.user.service;
 
 import com.pedro.resumeapi.security.CurrentUser;
+import com.pedro.resumeapi.storage.AvatarStorageService;
 import com.pedro.resumeapi.user.domain.User;
 import com.pedro.resumeapi.user.dto.UpdateUserProfileRequest;
 import com.pedro.resumeapi.user.dto.UserProfileDTO;
@@ -8,6 +9,9 @@ import com.pedro.resumeapi.user.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Service
 @AllArgsConstructor
@@ -15,6 +19,7 @@ public class UserProfileService {
 
     private final UserRepository userRepository;
     private final CurrentUser currentUser;
+    private final AvatarStorageService avatarStorageService;
 
     @Transactional(readOnly = true)
     public UserProfileDTO getMyProfile() {
@@ -32,6 +37,18 @@ public class UserProfileService {
         user.setPhone(normalize(request.phone()));
         user.setBio(normalize(request.bio()));
         user.setAvatarUrl(normalize(request.avatarUrl()));
+
+        userRepository.save(user);
+        return toProfile(user);
+    }
+
+    @Transactional
+    public UserProfileDTO uploadMyAvatar(MultipartFile file) throws IOException {
+        User user = userRepository.findById(currentUser.id())
+                .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+
+        String avatarUrl = avatarStorageService.store(user.getId(), file);
+        user.setAvatarUrl(avatarUrl);
 
         userRepository.save(user);
         return toProfile(user);

@@ -72,4 +72,20 @@ public class S3StorageService {
         }
         s3Client.deleteObject(request.build());
     }
+
+    public void storeAvatar(String objectKey, MultipartFile file, String contentType) throws IOException {
+        if (!StringUtils.hasText(properties.getBucket())) {
+            throw new IllegalStateException("S3 bucket is not configured");
+        }
+        PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(properties.getBucket())
+                .key(objectKey)
+                .contentType(contentType)
+                .build();
+
+        s3Client.putObject(
+                request,
+                RequestBody.fromInputStream(file.getInputStream(), file.getSize())
+        );
+    }
 }
