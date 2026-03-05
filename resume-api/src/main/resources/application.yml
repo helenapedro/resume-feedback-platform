@@ -33,6 +33,11 @@ spring:
       uuid-representation: standard
 
 app:
+  auth:
+    google:
+      client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
+      client-ids: ${GOOGLE_OAUTH_CLIENT_IDS:}
+      token-info-url: ${GOOGLE_OAUTH_TOKEN_INFO_URL:https://oauth2.googleapis.com/tokeninfo}
   ai-jobs:
     topic: ${KAFKA_PREFIX:}resume-ai-jobs
   storage:
