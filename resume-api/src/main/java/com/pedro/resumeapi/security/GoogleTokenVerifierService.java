@@ -25,9 +25,9 @@ public class GoogleTokenVerifierService {
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
 
-    public GoogleTokenVerifierService(GoogleAuthProperties properties, ObjectMapper objectMapper) {
+    public GoogleTokenVerifierService(GoogleAuthProperties properties) {
         this.properties = properties;
-        this.objectMapper = objectMapper;
+        this.objectMapper = new ObjectMapper();
         this.httpClient = HttpClient.newHttpClient();
     }
 
@@ -135,4 +135,3 @@ public class GoogleTokenVerifierService {
             String pictureUrl
     ) { }
 }
-
