@@ -6,6 +6,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -23,7 +25,7 @@ public class AvatarStorageService {
         validate(file);
 
         String extension = resolveExtension(file);
-        String key = "avatars/" + userId + "/" + UUID.randomUUID() + "." + extension;
+        String key = "avatars/" + buildDatePrefix() + "/" + userId + "/" + UUID.randomUUID() + "." + extension;
         String contentType = file.getContentType();
 
         if (storageProperties.getBackend() != StorageBackend.S3) {
@@ -84,5 +86,10 @@ public class AvatarStorageService {
             return "https://" + bucket + ".s3.amazonaws.com/" + key;
         }
         return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;
+    }
+
+    private String buildDatePrefix() {
+        LocalDate now = LocalDate.now(ZoneOffset.UTC);
+        return now.getYear() + "/" + String.format("%02d", now.getMonthValue()) + "/" + String.format("%02d", now.getDayOfMonth());
     }
 }

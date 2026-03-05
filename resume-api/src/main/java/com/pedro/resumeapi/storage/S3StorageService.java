@@ -12,6 +12,8 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Service
@@ -32,7 +34,8 @@ public class S3StorageService {
             throw new IllegalStateException("S3 bucket is not configured");
         }
         String safeName = sanitizeFilename(originalFilename);
-        String key = ownerId + "/" + resumeId + "/v" + versionNumber + "_" + safeName;
+        String datePrefix = buildDatePrefix();
+        String key = "resumes/" + datePrefix + "/" + ownerId + "/" + resumeId + "/v" + versionNumber + "_" + safeName;
 
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(properties.getBucket())
@@ -58,6 +61,11 @@ public class S3StorageService {
                 .replace("\n", "")
                 .replace("\\", "_")
                 .replace("/", "_");
+    }
+
+    private String buildDatePrefix() {
+        LocalDate now = LocalDate.now(ZoneOffset.UTC);
+        return now.getYear() + "/" + String.format("%02d", now.getMonthValue()) + "/" + String.format("%02d", now.getDayOfMonth());
     }
 
     public void deleteObject(String bucket, String objectKey, String versionId) {
