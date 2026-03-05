@@ -14,7 +14,7 @@ import java.nio.file.*;
 import java.util.UUID;
 
 @Service
-@ConditionalOnProperty(name = "app.storage.backend", havingValue = "LOCAL", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.storage.backend", havingValue = "LOCAL")
 public class LocalStorageService {
 
     private final Path baseDir;

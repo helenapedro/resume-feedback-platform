@@ -9,5 +9,5 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "app.storage")
 @Getter @Setter
 public class StorageProperties {
-    private StorageBackend backend = StorageBackend.LOCAL;
+    private StorageBackend backend = StorageBackend.S3;
 }

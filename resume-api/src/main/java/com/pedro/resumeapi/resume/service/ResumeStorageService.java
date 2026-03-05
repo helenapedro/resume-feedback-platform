@@ -6,12 +6,10 @@ import com.pedro.resumeapi.resume.domain.ResumeVersion;
 import com.pedro.resumeapi.resume.repository.ResumeRepository;
 import com.pedro.resumeapi.resume.repository.ResumeVersionRepository;
 import com.pedro.resumeapi.security.CurrentUser;
-import com.pedro.resumeapi.storage.LocalStorageService;
 import com.pedro.resumeapi.storage.S3PresignService;
 import com.pedro.resumeapi.storage.StorageBackend;
 import com.pedro.resumeapi.storage.StorageProperties;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +22,6 @@ import java.util.UUID;
 public class ResumeStorageService {
     private final ResumeRepository resumeRepository;
     private final ResumeVersionRepository resumeVersionRepository;
-    private final ObjectProvider<LocalStorageService> storage;
     private final S3PresignService presignService;
     private final StorageProperties storageProperties;
     private final CurrentUser currentUser;
@@ -77,30 +74,25 @@ public class ResumeStorageService {
                 ? "application/octet-stream"
                 : version.getContentType();
 
-        if (storageProperties.getBackend() == StorageBackend.S3) {
-            var presigned = (attachment
-                    ? presignService.presignDownload(version, safeName, contentType)
-                    : presignService.presignPreview(version, safeName, contentType))
-                    .map(Object::toString)
-                    .orElse(null);
-
-            if (StringUtils.hasText(presigned)) {
-                return new DownloadPayload(null, filename, contentType, presigned);
-            }
-
-            if (StringUtils.hasText(version.getS3Bucket()) || StringUtils.hasText(version.getS3ObjectKey())) {
-                throw new IllegalStateException("S3 download requested but presigned URL is unavailable");
-            }
+        if (storageProperties.getBackend() != StorageBackend.S3) {
+            throw new IllegalStateException("Only S3 storage backend is supported");
         }
 
-        LocalStorageService localStorage = storage.getIfAvailable();
-        if (localStorage == null) {
-            throw new IllegalStateException("LOCAL storage service is unavailable");
+        var presigned = (attachment
+                ? presignService.presignDownload(version, safeName, contentType)
+                : presignService.presignPreview(version, safeName, contentType))
+                .map(Object::toString)
+                .orElse(null);
+
+        if (StringUtils.hasText(presigned)) {
+            return new DownloadPayload(null, filename, contentType, presigned);
         }
 
-        Resource resource = localStorage.loadAsResource(version.getStorageKey());
+        if (StringUtils.hasText(version.getS3Bucket()) || StringUtils.hasText(version.getS3ObjectKey())) {
+            throw new IllegalStateException("S3 download requested but presigned URL is unavailable");
+        }
 
-        return new DownloadPayload(resource, filename, contentType, null);
+        throw new IllegalStateException("Resume version is missing S3 object metadata");
     }
 
     private String sanitizeFilename(String filename) {

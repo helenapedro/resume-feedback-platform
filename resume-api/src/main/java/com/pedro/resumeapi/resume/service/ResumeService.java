@@ -13,7 +13,6 @@ import com.pedro.resumeapi.ai.repository.AiJobRepository;
 import com.pedro.resumeapi.comment.repository.CommentRepository;
 import com.pedro.resumeapi.resume.repository.ResumeRepository;
 import com.pedro.resumeapi.resume.repository.ResumeVersionRepository;
-import com.pedro.resumeapi.storage.LocalStorageService;
 import com.pedro.resumeapi.storage.S3StorageService;
 import com.pedro.resumeapi.storage.StorageBackend;
 import com.pedro.resumeapi.storage.StorageProperties;
@@ -49,7 +48,6 @@ public class ResumeService {
     private final ResumeVersionFactory versionFactory;
     private final AiJobService aiJobService;
     private final StorageProperties storageProperties;
-    private final ObjectProvider<LocalStorageService> localStorageService;
     private final ObjectProvider<S3StorageService> s3StorageService;
 
     public List<Resume> listMyResumes() {
@@ -146,17 +144,13 @@ public class ResumeService {
     private void cleanupStoredFilesBestEffort(List<ResumeVersion> versions) {
         for (ResumeVersion version : versions) {
             try {
-                if (storageProperties.getBackend() == StorageBackend.S3) {
-                    S3StorageService s3 = s3StorageService.getIfAvailable();
-                    if (s3 != null) {
-                        s3.deleteObject(version.getS3Bucket(), version.getS3ObjectKey(), version.getS3VersionId());
-                    }
-                } else {
-                    LocalStorageService local = localStorageService.getIfAvailable();
-                    if (local == null) {
-                        throw new IllegalStateException("LOCAL storage backend configured but service is unavailable");
-                    }
-                    local.deleteByStorageKey(version.getStorageKey());
+                if (storageProperties.getBackend() != StorageBackend.S3) {
+                    throw new IllegalStateException("Only S3 storage backend is supported");
+                }
+
+                S3StorageService s3 = s3StorageService.getIfAvailable();
+                if (s3 != null) {
+                    s3.deleteObject(version.getS3Bucket(), version.getS3ObjectKey(), version.getS3VersionId());
                 }
             } catch (Exception ex) {
                 log.warn("Failed to delete stored file for version {}: {}", version.getId(), ex.getMessage());
