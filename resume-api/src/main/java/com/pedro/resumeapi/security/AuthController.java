@@ -5,6 +5,7 @@ import com.pedro.resumeapi.user.domain.User;
 import com.pedro.resumeapi.auth.dto.AuthResponse;
 import com.pedro.resumeapi.auth.dto.GoogleAuthRequest;
 import com.pedro.resumeapi.auth.dto.LoginRequest;
+import com.pedro.resumeapi.auth.dto.ReactivateRequest;
 import com.pedro.resumeapi.auth.dto.RegisterRequest;
 import com.pedro.resumeapi.user.repository.UserRepository;
 import lombok.AllArgsConstructor;
@@ -84,7 +85,7 @@ public class AuthController {
         });
 
         if (!user.isEnabled()) {
-            throw new UnauthorizedException("user disabled");
+            user.setEnabled(true);
         }
 
         if ((user.getFullName() == null || user.getFullName().isBlank()) && identity.name() != null) {
@@ -93,6 +94,26 @@ public class AuthController {
         if ((user.getAvatarUrl() == null || user.getAvatarUrl().isBlank()) && identity.pictureUrl() != null) {
             user.setAvatarUrl(identity.pictureUrl());
         }
+        user.setLastLoginAt(Instant.now());
+        userRepository.save(user);
+
+        String token = jwtService.generate(user.getId(), user.getEmail(), user.getRole().name());
+        return new AuthResponse(token);
+    }
+
+    @PostMapping("/reactivate")
+    public AuthResponse reactivate(@RequestBody ReactivateRequest req) {
+        if (req.email() == null || req.email().isBlank()) throw new IllegalArgumentException("email required");
+        if (req.password() == null || req.password().isBlank()) throw new IllegalArgumentException("password required");
+
+        var user = userRepository.findByEmail(req.email().trim().toLowerCase())
+                .orElseThrow(() -> new UnauthorizedException("invalid credentials"));
+
+        if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
+            throw new UnauthorizedException("invalid credentials");
+        }
+
+        user.setEnabled(true);
         user.setLastLoginAt(Instant.now());
         userRepository.save(user);
 

@@ -1,6 +1,7 @@
 package com.pedro.resumeapi.security;
 
 import com.pedro.resumeapi.user.dto.UserPrincipal;
+import com.pedro.resumeapi.user.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -40,6 +42,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             UUID userId = UUID.fromString(claims.getSubject());
             String role = claims.get("role", String.class);
+            boolean enabled = userRepository.findById(userId).map(u -> u.isEnabled()).orElse(false);
+            if (!enabled) {
+                SecurityContextHolder.clearContext();
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
 
             var principal = new UserPrincipal(userId);
 
