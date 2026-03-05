@@ -15,22 +15,21 @@ public class CorsConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOrigins(List.of(
+                "http://localhost:8080",
+                "https://resumefeedback.hmpedro.com",
+                "https://feedback.hmpedro.com"));
 
         config.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
-        ));
+                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
 
         config.setAllowedHeaders(List.of("*"));
 
         config.setExposedHeaders(List.of("*"));
 
-        // Temporary open CORS policy for frontend integration phase.
-        // We are using Authorization headers (Bearer), not cookie credentials.
         config.setAllowCredentials(false);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
         source.registerCorsConfiguration("/**", config);
         return source;
