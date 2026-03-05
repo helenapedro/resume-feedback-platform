@@ -25,7 +25,7 @@ public class AvatarStorageService {
         validate(file);
 
         String extension = resolveExtension(file);
-        String key = "avatars/" + buildDatePrefix() + "/" + userId + "/" + UUID.randomUUID() + "." + extension;
+        String key = "avatars/" + buildDatePrefix() + "_" + UUID.randomUUID() + "." + extension;
         String contentType = file.getContentType();
 
         if (storageProperties.getBackend() != StorageBackend.S3) {
@@ -90,6 +90,6 @@ public class AvatarStorageService {
 
     private String buildDatePrefix() {
         LocalDate now = LocalDate.now(ZoneOffset.UTC);
-        return now.getYear() + "/" + String.format("%02d", now.getMonthValue()) + "/" + String.format("%02d", now.getDayOfMonth());
+        return now.toString();
     }
 }

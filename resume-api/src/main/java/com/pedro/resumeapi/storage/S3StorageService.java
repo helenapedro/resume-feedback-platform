@@ -34,8 +34,7 @@ public class S3StorageService {
             throw new IllegalStateException("S3 bucket is not configured");
         }
         String safeName = sanitizeFilename(originalFilename);
-        String datePrefix = buildDatePrefix();
-        String key = "resumes/" + datePrefix + "/" + ownerId + "/" + resumeId + "/v" + versionNumber + "_" + safeName;
+        String key = "resumes/" + buildResumeFolderPrefix(resumeId) + "/v" + versionNumber + "_" + safeName;
 
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(properties.getBucket())
@@ -64,8 +63,11 @@ public class S3StorageService {
     }
 
     private String buildDatePrefix() {
-        LocalDate now = LocalDate.now(ZoneOffset.UTC);
-        return now.getYear() + "/" + String.format("%02d", now.getMonthValue()) + "/" + String.format("%02d", now.getDayOfMonth());
+        return LocalDate.now(ZoneOffset.UTC).toString();
+    }
+
+    private String buildResumeFolderPrefix(UUID resumeId) {
+        return buildDatePrefix() + "_" + resumeId;
     }
 
     public void deleteObject(String bucket, String objectKey, String versionId) {
