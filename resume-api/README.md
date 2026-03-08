@@ -1,6 +1,6 @@
 # resume-api
 
-Synchronous REST API module for authentication, resumes, share links, comments, and AI job orchestration.
+Synchronous REST API module for authentication, resumes, share links, comments, AI job orchestration, and AI progress retrieval across resume versions.
 
 For platform context and architecture, see the [root README](../README.md).
 
@@ -16,6 +16,7 @@ For platform context and architecture, see the [root README](../README.md).
 - Owner/public comments
 - AI job creation/status/regeneration endpoints
 - AI feedback read endpoints
+- AI progress read endpoint for version-to-version comparison
 - Audit and access logging
 
 ## Key Dependencies
@@ -87,6 +88,7 @@ Comments:
 
 AI:
 - `GET /api/resumes/{resumeId}/versions/{versionId}/ai-feedback`
+- `GET /api/resumes/{resumeId}/versions/{versionId}/ai-progress`
 - `GET /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/latest`
 - `POST /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/regenerate`
 
@@ -100,3 +102,4 @@ AI:
 
 - Share tokens are persisted as hashes (plaintext returned only at creation time).
 - AI events are published after transaction commit to avoid race conditions with worker consumption.
+- `ai-progress` is available only when the requested version has a prior version with stored AI feedback to use as baseline context.

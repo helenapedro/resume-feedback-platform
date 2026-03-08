@@ -6,15 +6,16 @@ For platform context and architecture, see the [root README](../README.md).
 
 ## Purpose
 
-`resume-worker` consumes AI job events from Kafka, generates resume feedback (Gemini), stores outputs, and updates job state.
+`resume-worker` consumes AI job events from Kafka, generates resume feedback (Gemini), stores outputs, generates version-to-version progress analysis when possible, and updates job state.
 
 ## Responsibilities
 
 - Consume `AiJobRequestedMessage` events from Kafka
 - Transition job lifecycle (`PENDING -> PROCESSING -> DONE/FAILED`)
 - Generate AI feedback from prompt payloads
+- Generate AI progress analysis for newer resume versions using the previous version plus prior AI feedback as baseline context
 - Persist AI feedback documents in MongoDB
-- Persist feedback references and job state in MySQL
+- Persist feedback/progress references and job state in MySQL
 - Retry failed jobs using scheduled backoff policy
 
 ## Key Dependencies
@@ -57,6 +58,7 @@ Gemini:
 - Topic: `${KAFKA_PREFIX}resume-ai-jobs` (default)
 - Consumer group: `${KAFKA_PREFIX}resume-worker` (default)
 - Failed jobs are retried on schedule until max attempts are reached.
+- Progress analysis is skipped for the first version of a resume, or when the previous version has no stored baseline feedback yet.
 
 ## Tests
 
@@ -68,3 +70,4 @@ Gemini:
 
 - If `GEMINI_API_KEY` is missing or Gemini fails, fallback feedback content may be generated depending on current implementation.
 - Monitor logs for consumer errors and job status transitions.
+- Progress-analysis failures do not fail the primary feedback job; the worker logs and skips that secondary artifact.

@@ -3,8 +3,8 @@
 Enterprise-grade platform for resume management, secure sharing, versioned feedback, and AI-assisted analysis.
 
 This repository is a multi-module Spring Boot monorepo with:
-- `resume-api`: synchronous REST API for auth, resumes, share links, comments, and AI job orchestration.
-- `resume-worker`: asynchronous worker that consumes Kafka jobs and generates AI feedback.
+- `resume-api`: synchronous REST API for auth, resumes, share links, comments, AI job orchestration, and progress retrieval across resume versions.
+- `resume-worker`: asynchronous worker that consumes Kafka jobs and generates AI feedback plus version-to-version progress analysis.
 - `common`: shared contracts and cross-module models (including Kafka payloads).
 
 ## Quick Start
@@ -33,6 +33,8 @@ This repository is a multi-module Spring Boot monorepo with:
 - Login: `POST /api/auth/login`
 - Upload resume: `POST /api/resumes` (multipart: `file`, `title`)
 - Check latest AI job: `GET /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/latest`
+- Get latest AI feedback: `GET /api/resumes/{resumeId}/versions/{versionId}/ai-feedback`
+- Get version progress analysis: `GET /api/resumes/{resumeId}/versions/{versionId}/ai-progress`
 
 For full local infra/bootstrap details, see [docs/operations.md](docs/operations.md).
 
@@ -48,7 +50,7 @@ For full local infra/bootstrap details, see [docs/operations.md](docs/operations
 ## Business Context and Scope
 
 ### Executive Summary
-The platform allows users to upload and version resumes, share them through controlled links, receive comments, and generate AI feedback asynchronously.  
+The platform allows users to upload and version resumes, share them through controlled links, receive comments, and generate AI feedback asynchronously. It also keeps AI comparison memory at the resume-version level so newer uploads can be compared with previous versions and prior feedback.  
 It separates user-facing API latency from AI processing latency by moving feedback generation to a Kafka-based worker pipeline.
 
 ### Problem It Solves
@@ -63,6 +65,7 @@ It separates user-facing API latency from AI processing latency by moving feedba
 - Owner/public comments
 - Asynchronous AI job creation and status tracking
 - AI feedback persistence and retrieval
+- AI progress analysis across resume versions
 
 ### Out of Scope (Current)
 - Multi-tenant organization model
@@ -95,7 +98,7 @@ Detailed architecture documentation is available at:
 
 ### Key Decisions
 - Async AI processing via Kafka instead of synchronous API calls.
-- Dual persistence: MySQL (core state) + MongoDB (feedback document model).
+- Dual persistence: MySQL (core state and AI references) + MongoDB (feedback/progress document models).
 - JWT-based stateless auth for API endpoints.
 
 ### Trade-offs
@@ -104,11 +107,13 @@ Detailed architecture documentation is available at:
 
 ### Known Limitations
 - AI completion is not immediate; clients must poll.
+- Progress analysis is only available when a version has a previous version with stored baseline feedback.
 - Health checks can reflect downstream dependency latency.
 
 ### Technical Risks
 - Provider/API key misconfiguration may stall or fail jobs.
 - Broker/auth settings can break event flow if environment drift occurs.
+- AI comparison quality depends on extracted resume text quality and consistency between versions.
 
 ---
 
@@ -117,6 +122,7 @@ Detailed architecture documentation is available at:
 - Kafka SSL and deserializer compatibility required explicit environment handling.
 - AI payload serialization required explicit Java Time support for `Instant`.
 - Event publication timing needed post-commit publishing to avoid race conditions where worker reads before DB commit.
+- Persisted version-aware AI memory is more reliable than relying on provider-side chat/session memory.
 
 ---
 
