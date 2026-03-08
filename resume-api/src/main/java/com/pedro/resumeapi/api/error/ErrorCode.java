@@ -10,6 +10,7 @@ public enum ErrorCode {
     VERSION_NOT_FOUND,
     VERSION_NOT_IN_RESUME,
     AI_JOB_NOT_FOUND,
+    AI_PROGRESS_NOT_FOUND,
 
     // Validation / Input
     VALIDATION_ERROR,

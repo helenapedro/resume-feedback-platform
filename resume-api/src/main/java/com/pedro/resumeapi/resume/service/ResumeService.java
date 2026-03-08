@@ -4,7 +4,9 @@ import com.pedro.resumeapi.api.error.ForbiddenException;
 import com.pedro.resumeapi.api.error.ResumeNotFoundException;
 import com.pedro.resumeapi.accessaudit.repository.AccessAuditRepository;
 import com.pedro.resumeapi.ai.mongo.AiFeedbackMongoRepository;
+import com.pedro.resumeapi.ai.mongo.AiProgressMongoRepository;
 import com.pedro.resumeapi.ai.repository.AiFeedbackRefRepository;
+import com.pedro.resumeapi.ai.repository.AiProgressRefRepository;
 import com.pedro.resumeapi.resume.domain.Resume;
 import com.pedro.resumeapi.resume.domain.ResumeVersion;
 import com.pedro.resumeapi.user.domain.User;
@@ -42,6 +44,8 @@ public class ResumeService {
     private final AiJobRepository aiJobRepository;
     private final AiFeedbackRefRepository aiFeedbackRefRepository;
     private final AiFeedbackMongoRepository aiFeedbackMongoRepository;
+    private final AiProgressRefRepository aiProgressRefRepository;
+    private final AiProgressMongoRepository aiProgressMongoRepository;
     private final CommentRepository commentRepository;
     private final AccessAuditRepository accessAuditRepository;
     private final UserRepository userRepository;
@@ -124,7 +128,14 @@ public class ResumeService {
                     refs.stream().map(ref -> ref.getMongoDocId()).filter(StringUtils::hasText).toList()
             );
         }
+        var progressRefs = aiProgressRefRepository.findByResumeVersion_Resume_Id(resumeId);
+        if (!progressRefs.isEmpty()) {
+            aiProgressMongoRepository.deleteAllById(
+                    progressRefs.stream().map(ref -> ref.getMongoDocId()).filter(StringUtils::hasText).toList()
+            );
+        }
         aiFeedbackRefRepository.deleteByResumeVersion_Resume_Id(resumeId);
+        aiProgressRefRepository.deleteByResumeVersion_Resume_Id(resumeId);
         aiJobRepository.deleteByResumeVersion_Resume_Id(resumeId);
         commentRepository.deleteByResumeVersion_Resume_Id(resumeId);
 

@@ -80,6 +80,36 @@ public class GeminiClient {
         return fallbackAttempt.errorCode() != null ? fallbackAttempt : strictAttempt;
     }
 
+    public GeminiProgressCallResult generateProgressAnalysisWithDiagnostics(String prompt) {
+        if (!properties.enabled() || !StringUtils.hasText(properties.apiKey())) {
+            return GeminiProgressCallResult.failure("AI_PROVIDER_DISABLED", "Gemini is disabled or API key is missing");
+        }
+
+        GeminiProgressCallResult strictAttempt = requestProgressAnalysis(prompt, true, true);
+        if (strictAttempt.analysis().isPresent()) {
+            return strictAttempt;
+        }
+        if ("AI_PROVIDER_BLOCKED".equals(strictAttempt.errorCode())) {
+            return strictAttempt;
+        }
+
+        GeminiProgressCallResult fallbackAttempt = requestProgressAnalysis(prompt, false, true);
+        if (fallbackAttempt.analysis().isPresent()) {
+            return fallbackAttempt;
+        }
+        if ("AI_PROVIDER_INVALID_JSON".equals(fallbackAttempt.errorCode())) {
+            GeminiProgressCallResult compactJsonAttempt = requestProgressAnalysis(
+                    prompt + "\n\nIMPORTANT: Return strictly valid JSON in ONE LINE only. No markdown. No comments.",
+                    false,
+                    true);
+            if (compactJsonAttempt.analysis().isPresent()) {
+                return compactJsonAttempt;
+            }
+            return compactJsonAttempt.errorCode() != null ? compactJsonAttempt : fallbackAttempt;
+        }
+        return fallbackAttempt.errorCode() != null ? fallbackAttempt : strictAttempt;
+    }
+
     public String effectiveModel() {
         return StringUtils.hasText(properties.model())
                 ? properties.model()
@@ -92,7 +122,7 @@ public class GeminiClient {
                     .uri(buildUri())
                     .timeout(Duration.ofSeconds(30))
                     .header("Content-Type", "application/json; charset=utf-8")
-                    .POST(HttpRequest.BodyPublishers.ofString(buildPayload(prompt, useResponseSchema)))
+                    .POST(HttpRequest.BodyPublishers.ofString(buildPayload(prompt, useResponseSchema, buildResponseSchema())))
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
@@ -150,6 +180,70 @@ public class GeminiClient {
         }
     }
 
+    private GeminiProgressCallResult requestProgressAnalysis(String prompt, boolean useResponseSchema, boolean allowRepair) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(buildUri())
+                    .timeout(Duration.ofSeconds(30))
+                    .header("Content-Type", "application/json; charset=utf-8")
+                    .POST(HttpRequest.BodyPublishers.ofString(buildPayload(prompt, useResponseSchema, buildProgressResponseSchema())))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                log.warn("Gemini HTTP error for progress (schema={}) status={} body={}",
+                        useResponseSchema,
+                        response.statusCode(),
+                        truncateForLog(response.body()));
+                return GeminiProgressCallResult.failure(
+                        "AI_PROVIDER_HTTP_ERROR",
+                        "status=%s body=%s".formatted(response.statusCode(), truncateForLog(response.body())));
+            }
+
+            GeminiResponse geminiResponse = objectMapper.readValue(response.body(), GeminiResponse.class);
+            if (geminiResponse.promptFeedback != null && StringUtils.hasText(geminiResponse.promptFeedback.blockReason)) {
+                String detail = "blockReason=%s message=%s".formatted(
+                        geminiResponse.promptFeedback.blockReason,
+                        geminiResponse.promptFeedback.blockReasonMessage);
+                log.warn("Gemini progress request blocked (schema={}): {}", useResponseSchema, detail);
+                return GeminiProgressCallResult.failure("AI_PROVIDER_BLOCKED", detail);
+            }
+
+            String text = geminiResponse.firstText();
+            if (!StringUtils.hasText(text)) {
+                String finishReason = geminiResponse.firstFinishReason();
+                log.warn("Gemini returned empty progress content (schema={}) body={}",
+                        useResponseSchema,
+                        truncateForLog(response.body()));
+                if ("MAX_TOKENS".equalsIgnoreCase(finishReason)) {
+                    return GeminiProgressCallResult.failure("AI_PROVIDER_MAX_TOKENS", "finishReason=MAX_TOKENS");
+                }
+                return GeminiProgressCallResult.failure(
+                        "AI_PROVIDER_EMPTY_RESPONSE",
+                        "No text in candidates. finishReason=" + finishReason);
+            }
+
+            GeminiProgressCallResult parsed = parseProgressResult(text, useResponseSchema);
+            if (parsed.analysis().isPresent()) {
+                return parsed;
+            }
+
+            if (allowRepair && "AI_PROVIDER_INVALID_JSON".equals(parsed.errorCode())) {
+                GeminiProgressCallResult repaired = requestProgressJsonRepair(text);
+                if (repaired.analysis().isPresent()) {
+                    return repaired;
+                }
+            }
+            return parsed;
+        } catch (IOException ex) {
+            log.warn("Gemini progress parse failed (schema={}): {}", useResponseSchema, ex.getMessage());
+            return GeminiProgressCallResult.failure("AI_PROVIDER_INVALID_JSON", ex.getMessage());
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return GeminiProgressCallResult.failure("AI_PROVIDER_INTERRUPTED", ex.getMessage());
+        }
+    }
+
     private URI buildUri() {
         String baseUrl = StringUtils.hasText(properties.baseUrl())
                 ? properties.baseUrl()
@@ -164,7 +258,7 @@ public class GeminiClient {
         ));
     }
 
-    private String buildPayload(String prompt, boolean useResponseSchema) throws IOException {
+    private String buildPayload(String prompt, boolean useResponseSchema, ObjectNode responseSchema) throws IOException {
         ObjectNode root = objectMapper.createObjectNode();
         ObjectNode content = objectMapper.createObjectNode();
         content.put("role", "user");
@@ -178,7 +272,7 @@ public class GeminiClient {
         config.put("maxOutputTokens", properties.maxOutputTokens());
         config.put("responseMimeType", "application/json");
         if (useResponseSchema) {
-            config.set("responseSchema", buildResponseSchema());
+            config.set("responseSchema", responseSchema);
         }
         root.set("generationConfig", config);
 
@@ -219,9 +313,68 @@ public class GeminiClient {
         return schema;
     }
 
+    private ObjectNode buildProgressResponseSchema() {
+        ObjectNode schema = objectMapper.createObjectNode();
+        schema.put("type", "OBJECT");
+
+        ObjectNode propertiesNode = objectMapper.createObjectNode();
+
+        ObjectNode summary = objectMapper.createObjectNode();
+        summary.put("type", "STRING");
+        propertiesNode.set("summary", summary);
+
+        ObjectNode progressStatus = objectMapper.createObjectNode();
+        progressStatus.put("type", "STRING");
+        propertiesNode.set("progressStatus", progressStatus);
+
+        ObjectNode progressScore = objectMapper.createObjectNode();
+        progressScore.put("type", "INTEGER");
+        propertiesNode.set("progressScore", progressScore);
+
+        ObjectNode improvedAreas = objectMapper.createObjectNode();
+        improvedAreas.put("type", "ARRAY");
+        ObjectNode improvedItems = objectMapper.createObjectNode();
+        improvedItems.put("type", "STRING");
+        improvedAreas.set("items", improvedItems);
+        propertiesNode.set("improvedAreas", improvedAreas);
+
+        ObjectNode unchangedIssues = objectMapper.createObjectNode();
+        unchangedIssues.put("type", "ARRAY");
+        ObjectNode unchangedItems = objectMapper.createObjectNode();
+        unchangedItems.put("type", "STRING");
+        unchangedIssues.set("items", unchangedItems);
+        propertiesNode.set("unchangedIssues", unchangedIssues);
+
+        ObjectNode newIssues = objectMapper.createObjectNode();
+        newIssues.put("type", "ARRAY");
+        ObjectNode newItems = objectMapper.createObjectNode();
+        newItems.put("type", "STRING");
+        newIssues.set("items", newItems);
+        propertiesNode.set("newIssues", newIssues);
+
+        schema.set("properties", propertiesNode);
+
+        ArrayNode required = objectMapper.createArrayNode();
+        required.add("summary");
+        required.add("progressStatus");
+        required.add("progressScore");
+        required.add("improvedAreas");
+        required.add("unchangedIssues");
+        required.add("newIssues");
+        schema.set("required", required);
+        return schema;
+    }
+
     private boolean isUsable(GeminiFeedback feedback) {
         return feedback != null
                 && StringUtils.hasText(feedback.summary());
+    }
+
+    private boolean isUsable(GeminiProgressAnalysis analysis) {
+        return analysis != null
+                && StringUtils.hasText(analysis.summary())
+                && StringUtils.hasText(analysis.progressStatus())
+                && analysis.progressScore() != null;
     }
 
     private String extractJsonObject(String rawText) {
@@ -270,6 +423,22 @@ public class GeminiClient {
         }
     }
 
+    private GeminiProgressCallResult parseProgressResult(String text, boolean useResponseSchema) {
+        try {
+            GeminiProgressAnalysis analysis = parseProgressAnalysis(text);
+            if (!isUsable(analysis)) {
+                log.warn("Gemini returned unusable progress (schema={}) text={}",
+                        useResponseSchema,
+                        truncateForLog(text));
+                return GeminiProgressCallResult.failure("AI_PROVIDER_UNUSABLE_JSON", truncateForLog(text));
+            }
+            return GeminiProgressCallResult.success(analysis);
+        } catch (IOException ex) {
+            log.warn("Gemini progress parse failed (schema={}): {}", useResponseSchema, ex.getMessage());
+            return GeminiProgressCallResult.failure("AI_PROVIDER_INVALID_JSON", ex.getMessage());
+        }
+    }
+
     private GeminiCallResult requestJsonRepair(String malformedResponse) {
         String repairPrompt = """
                 Converta o texto abaixo para JSON valido em UMA LINHA, sem markdown, sem comentarios.
@@ -284,6 +453,22 @@ public class GeminiClient {
                 %s
                 """.formatted(malformedResponse);
         return requestFeedback(repairPrompt, false, false);
+    }
+
+    private GeminiProgressCallResult requestProgressJsonRepair(String malformedResponse) {
+        String repairPrompt = """
+                Converta o texto abaixo para JSON valido em UMA LINHA, sem markdown, sem comentarios.
+                Saida obrigatoria:
+                {"summary":"...","progressStatus":"MELHOROU","progressScore":0,"improvedAreas":["..."],"unchangedIssues":["..."],"newIssues":["..."]}
+                Regras:
+                - Escape aspas internas corretamente.
+                - Remova quebras de linha dentro de strings.
+                - Se faltar algum campo, complete com texto curto e objetivo.
+
+                Texto a corrigir:
+                %s
+                """.formatted(malformedResponse);
+        return requestProgressAnalysis(repairPrompt, false, false);
     }
 
     private GeminiFeedback parseFeedback(String rawText) throws IOException {
@@ -301,6 +486,20 @@ public class GeminiClient {
         }
     }
 
+    private GeminiProgressAnalysis parseProgressAnalysis(String rawText) throws IOException {
+        String extractedJson = extractJsonObject(rawText);
+        try {
+            return normalize(objectMapper.readValue(extractedJson, GeminiProgressAnalysis.class));
+        } catch (IOException first) {
+            String flattened = extractedJson.replace('\r', ' ').replace('\n', ' ');
+            try {
+                return normalize(lenientObjectMapper.readValue(flattened, GeminiProgressAnalysis.class));
+            } catch (IOException second) {
+                throw second;
+            }
+        }
+    }
+
     private GeminiFeedback normalize(GeminiFeedback feedback) {
         if (feedback == null) {
             return null;
@@ -309,6 +508,21 @@ public class GeminiClient {
         List<String> strengths = sanitizeList(feedback.strengths());
         List<String> improvements = sanitizeList(feedback.improvements());
         return new GeminiFeedback(summary, strengths, improvements);
+    }
+
+    private GeminiProgressAnalysis normalize(GeminiProgressAnalysis analysis) {
+        if (analysis == null) {
+            return null;
+        }
+        String summary = analysis.summary() == null ? "" : analysis.summary().trim();
+        String progressStatus = analysis.progressStatus() == null ? "" : analysis.progressStatus().trim();
+        Integer progressScore = analysis.progressScore() == null
+                ? null
+                : Math.max(0, Math.min(100, analysis.progressScore()));
+        List<String> improvedAreas = sanitizeList(analysis.improvedAreas());
+        List<String> unchangedIssues = sanitizeList(analysis.unchangedIssues());
+        List<String> newIssues = sanitizeList(analysis.newIssues());
+        return new GeminiProgressAnalysis(summary, progressStatus, progressScore, improvedAreas, unchangedIssues, newIssues);
     }
 
     private List<String> sanitizeList(List<String> input) {
@@ -375,6 +589,16 @@ public class GeminiClient {
             List<String> improvements
     ) {}
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record GeminiProgressAnalysis(
+            String summary,
+            String progressStatus,
+            Integer progressScore,
+            List<String> improvedAreas,
+            List<String> unchangedIssues,
+            List<String> newIssues
+    ) {}
+
     public record GeminiCallResult(Optional<GeminiFeedback> feedback, String errorCode, String errorDetail) {
         static GeminiCallResult success(GeminiFeedback feedback) {
             return new GeminiCallResult(Optional.ofNullable(feedback), null, null);
@@ -382,6 +606,16 @@ public class GeminiClient {
 
         static GeminiCallResult failure(String errorCode, String errorDetail) {
             return new GeminiCallResult(Optional.empty(), errorCode, errorDetail);
+        }
+    }
+
+    public record GeminiProgressCallResult(Optional<GeminiProgressAnalysis> analysis, String errorCode, String errorDetail) {
+        static GeminiProgressCallResult success(GeminiProgressAnalysis analysis) {
+            return new GeminiProgressCallResult(Optional.ofNullable(analysis), null, null);
+        }
+
+        static GeminiProgressCallResult failure(String errorCode, String errorDetail) {
+            return new GeminiProgressCallResult(Optional.empty(), errorCode, errorDetail);
         }
     }
 }

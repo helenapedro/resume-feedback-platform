@@ -25,6 +25,9 @@ public class ResumeVersion {
     @Column(name = "created_by", columnDefinition = "BINARY(16)")
     private UUID createdBy;
 
+    @Column(name = "version_number")
+    private Integer versionNumber;
+
     @Column(name = "storage_key", length = 1024)
     private String storageKey;
 
