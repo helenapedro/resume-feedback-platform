@@ -7,6 +7,7 @@ import com.pedro.resumeapi.api.error.ForbiddenException;
 import com.pedro.resumeapi.api.error.ResumeNotFoundException;
 import com.pedro.resumeapi.api.error.VersionNotFoundException;
 import com.pedro.resumeapi.resume.domain.Resume;
+import com.pedro.common.ai.Language;
 import com.pedro.resumeapi.resume.domain.ResumeVersion;
 import com.pedro.resumeapi.resume.repository.ResumeRepository;
 import com.pedro.resumeapi.resume.repository.ResumeVersionRepository;
@@ -28,16 +29,22 @@ public class AiJobService {
 
     @Transactional
     public AiJob createForVersion(ResumeVersion version) {
-        return createForVersion(version, version.getId().toString());
+        return createForVersion(version, version.getId().toString(), Language.EN);
     }
 
     @Transactional
     public AiJob createForVersion(ResumeVersion version, String idempotencyKey) {
+        return createForVersion(version, idempotencyKey, Language.EN);
+    }
+
+    @Transactional
+    public AiJob createForVersion(ResumeVersion version, String idempotencyKey, Language language) {
         AiJob job = new AiJob();
         job.setResumeVersion(version);
         job.setStatus(AiJob.Status.PENDING);
         job.setAttemptCount(0);
         job.setIdempotencyKey(idempotencyKey);
+        job.setLanguage(language == null ? Language.EN : language);
 
         try {
             return repo.save(job);
@@ -56,9 +63,14 @@ public class AiJobService {
 
     @Transactional
     public AiJob regenerateForVersion(UUID resumeId, UUID versionId) {
+        return regenerateForVersion(resumeId, versionId, Language.EN);
+    }
+
+    @Transactional
+    public AiJob regenerateForVersion(UUID resumeId, UUID versionId, Language language) {
         ResumeVersion version = getOwnedVersion(resumeId, versionId);
         String idempotencyKey = version.getId() + ":regen:" + UUID.randomUUID();
-        return createForVersion(version, idempotencyKey);
+        return createForVersion(version, idempotencyKey, language);
     }
 
     private ResumeVersion getOwnedVersion(UUID resumeId, UUID versionId) {

@@ -27,7 +27,7 @@ public class ResumeTextExtractor {
     private final int maxResumeChars;
 
     public ResumeTextExtractor(ObjectProvider<S3Client> s3ClientProvider,
-                               @Value("${app.ai-feedback.max-resume-chars:12000}") int maxResumeChars) {
+            @Value("${app.ai-feedback.max-resume-chars:12000}") int maxResumeChars) {
         this.s3ClientProvider = s3ClientProvider;
         this.maxResumeChars = maxResumeChars;
     }
@@ -42,20 +42,25 @@ public class ResumeTextExtractor {
 
             if (StringUtils.hasText(version.getS3Bucket()) && StringUtils.hasText(version.getS3ObjectKey())) {
                 S3Client s3 = s3ClientProvider.getIfAvailable();
+
                 if (s3 != null) {
                     GetObjectRequest.Builder req = GetObjectRequest.builder()
                             .bucket(version.getS3Bucket())
                             .key(version.getS3ObjectKey());
+
                     if (StringUtils.hasText(version.getS3VersionId())) {
                         req.versionId(version.getS3VersionId());
                     }
+
                     ResponseBytes<GetObjectResponse> objectBytes = s3.getObjectAsBytes(req.build());
+
                     bytes = objectBytes.asByteArray();
                 }
             }
 
             if (bytes == null && StringUtils.hasText(version.getStorageKey())) {
                 Path localPath = Path.of(version.getStorageKey()).toAbsolutePath().normalize();
+
                 if (Files.exists(localPath)) {
                     bytes = Files.readAllBytes(localPath);
                 }
@@ -66,25 +71,32 @@ public class ResumeTextExtractor {
             }
 
             String text = extractTextFromPdf(bytes);
+
             if (!StringUtils.hasText(text)) {
                 return Optional.empty();
             }
 
             String normalized = normalizeText(text);
+
             if (normalized.length() > maxResumeChars) {
                 normalized = normalized.substring(0, maxResumeChars);
             }
+
             return Optional.of(normalized);
+
         } catch (Exception ex) {
             log.warn("Could not extract resume text for resumeVersionId={}: {}",
                     version.getId(), ex.getMessage());
+
             return Optional.empty();
         }
     }
 
     private String extractTextFromPdf(byte[] pdfBytes) throws IOException {
+
         try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
             PDFTextStripper stripper = new PDFTextStripper();
+
             return stripper.getText(doc);
         }
     }
@@ -98,4 +110,3 @@ public class ResumeTextExtractor {
                 .trim();
     }
 }
-

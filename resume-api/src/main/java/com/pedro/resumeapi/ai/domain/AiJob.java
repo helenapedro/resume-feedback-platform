@@ -1,5 +1,6 @@
 package com.pedro.resumeapi.ai.domain;
 
+import com.pedro.common.ai.Language;
 import com.pedro.resumeapi.resume.domain.ResumeVersion;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -9,17 +10,17 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "ai_jobs",
-        indexes = {
-                @Index(name = "idx_ai_jobs_version", columnList = "resume_version_id"),
-                @Index(name = "idx_ai_jobs_status", columnList = "status")
-        },
-        uniqueConstraints = @UniqueConstraint(name = "uk_ai_jobs_idempotency", columnNames = "idempotency_key")
-)
-@Getter @Setter
+@Table(name = "ai_jobs", indexes = {
+        @Index(name = "idx_ai_jobs_version", columnList = "resume_version_id"),
+        @Index(name = "idx_ai_jobs_status", columnList = "status")
+}, uniqueConstraints = @UniqueConstraint(name = "uk_ai_jobs_idempotency", columnNames = "idempotency_key"))
+@Getter
+@Setter
 public class AiJob {
 
-    public enum Status { PENDING, PROCESSING, DONE, FAILED }
+    public enum Status {
+        PENDING, PROCESSING, DONE, FAILED
+    }
 
     @Id
     @Column(columnDefinition = "BINARY(16)")
@@ -38,6 +39,10 @@ public class AiJob {
 
     @Column(name = "idempotency_key", length = 80, unique = true)
     private String idempotencyKey;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "language", nullable = false, length = 10)
+    private Language language = Language.EN;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -62,9 +67,14 @@ public class AiJob {
 
     @PrePersist
     void prePersist() {
-        if (id == null) id = UUID.randomUUID();
-        if (createdAt == null) createdAt = Instant.now();
-        if (status == null) status = Status.PENDING;
+        if (id == null)
+            id = UUID.randomUUID();
+        if (createdAt == null)
+            createdAt = Instant.now();
+        if (status == null)
+            status = Status.PENDING;
+        if (language == null)
+            language = Language.EN;
     }
 
     @PreUpdate

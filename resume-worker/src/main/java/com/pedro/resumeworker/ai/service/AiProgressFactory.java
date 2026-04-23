@@ -1,6 +1,7 @@
 package com.pedro.resumeworker.ai.service;
 
 import com.pedro.common.ai.AiJobRequestedMessage;
+import com.pedro.common.ai.Language;
 import com.pedro.common.ai.mongo.AiFeedbackDocument;
 import com.pedro.common.ai.mongo.AiProgressDocument;
 import com.pedro.resumeworker.ai.domain.ResumeVersion;
@@ -36,19 +37,22 @@ public class AiProgressFactory {
             AiJobRequestedMessage message,
             ResumeVersion currentVersion,
             ResumeVersion previousVersion,
-            AiFeedbackDocument previousFeedback
-    ) {
+            AiFeedbackDocument previousFeedback) {
         String currentResumeText = resumeTextExtractor.extract(currentVersion).orElse("");
         String previousResumeText = resumeTextExtractor.extract(previousVersion).orElse("");
 
+        Language language = message.language() == null ? Language.EN : message.language();
+
         GeminiClient.GeminiProgressCallResult result = geminiClient.generateProgressAnalysisWithDiagnostics(
-                buildPrompt(message, currentVersion, previousVersion, currentResumeText, previousResumeText, previousFeedback));
+                buildPrompt(message, currentVersion, previousVersion, currentResumeText, previousResumeText,
+                        previousFeedback, language));
         GeminiClient.GeminiProgressAnalysis progress = result.analysis().orElse(null);
         if (progress == null) {
             throw new AiJobDomainException(
                     result.errorCode() == null ? "AI_PROVIDER_EMPTY_PROGRESS_RESPONSE" : result.errorCode(),
                     "Gemini progress failure. jobId=%s resumeVersionId=%s baselineResumeVersionId=%s detail=%s"
-                            .formatted(message.jobId(), currentVersion.getId(), previousVersion.getId(), result.errorDetail()));
+                            .formatted(message.jobId(), currentVersion.getId(), previousVersion.getId(),
+                                    result.errorDetail()));
         }
 
         AiProgressDocument doc = new AiProgressDocument();
@@ -75,54 +79,108 @@ public class AiProgressFactory {
             ResumeVersion previousVersion,
             String currentResumeText,
             String previousResumeText,
-            AiFeedbackDocument previousFeedback
-    ) {
-        String previousFeedbackSection = previousFeedback == null ? "Feedback anterior: NAO DISPONIVEL" : """
-                Feedback anterior dado ao utilizador:
-                - summary: %s
-                - strengths: %s
-                - improvements: %s
-                """.formatted(
-                sanitize(previousFeedback.getSummary()),
-                sanitizeList(previousFeedback.getStrengths()),
-                sanitizeList(previousFeedback.getImprovements()));
+            AiFeedbackDocument previousFeedback,
+            Language language) {
+        String previousFeedbackSection = previousFeedback == null
+                ? (language == Language.PT ? "Feedback anterior: NAO DISPONIVEL" : "Previous feedback: NOT AVAILABLE")
+                : """
+                        %s:
+                        - summary: %s
+                        - strengths: %s
+                        - improvements: %s
+                        """.formatted(
+                        language == Language.PT ? "Feedback anterior dado ao utilizador"
+                                : "Previous feedback delivered to the user",
+                        sanitize(previousFeedback.getSummary(), language),
+                        sanitizeList(previousFeedback.getStrengths()),
+                        sanitizeList(previousFeedback.getImprovements()));
+
+        if (language == Language.PT) {
+            return """
+                    Voce e um revisor especializado em curriculos.
+                    Compare a nova versao com a versao anterior e com o feedback anterior.
+                    Escreva em portugues de Portugal, objetivo, sem frases genericas e sem markdown.
+                    RETORNE O JSON EM UMA UNICA LINHA.
+                    Responda SOMENTE com JSON valido no formato:
+                    {
+                      "summary": "resumo curto sobre a progressao",
+                      "progressStatus": "MELHOROU|ESTAVEL|REGREDIU",
+                      "progressScore": 0,
+                      "improvedAreas": ["ate 3 melhorias concretas"],
+                      "unchangedIssues": ["ate 3 problemas que continuam"],
+                      "newIssues": ["ate 3 novos problemas introduzidos"]
+                    }
+                    Regras:
+                    - Baseie-se no curriculo anterior, no curriculo atual e no feedback anterior.
+                    - progressScore deve ser inteiro entre 0 e 100.
+                    - Se nao houver evidencia suficiente, use listas vazias em vez de inventar.
+                    - Nao use aspas duplas dentro dos valores de texto.
+                    - Nao inclua quebra de linha nos valores.
+                    - Escape corretamente quaisquer caracteres especiais.
+
+                    Metadados:
+                    - jobId: %s
+                    - resumeId: %s
+                    - currentResumeVersionId: %s
+                    - baselineResumeVersionId: %s
+                    - ownerId: %s
+                    - limite de caracteres analisados: %s
+
+                    Curriculo anterior (texto bruto):
+                    %s
+
+                    %s
+
+                    Curriculo atual (texto bruto):
+                    %s
+                    """.formatted(
+                    message.jobId(),
+                    message.resumeId(),
+                    currentVersion.getId(),
+                    previousVersion.getId(),
+                    message.ownerId(),
+                    maxResumeChars,
+                    sanitize(previousResumeText, language),
+                    previousFeedbackSection,
+                    sanitize(currentResumeText, language));
+        }
 
         return """
-                Voce e um revisor especializado em curriculos.
-                Compare a nova versao com a versao anterior e com o feedback anterior.
-                Escreva em portugues de Portugal, objetivo, sem frases genericas e sem markdown.
-                RETORNE O JSON EM UMA UNICA LINHA.
-                Responda SOMENTE com JSON valido no formato:
+                You are a resume reviewer.
+                Compare the new version with the previous version and the previous feedback.
+                Write in clear English, objective, without generic phrases, and without markdown.
+                RETURN THE JSON IN A SINGLE LINE.
+                Respond ONLY with valid JSON in the format:
                 {
-                  "summary": "resumo curto sobre a progressao",
-                  "progressStatus": "MELHOROU|ESTAVEL|REGREDIU",
+                  "summary": "short summary of the progression",
+                  "progressStatus": "IMPROVED|UNCHANGED|DECLINED",
                   "progressScore": 0,
-                  "improvedAreas": ["ate 3 melhorias concretas"],
-                  "unchangedIssues": ["ate 3 problemas que continuam"],
-                  "newIssues": ["ate 3 novos problemas introduzidos"]
+                  "improvedAreas": ["up to 3 concrete improvements"],
+                  "unchangedIssues": ["up to 3 issues that remain"],
+                  "newIssues": ["up to 3 newly introduced issues"]
                 }
-                Regras:
-                - Baseie-se no curriculo anterior, no curriculo atual e no feedback anterior.
-                - progressScore deve ser inteiro entre 0 e 100.
-                - Se nao houver evidencia suficiente, use listas vazias em vez de inventar.
-                - Nao use aspas duplas dentro dos valores de texto.
-                - Nao inclua quebra de linha nos valores.
-                - Escape corretamente quaisquer caracteres especiais.
+                Rules:
+                - Base your analysis on the previous resume, the current resume, and the previous feedback.
+                - progressScore must be an integer between 0 and 100.
+                - If there is insufficient evidence, use empty lists instead of making things up.
+                - Do not use double quotes inside text values.
+                - Do not include line breaks in values.
+                - Escape any special characters correctly.
 
-                Metadados:
+                Metadata:
                 - jobId: %s
                 - resumeId: %s
                 - currentResumeVersionId: %s
                 - baselineResumeVersionId: %s
                 - ownerId: %s
-                - limite de caracteres analisados: %s
+                - analyzed character limit: %s
 
-                Curriculo anterior (texto bruto):
+                Previous resume (raw text):
                 %s
 
                 %s
 
-                Curriculo atual (texto bruto):
+                Current resume (raw text):
                 %s
                 """.formatted(
                 message.jobId(),
@@ -131,13 +189,15 @@ public class AiProgressFactory {
                 previousVersion.getId(),
                 message.ownerId(),
                 maxResumeChars,
-                sanitize(previousResumeText),
+                sanitize(previousResumeText, language),
                 previousFeedbackSection,
-                sanitize(currentResumeText));
+                sanitize(currentResumeText, language));
     }
 
-    private String sanitize(String value) {
-        return value == null || value.isBlank() ? "NAO DISPONIVEL" : value;
+    private String sanitize(String value, Language language) {
+        return value == null || value.isBlank()
+                ? (language == Language.PT ? "NAO DISPONIVEL" : "NOT AVAILABLE")
+                : value;
     }
 
     private String sanitizeList(List<String> values) {

@@ -1,6 +1,7 @@
 package com.pedro.resumeworker.ai.service;
 
 import com.pedro.common.ai.AiJobRequestedMessage;
+import com.pedro.common.ai.Language;
 import com.pedro.resumeworker.ai.config.AiJobRetryProperties;
 import com.pedro.resumeworker.ai.domain.AiJob;
 import com.pedro.resumeworker.ai.domain.ResumeVersion;
@@ -27,16 +28,14 @@ public class AiJobRetryScheduler {
     @Transactional
     public void retryFailedJobs() {
         List<AiJob> pendingJobs = aiJobRepository.findTop50ByStatusOrderByCreatedAtAsc(
-                AiJob.Status.PENDING
-        );
+                AiJob.Status.PENDING);
         for (AiJob job : pendingJobs) {
             processJob(job);
         }
 
         List<AiJob> dueJobs = aiJobRepository.findTop50ByStatusAndNextRetryAtBeforeOrderByNextRetryAtAsc(
                 AiJob.Status.FAILED,
-                Instant.now()
-        );
+                Instant.now());
         for (AiJob job : dueJobs) {
             if (job.getAttemptCount() >= retryProperties.maxAttempts()) {
                 continue;
@@ -52,8 +51,8 @@ public class AiJobRetryScheduler {
                 version.getResumeId(),
                 version.getId(),
                 version.getCreatedBy(),
-                job.getCreatedAt()
-        );
+                job.getCreatedAt(),
+                job.getLanguage() == null ? Language.EN : job.getLanguage());
         processor.process(message);
     }
 }

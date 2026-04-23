@@ -40,6 +40,113 @@ flowchart LR
   API --> U
 ```
 
+## AI Sequence Flows
+
+### AI Resume Feedback Generation
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant API as resume-api
+    participant MySQL as MySQL
+    participant Worker as resume-worker
+    participant Extractor as ResumeTextExtractor
+    participant Gemini as Gemini API
+    participant Mongo as MongoDB
+
+    User->>API: POST /api/resumes or POST /versions
+    API->>MySQL: Save Resume + ResumeVersion
+    API->>MySQL: Create AiJob(status=PENDING)
+    API-->>User: Return resume/version response
+
+    Note over API,Worker: Intended async design includes Kafka event publishing
+    Note over Worker,MySQL: Current worker code also processes pending jobs via scheduler
+
+    Worker->>MySQL: Poll pending AiJobs
+    MySQL-->>Worker: PENDING job + ResumeVersion metadata
+
+    Worker->>MySQL: Mark job PROCESSING
+    Worker->>Extractor: extract(resumeVersion)
+
+    alt Resume stored in S3
+        Extractor->>Extractor: Download PDF bytes from S3
+    else Resume stored locally
+        Extractor->>Extractor: Read PDF from storageKey
+    end
+
+    Extractor->>Extractor: Extract and normalize PDF text
+    Extractor-->>Worker: Resume text
+
+    Worker->>Gemini: Prompt with resume text
+    Gemini-->>Worker: JSON feedback(summary, strengths, improvements)
+
+    alt Gemini response valid
+        Worker->>Mongo: Save AiFeedbackDocument
+        Mongo-->>Worker: mongoDocId
+        Worker->>MySQL: Save AiFeedbackRef(version, model, promptVersion, mongoDocId)
+        Worker->>MySQL: Mark job DONE
+    else Gemini failure / parse error / provider error
+        Worker->>MySQL: Mark job FAILED with error metadata
+    end
+
+    User->>API: GET /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/latest
+    API->>MySQL: Read latest AiJob
+    API-->>User: Job status
+
+    User->>API: GET /api/resumes/{resumeId}/versions/{versionId}/ai-feedback
+    API->>MySQL: Read latest AiFeedbackRef
+    API->>Mongo: Read AiFeedbackDocument
+    API-->>User: Feedback JSON
+```
+
+### AI Progress Analysis Across Resume Versions
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant API as resume-api
+    participant MySQL as MySQL
+    participant Worker as resume-worker
+    participant Extractor as ResumeTextExtractor
+    participant Gemini as Gemini API
+    participant Mongo as MongoDB
+
+    User->>API: POST /api/resumes/{resumeId}/versions
+    API->>MySQL: Save new ResumeVersion
+    API->>MySQL: Create AiJob(status=PENDING)
+    API-->>User: Return version response
+
+    Worker->>MySQL: Poll pending AiJobs
+    MySQL-->>Worker: Pending job for current version
+    Worker->>MySQL: Mark job PROCESSING
+
+    Worker->>Extractor: Extract current resume text
+    Extractor-->>Worker: Current resume text
+    Worker->>Mongo: Load latest feedback for previous version
+    Worker->>MySQL: Load previous ResumeVersion
+
+    alt Previous version exists and baseline feedback exists
+        Worker->>Extractor: Extract previous resume text
+        Extractor-->>Worker: Previous resume text
+        Worker->>Gemini: Prompt with previous resume, current resume, and previous feedback
+        Gemini-->>Worker: JSON progress(summary, status, score, issue lists)
+        Worker->>Mongo: Save AiProgressDocument
+        Mongo-->>Worker: mongoDocId
+        Worker->>MySQL: Save AiProgressRef(baselineVersion, model, promptVersion, mongoDocId)
+    else Baseline missing
+        Worker->>Worker: Skip progress generation
+    end
+
+    Worker->>MySQL: Mark primary feedback job DONE
+
+    User->>API: GET /api/resumes/{resumeId}/versions/{versionId}/ai-progress
+    API->>MySQL: Read latest AiProgressRef
+    API->>Mongo: Read AiProgressDocument
+    API-->>User: Progress analysis JSON
+```
+
 ## Integration Strategy
 
 - REST for user-facing operations
@@ -54,3 +161,4 @@ flowchart LR
 
 - The API publishes AI events after transaction commit to avoid race conditions with worker consumption.
 - AI job lifecycle is tracked in MySQL while feedback payloads are stored in MongoDB.
+- The current worker implementation also includes a scheduled retry/polling path that processes `PENDING` jobs directly from MySQL.

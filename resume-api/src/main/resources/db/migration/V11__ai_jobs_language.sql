@@ -1,0 +1,2 @@
+ALTER TABLE ai_jobs
+    ADD COLUMN language VARCHAR(10) NOT NULL DEFAULT 'EN';

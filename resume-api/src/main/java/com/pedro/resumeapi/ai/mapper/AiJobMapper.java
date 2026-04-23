@@ -1,6 +1,7 @@
 package com.pedro.resumeapi.ai.mapper;
 
 import com.pedro.common.ai.AiJobRequestedMessage;
+import com.pedro.common.ai.Language;
 import com.pedro.resumeapi.ai.domain.AiJob;
 import com.pedro.resumeapi.ai.dto.AiJobDTO;
 
@@ -9,42 +10,42 @@ import java.util.UUID;
 
 public class AiJobMapper {
 
-    public static AiJobDTO toDTO(AiJob job) {
-        UUID versionId = job.getResumeVersion() == null ? null : job.getResumeVersion().getId();
-        String status = job.getStatus() == null ? null : job.getStatus().name();
+        public static AiJobDTO toDTO(AiJob job) {
+                UUID versionId = job.getResumeVersion() == null ? null : job.getResumeVersion().getId();
+                String status = job.getStatus() == null ? null : job.getStatus().name();
 
-        return new AiJobDTO(
-                job.getId(),
-                versionId,
-                status,
-                job.getAttemptCount(),
-                job.getCreatedAt(),
-                job.getUpdatedAt(),
-                job.getStartedAt(),
-                job.getFinishedAt(),
-                job.getErrorCode(),
-                job.getErrorDetail(),
-                job.getNextRetryAt()
-        );
-    }
+                return new AiJobDTO(
+                                job.getId(),
+                                versionId,
+                                status,
+                                job.getAttemptCount(),
+                                job.getCreatedAt(),
+                                job.getUpdatedAt(),
+                                job.getStartedAt(),
+                                job.getFinishedAt(),
+                                job.getErrorCode(),
+                                job.getErrorDetail(),
+                                job.getNextRetryAt(),
+                                job.getLanguage() == null ? Language.EN.name() : job.getLanguage().name());
+        }
 
-    public static AiJobRequestedMessage toMessage(AiJob job) {
-        UUID resumeId = job.getResumeVersion() == null || job.getResumeVersion().getResume() == null
-                ? null
-                : job.getResumeVersion().getResume().getId();
-        UUID ownerId = job.getResumeVersion() == null
-                || job.getResumeVersion().getResume() == null
-                || job.getResumeVersion().getResume().getOwner() == null
-                ? null
-                : job.getResumeVersion().getResume().getOwner().getId();
-        Instant createdAt = job.getCreatedAt();
+        public static AiJobRequestedMessage toMessage(AiJob job) {
+                UUID resumeId = job.getResumeVersion() == null || job.getResumeVersion().getResume() == null
+                                ? null
+                                : job.getResumeVersion().getResume().getId();
+                UUID ownerId = job.getResumeVersion() == null
+                                || job.getResumeVersion().getResume() == null
+                                || job.getResumeVersion().getResume().getOwner() == null
+                                                ? null
+                                                : job.getResumeVersion().getResume().getOwner().getId();
+                Instant createdAt = job.getCreatedAt();
 
-        return new AiJobRequestedMessage(
-                job.getId(),
-                resumeId,
-                job.getResumeVersion() == null ? null : job.getResumeVersion().getId(),
-                ownerId,
-                createdAt
-        );
-    }
+                return new AiJobRequestedMessage(
+                                job.getId(),
+                                resumeId,
+                                job.getResumeVersion() == null ? null : job.getResumeVersion().getId(),
+                                ownerId,
+                                createdAt,
+                                job.getLanguage() == null ? Language.EN : job.getLanguage());
+        }
 }
