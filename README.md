@@ -3,6 +3,7 @@
 Enterprise-grade platform for resume management, secure sharing, versioned feedback, and AI-assisted analysis.
 
 This repository is a multi-module Spring Boot monorepo with:
+
 - `resume-api`: synchronous REST API for auth, resumes, share links, comments, AI job orchestration, and progress retrieval across resume versions.
 - `resume-worker`: asynchronous worker that consumes Kafka jobs and generates AI feedback plus version-to-version progress analysis.
 - `common`: shared contracts and cross-module models (including Kafka payloads).
@@ -10,31 +11,37 @@ This repository is a multi-module Spring Boot monorepo with:
 ## Quick Start
 
 ### 1) Prerequisites
+
 - Java 17
 - Maven Wrapper (`mvnw` / `mvnw.cmd`)
 - Docker Desktop (recommended for local dependencies)
 
 ### 2) Build all modules
+
 ```bash
 ./mvnw -DskipTests package
 ```
 
 ### 3) Run API
+
 ```bash
 ./mvnw -pl resume-api spring-boot:run
 ```
 
 ### 4) Run worker
+
 ```bash
 ./mvnw -pl resume-worker spring-boot:run
 ```
 
 ### 5) Validate
+
 - Login: `POST /api/auth/login`
 - Upload resume: `POST /api/resumes` (multipart: `file`, `title`)
 - Check latest AI job: `GET /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/latest`
 - Get latest AI feedback: `GET /api/resumes/{resumeId}/versions/{versionId}/ai-feedback`
 - Get version progress analysis: `GET /api/resumes/{resumeId}/versions/{versionId}/ai-progress`
+- Regenerate AI feedback in Portuguese: `POST /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/regenerate?language=PT`
 
 For full local infra/bootstrap details, see [docs/operations.md](docs/operations.md).
 
@@ -44,21 +51,25 @@ For full local infra/bootstrap details, see [docs/operations.md](docs/operations
 - [Architecture](docs/architecture.md)
 - [Requirements](docs/requirements.md)
 - [Operations](docs/operations.md)
+- [Submission](docs/submission.md)
 
 ---
 
 ## Business Context and Scope
 
 ### Executive Summary
+
 The platform allows users to upload and version resumes, share them through controlled links, receive comments, and generate AI feedback asynchronously. It also keeps AI comparison memory at the resume-version level so newer uploads can be compared with previous versions and prior feedback.  
 It separates user-facing API latency from AI processing latency by moving feedback generation to a Kafka-based worker pipeline.
 
 ### Problem It Solves
+
 - Resume review is usually manual and inconsistent.
 - Sharing and auditing resume access is often insecure or not traceable.
 - AI processing can be slow and should not block upload flows.
 
 ### In Scope
+
 - User registration/login (JWT)
 - Resume upload, listing, download, and versioning
 - Secure share links with audit trail
@@ -68,12 +79,14 @@ It separates user-facing API latency from AI processing latency by moving feedba
 - AI progress analysis across resume versions
 
 ### Out of Scope (Current)
+
 - Multi-tenant organization model
 - Real-time WebSocket notifications for job completion
 - Advanced prompt management UI
 - Full SLO dashboards as code
 
 ### Target Users
+
 - Resume owners (candidates/professionals)
 - Recruiters/managers reviewing shared resumes
 - Platform operators/developers
@@ -83,6 +96,7 @@ It separates user-facing API latency from AI processing latency by moving feedba
 ## Requirements
 
 Detailed functional and non-functional requirements are available at:
+
 - [docs/requirements.md](docs/requirements.md)
 
 ---
@@ -90,6 +104,7 @@ Detailed functional and non-functional requirements are available at:
 ## Architecture
 
 Detailed architecture documentation is available at:
+
 - [docs/architecture.md](docs/architecture.md)
 
 ---
@@ -97,20 +112,24 @@ Detailed architecture documentation is available at:
 ## Technical Decisions and Trade-offs
 
 ### Key Decisions
+
 - Async AI processing via Kafka instead of synchronous API calls.
 - Dual persistence: MySQL (core state and AI references) + MongoDB (feedback/progress document models).
 - JWT-based stateless auth for API endpoints.
 
 ### Trade-offs
+
 - Pros: responsiveness, decoupling, better throughput under AI latency.
 - Cons: eventual consistency and operational complexity (Kafka + worker).
 
 ### Known Limitations
+
 - AI completion is not immediate; clients must poll.
 - Progress analysis is only available when a version has a previous version with stored baseline feedback.
 - Health checks can reflect downstream dependency latency.
 
 ### Technical Risks
+
 - Provider/API key misconfiguration may stall or fail jobs.
 - Broker/auth settings can break event flow if environment drift occurs.
 - AI comparison quality depends on extracted resume text quality and consistency between versions.
@@ -126,9 +145,31 @@ Detailed architecture documentation is available at:
 
 ---
 
+## Codex Creator Challenge Submission
+
+This repository is prepared as a backend-first entry for the Codex Creator Challenge.
+The project emphasizes an AI-driven resume feedback platform with strong operational design, including:
+
+- asynchronous AI jobs using Kafka to keep the API responsive
+- version-aware progress analysis across resume versions
+- secure token-based resume sharing and comment workflows
+- Gemini-powered AI feedback in English and Portuguese
+- a clear persistence strategy separating transactional state and AI payloads
+
+Key challenge strengths:
+
+- real-world deployability with Docker, MySQL, MongoDB, Kafka, and Spring Boot
+- explicit retry and failure handling for AI jobs
+- detailed documentation and demo workflow guidance
+
+See [docs/submission.md](docs/submission.md) for the full challenge entry summary.
+
+---
+
 ## Operations
 
 Detailed runtime, environment, testing, deployment, and troubleshooting guidance is available at:
+
 - [docs/operations.md](docs/operations.md)
 
 ---
@@ -144,6 +185,7 @@ Detailed runtime, environment, testing, deployment, and troubleshooting guidance
 ---
 
 ## Module READMEs
+
 - [API Module](resume-api/README.md)
 - [Worker Module](resume-worker/README.md)
 - [Common Module](common/README.md)
