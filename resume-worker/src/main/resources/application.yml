@@ -51,7 +51,7 @@ app:
       poll-interval: ${APP_AI_JOBS_POLL_INTERVAL:PT5S}
   ai-feedback:
     model: gemini-1.5-flash
-    prompt-version: v1
+    prompt-version: v2
     max-resume-chars: 12000
     gemini:
       enabled: true
@@ -59,7 +59,7 @@ app:
       base-url: https://generativelanguage.googleapis.com
       model: gemini-1.5-flash
       temperature: 0.4
-      max-output-tokens: 600
+      max-output-tokens: 1000
 
 logging:
   level:
