@@ -37,3 +37,6 @@ build/
 docs/frontend-handoff.local.md
 /docs/API.md
 docs/MYNOTES.md
+var/
+resume-api/var/
+resume-api/target/test-resume-storage/

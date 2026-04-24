@@ -37,14 +37,14 @@ Related docs:
 
 1. Upload resume (or version).
 2. Persist metadata in MySQL and content in configured storage.
-3. Create AI job and publish Kafka event after DB commit.
-4. Worker consumes event, generates feedback, stores result, updates status.
+3. Create AI job and hand it off for asynchronous worker processing.
+4. Worker processes the job, generates feedback, stores result, updates status.
 5. API returns job status and latest feedback.
 
 ### Alternative/Error Flows
 
 - Duplicate/idempotent AI job request returns existing job.
-- Kafka/serialization/provider issues move job to `FAILED` with error details.
+- Kafka, scheduler, serialization, or provider issues move job to `FAILED` with error details.
 - Worker retry scheduler reprocesses due failed jobs up to max attempts.
 - Unauthorized access to owner endpoints returns forbidden errors.
 
@@ -65,7 +65,7 @@ Related docs:
 ### Scalability
 
 - API and worker should scale horizontally as stateless services.
-- Kafka partitioning enables parallel job consumption.
+- The worker path should remain scalable whether jobs are polled from MySQL or consumed from Kafka.
 
 ### Availability and Reliability
 
@@ -82,7 +82,7 @@ Related docs:
 - JWT auth for protected routes.
 - Authorization checks for owner-specific resources.
 - Tokenized public access with revocation support.
-- TLS-secured Kafka connectivity in production configuration.
+- Optional Kafka connectivity should be configurable for deployments that enable it.
 
 ### Observability
 
@@ -99,4 +99,4 @@ Related docs:
 ### Extensibility
 
 - AI provider integration isolated in worker-side client/factory layers.
-- Event-driven flow can be extended with additional consumers/workflows.
+- Optional event-driven flow can be extended with additional consumers/workflows.

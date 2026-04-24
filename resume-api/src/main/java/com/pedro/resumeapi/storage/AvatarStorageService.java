@@ -1,6 +1,7 @@
 package com.pedro.resumeapi.storage;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,7 +20,7 @@ public class AvatarStorageService {
 
     private final StorageProperties storageProperties;
     private final S3StorageProperties s3Properties;
-    private final S3StorageService s3StorageService;
+    private final ObjectProvider<S3StorageService> s3StorageService;
 
     public String store(UUID userId, MultipartFile file) throws IOException {
         validate(file);
@@ -31,7 +32,11 @@ public class AvatarStorageService {
         if (storageProperties.getBackend() != StorageBackend.S3) {
             throw new IllegalStateException("Avatar upload requires S3 backend");
         }
-        s3StorageService.storeAvatar(key, file, contentType);
+        S3StorageService storage = s3StorageService.getIfAvailable();
+        if (storage == null) {
+            throw new IllegalStateException("S3 storage backend is not available");
+        }
+        storage.storeAvatar(key, file, contentType);
         return publicUrl(key);
     }
 

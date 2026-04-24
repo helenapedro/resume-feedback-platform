@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/resume_feedback?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: app
+    password: app
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/resume_feedback
+      uuid-representation: standard
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      ssl:
+        enabled: false
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+app:
+  storage:
+    backend: LOCAL
+    local-dir: ./var/resumes
+  jwt:
+    secret: dev-secret-key-dev-secret-key-dev-secret-key-123456
+    issuer: resume-api-dev
+    expMinutes: 1440

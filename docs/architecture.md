@@ -8,22 +8,22 @@ Related docs:
 ## Architectural Style
 
 - Layered modular monolith at repository level
-- Event-driven asynchronous processing for AI pipeline
+- Asynchronous worker processing for the AI pipeline, with optional event-driven Kafka support
 
 ## High-Level Components
 
 - `resume-api`
   - Auth, resume, sharing, comments, AI job orchestration
-  - Publishes `AiJobRequestedMessage` to Kafka
+  - Creates `AiJob` records and supports optional Kafka publishing
 - `resume-worker`
-  - Consumes AI jobs, calls Gemini, stores feedback, updates job status
+  - Processes AI jobs, calls Gemini, stores feedback, updates job status
 - `common`
   - Shared message contracts and models
 - Datastores
   - MySQL: users, resumes, versions, jobs, audit, refs
   - MongoDB: AI feedback documents
-  - Redis: rate-limit support
-  - Kafka: AI jobs topic
+  - Redis: optional rate-limit support
+  - Kafka: optional AI jobs topic integration
 
 ## Data Flow
 
@@ -31,8 +31,9 @@ Related docs:
 flowchart LR
   U[User / Client] --> API[resume-api]
   API --> MYSQL[(MySQL)]
-  API --> KAFKA[(Kafka topic: resume-ai-jobs)]
-  KAFKA --> WORKER[resume-worker]
+  API --> WORKER[resume-worker]
+  API -. optional .-> KAFKA[(Kafka topic: resume-ai-jobs)]
+  KAFKA -. optional .-> WORKER
   WORKER --> GEMINI[Gemini API]
   WORKER --> MONGO[(MongoDB)]
   WORKER --> MYSQL
@@ -60,8 +61,8 @@ sequenceDiagram
     API->>MySQL: Create AiJob(status=PENDING)
     API-->>User: Return resume/version response
 
-    Note over API,Worker: Intended async design includes Kafka event publishing
-    Note over Worker,MySQL: Current worker code also processes pending jobs via scheduler
+    Note over API,Worker: Current hosted deployment uses background polling from MySQL
+    Note over API,Worker: Kafka publishing remains available as an optional integration path
 
     Worker->>MySQL: Poll pending AiJobs
     MySQL-->>Worker: PENDING job + ResumeVersion metadata
@@ -150,7 +151,8 @@ sequenceDiagram
 ## Integration Strategy
 
 - REST for user-facing operations
-- Kafka messaging for asynchronous AI jobs
+- Background worker for asynchronous AI jobs
+- Optional Kafka integration for event-driven deployments
 
 ## Persistence Strategy
 
@@ -159,6 +161,6 @@ sequenceDiagram
 
 ## Notes
 
-- The API publishes AI events after transaction commit to avoid race conditions with worker consumption.
+- The API supports after-commit AI event publication when Kafka is enabled.
 - AI job lifecycle is tracked in MySQL while feedback payloads are stored in MongoDB.
-- The current worker implementation also includes a scheduled retry/polling path that processes `PENDING` jobs directly from MySQL.
+- The current hosted deployment uses the scheduled retry/polling path that processes `PENDING` jobs directly from MySQL.

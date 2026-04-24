@@ -16,6 +16,7 @@ import com.pedro.resumeapi.comment.repository.CommentRepository;
 import com.pedro.resumeapi.resume.repository.ResumeRepository;
 import com.pedro.resumeapi.resume.repository.ResumeVersionRepository;
 import com.pedro.resumeapi.storage.S3StorageService;
+import com.pedro.resumeapi.storage.LocalStorageService;
 import com.pedro.resumeapi.storage.StorageBackend;
 import com.pedro.resumeapi.storage.StorageProperties;
 import com.pedro.resumeapi.user.repository.UserRepository;
@@ -53,6 +54,7 @@ public class ResumeService {
     private final AiJobService aiJobService;
     private final StorageProperties storageProperties;
     private final ObjectProvider<S3StorageService> s3StorageService;
+    private final ObjectProvider<LocalStorageService> localStorageService;
 
     public List<Resume> listMyResumes() {
         return resumeRepository.findByOwner_IdOrderByCreatedAtDesc(currentUser.id());
@@ -155,8 +157,12 @@ public class ResumeService {
     private void cleanupStoredFilesBestEffort(List<ResumeVersion> versions) {
         for (ResumeVersion version : versions) {
             try {
-                if (storageProperties.getBackend() != StorageBackend.S3) {
-                    throw new IllegalStateException("Only S3 storage backend is supported");
+                if (storageProperties.getBackend() == StorageBackend.LOCAL) {
+                    LocalStorageService local = localStorageService.getIfAvailable();
+                    if (local != null) {
+                        local.deleteByStorageKey(version.getStorageKey());
+                    }
+                    continue;
                 }
 
                 S3StorageService s3 = s3StorageService.getIfAvailable();

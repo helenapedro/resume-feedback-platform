@@ -6,7 +6,7 @@ For platform context and architecture, see the [root README](../README.md).
 
 ## Purpose
 
-`resume-api` is the entry point for client applications. It handles user-facing operations and publishes AI processing requests to Kafka.
+`resume-api` is the entry point for client applications. It handles user-facing operations and creates AI jobs for asynchronous worker processing. The codebase supports Kafka publishing, but the current hosted deployment does not depend on Kafka.
 
 ## Responsibilities
 
@@ -25,8 +25,8 @@ For platform context and architecture, see the [root README](../README.md).
 - Spring Security (JWT)
 - Spring Data JPA (MySQL)
 - Spring Data MongoDB
-- Spring Data Redis
-- Spring Kafka
+- Spring Data Redis (optional, currently disabled in production)
+- Spring Kafka (optional integration)
 - Flyway
 - AWS SDK S3
 
@@ -35,7 +35,7 @@ For platform context and architecture, see the [root README](../README.md).
 From repo root:
 
 ```bash
-./mvnw -pl resume-api spring-boot:run
+./mvnw -pl resume-api spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
 Common profile usage:
@@ -52,7 +52,7 @@ Core dependencies are provided via environment variables:
 - `SPRING_DATASOURCE_USERNAME`
 - `SPRING_DATASOURCE_PASSWORD`
 - `SPRING_DATA_MONGODB_URI`
-- `SPRING_KAFKA_BOOTSTRAP_SERVERS`
+- `SPRING_KAFKA_BOOTSTRAP_SERVERS` (only if Kafka is enabled)
 - `KAFKA_PREFIX` (optional topic/group prefix)
 
 Storage:
@@ -101,5 +101,5 @@ AI:
 ## Notes
 
 - Share tokens are persisted as hashes (plaintext returned only at creation time).
-- AI events are published after transaction commit to avoid race conditions with worker consumption.
+- AI handoff logic is designed to be safe after commit; Kafka publishing exists in code, while the current Heroku deployment uses the background worker without paid Kafka add-ons.
 - `ai-progress` is available only when the requested version has a prior version with stored AI feedback to use as baseline context.

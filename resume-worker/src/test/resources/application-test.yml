@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:resume_worker_test;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/resume_worker_test
+  kafka:
+    bootstrap-servers: localhost:9092
+    properties:
+      security.protocol: PLAINTEXT
+      ssl.keystore.key:
+      ssl.keystore.certificate.chain:
+      ssl.truststore.certificates:
+
+app:
+  storage:
+    backend: LOCAL
+  ai-jobs:
+    kafka-enabled: false
+    retry:
+      max-attempts: 5
+      initial-backoff: PT10S
+      max-backoff: PT5M
+      poll-interval: PT30S
+  ai-feedback:
+    gemini:
+      enabled: false

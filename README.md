@@ -1,191 +1,91 @@
 # Resume Feedback Platform
 
-Enterprise-grade platform for resume management, secure sharing, versioned feedback, and AI-assisted analysis.
+Resume Feedback Platform is a live product for uploading resumes, generating AI feedback, tracking improvements across versions, and sharing review links with controlled access.
 
-This repository is a multi-module Spring Boot monorepo with:
+This repo is the backend monorepo behind the hosted app at `https://feedback.hmpedro.com`. The frontend is a separate React + TypeScript application hosted on AWS Amplify, while this repository contains the Spring Boot API and worker services deployed on Heroku. It is also the project package for the Codex Creator Challenge.
 
-- `resume-api`: synchronous REST API for auth, resumes, share links, comments, AI job orchestration, and progress retrieval across resume versions.
-- `resume-worker`: asynchronous worker that consumes Kafka jobs and generates AI feedback plus version-to-version progress analysis.
-- `common`: shared contracts and cross-module models (including Kafka payloads).
+## What judges should see first
 
-## Quick Start
+- Live app: `https://feedback.hmpedro.com`
+- Hosted frontend flow: landing page, auth, resume library, profile, version history, AI feedback, comments, and share links
+- Judge guide: [JUDGES_GUIDE.md](JUDGES_GUIDE.md)
+- Demo guide: [DEMO.md](DEMO.md)
+- Codex build story: [docs/codex-build-story.md](docs/codex-build-story.md)
+- Submission summary: [docs/submission.md](docs/submission.md)
 
-### 1) Prerequisites
+## Why this entry is strong
+
+- Real product, not a toy endpoint set: there is a deployed UI and a working end-to-end workflow.
+- AI feedback is asynchronous: uploads stay responsive while a background worker processes Gemini jobs.
+- Version-aware analysis: the platform compares resume versions instead of treating each upload in isolation.
+- Shareable review workflow: token-based links, comments, and access auditing support recruiter or mentor review.
+- Practical engineering choices: MySQL for transactional state, MongoDB for AI artifacts, optional Kafka support for event-driven processing, and production-friendly cost controls such as worker polling and disabled Redis-backed rate limiting.
+
+## Core product flow
+
+1. Sign in and upload a resume PDF.
+2. The API stores metadata and creates an AI job.
+3. The worker processes pending AI jobs and generates feedback plus progress analysis.
+4. The UI shows version history, AI feedback, comments, and share-link controls.
+5. Users iterate on new resume versions and compare improvement over time.
+
+## Repository layout
+
+- `resume-api`: REST API for auth, resumes, share links, comments, AI job orchestration, and retrieval
+- `resume-worker`: background worker for AI feedback generation and progress analysis
+- `common`: shared message contracts and cross-module models
+
+## Quick evaluator path
+
+If you want the fastest way to understand the project:
+
+1. Open the live app at `https://feedback.hmpedro.com`
+2. Read [JUDGES_GUIDE.md](JUDGES_GUIDE.md)
+3. Skim [docs/submission.md](docs/submission.md)
+4. Use [DEMO.md](DEMO.md) only if you want to run the stack locally
+
+## Local development
+
+Prerequisites:
 
 - Java 17
-- Maven Wrapper (`mvnw` / `mvnw.cmd`)
-- Docker Desktop (recommended for local dependencies)
+- Maven Wrapper
+- Docker Desktop
 
-### 2) Build all modules
-
-```bash
-./mvnw -DskipTests package
-```
-
-### 3) Run API
+Start the local stack:
 
 ```bash
-./mvnw -pl resume-api spring-boot:run
+docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker/docker-compose.kafka.yml up -d
+./mvnw -pl resume-api spring-boot:run -Dspring-boot.run.profiles=dev
+./mvnw -pl resume-worker spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-### 4) Run worker
+For the full local walkthrough, see [DEMO.md](DEMO.md). For runtime details, see [docs/operations.md](docs/operations.md).
 
-```bash
-./mvnw -pl resume-worker spring-boot:run
-```
+## Focused execution coverage
 
-### 5) Validate
+This repo now includes higher-signal automated coverage around the parts judges will care about most:
 
-- Login: `POST /api/auth/login`
-- Upload resume: `POST /api/resumes` (multipart: `file`, `title`)
-- Check latest AI job: `GET /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/latest`
-- Get latest AI feedback: `GET /api/resumes/{resumeId}/versions/{versionId}/ai-feedback`
-- Get version progress analysis: `GET /api/resumes/{resumeId}/versions/{versionId}/ai-progress`
-- Regenerate AI feedback in Portuguese: `POST /api/resumes/{resumeId}/versions/{versionId}/ai-jobs/regenerate?language=PT`
-
-For full local infra/bootstrap details, see [docs/operations.md](docs/operations.md).
+- AI job creation and async handoff behavior are covered
+- Share-link validation records both successful and failed access audits
+- Worker job processing covers success and retry/failure paths
 
 ## Documentation
 
+- [JUDGES_GUIDE.md](JUDGES_GUIDE.md)
+- [DEMO.md](DEMO.md)
+- [FINAL_SUBMISSION.md](FINAL_SUBMISSION.md)
 - [Documentation Index](docs/README.md)
 - [Architecture](docs/architecture.md)
 - [Requirements](docs/requirements.md)
 - [Operations](docs/operations.md)
 - [Submission](docs/submission.md)
+- [Codex Build Story](docs/codex-build-story.md)
 
----
+## Next improvements
 
-## Business Context and Scope
-
-### Executive Summary
-
-The platform allows users to upload and version resumes, share them through controlled links, receive comments, and generate AI feedback asynchronously. It also keeps AI comparison memory at the resume-version level so newer uploads can be compared with previous versions and prior feedback.  
-It separates user-facing API latency from AI processing latency by moving feedback generation to a Kafka-based worker pipeline.
-
-### Problem It Solves
-
-- Resume review is usually manual and inconsistent.
-- Sharing and auditing resume access is often insecure or not traceable.
-- AI processing can be slow and should not block upload flows.
-
-### In Scope
-
-- User registration/login (JWT)
-- Resume upload, listing, download, and versioning
-- Secure share links with audit trail
-- Owner/public comments
-- Asynchronous AI job creation and status tracking
-- AI feedback persistence and retrieval
-- AI progress analysis across resume versions
-
-### Out of Scope (Current)
-
-- Multi-tenant organization model
-- Real-time WebSocket notifications for job completion
-- Advanced prompt management UI
-- Full SLO dashboards as code
-
-### Target Users
-
-- Resume owners (candidates/professionals)
-- Recruiters/managers reviewing shared resumes
-- Platform operators/developers
-
----
-
-## Requirements
-
-Detailed functional and non-functional requirements are available at:
-
-- [docs/requirements.md](docs/requirements.md)
-
----
-
-## Architecture
-
-Detailed architecture documentation is available at:
-
-- [docs/architecture.md](docs/architecture.md)
-
----
-
-## Technical Decisions and Trade-offs
-
-### Key Decisions
-
-- Async AI processing via Kafka instead of synchronous API calls.
-- Dual persistence: MySQL (core state and AI references) + MongoDB (feedback/progress document models).
-- JWT-based stateless auth for API endpoints.
-
-### Trade-offs
-
-- Pros: responsiveness, decoupling, better throughput under AI latency.
-- Cons: eventual consistency and operational complexity (Kafka + worker).
-
-### Known Limitations
-
-- AI completion is not immediate; clients must poll.
-- Progress analysis is only available when a version has a previous version with stored baseline feedback.
-- Health checks can reflect downstream dependency latency.
-
-### Technical Risks
-
-- Provider/API key misconfiguration may stall or fail jobs.
-- Broker/auth settings can break event flow if environment drift occurs.
-- AI comparison quality depends on extracted resume text quality and consistency between versions.
-
----
-
-## Challenges and Lessons Learned
-
-- Kafka SSL and deserializer compatibility required explicit environment handling.
-- AI payload serialization required explicit Java Time support for `Instant`.
-- Event publication timing needed post-commit publishing to avoid race conditions where worker reads before DB commit.
-- Persisted version-aware AI memory is more reliable than relying on provider-side chat/session memory.
-
----
-
-## Codex Creator Challenge Submission
-
-This repository is prepared as a backend-first entry for the Codex Creator Challenge.
-The project emphasizes an AI-driven resume feedback platform with strong operational design, including:
-
-- asynchronous AI jobs using Kafka to keep the API responsive
-- version-aware progress analysis across resume versions
-- secure token-based resume sharing and comment workflows
-- Gemini-powered AI feedback in English and Portuguese
-- a clear persistence strategy separating transactional state and AI payloads
-
-Key challenge strengths:
-
-- real-world deployability with Docker, MySQL, MongoDB, Kafka, and Spring Boot
-- explicit retry and failure handling for AI jobs
-- detailed documentation and demo workflow guidance
-
-See [docs/submission.md](docs/submission.md) for the full challenge entry summary.
-
----
-
-## Operations
-
-Detailed runtime, environment, testing, deployment, and troubleshooting guidance is available at:
-
-- [docs/operations.md](docs/operations.md)
-
----
-
-## Roadmap
-
-- Add push notifications/webhooks for AI job completion.
-- Add richer observability (metrics dashboards and tracing).
-- Improve retry/dead-letter strategy for poison events.
-- Add admin UI for operational visibility and reprocessing.
-- Expand AI provider abstraction and prompt version governance.
-
----
-
-## Module READMEs
-
-- [API Module](resume-api/README.md)
-- [Worker Module](resume-worker/README.md)
-- [Common Module](common/README.md)
+- Add a short public demo video or GIF-based walkthrough
+- Add richer before-vs-after resume examples in the submission packet
+- Add one thin judge account or scripted seeded demo data path
+- Add a single end-to-end browser smoke test for the hosted frontend

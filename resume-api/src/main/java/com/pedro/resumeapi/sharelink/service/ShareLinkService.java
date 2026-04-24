@@ -11,9 +11,9 @@ import com.pedro.resumeapi.resume.service.ResumeService;
 import com.pedro.resumeapi.sharelink.domain.ShareLink;
 import com.pedro.resumeapi.user.domain.User;
 import com.pedro.resumeapi.utils.TokenUtil;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -62,7 +62,11 @@ public class ShareLinkService {
         return shareLinkRepo.findByResume_IdOrderByCreatedAtDesc(resumeId);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = {
+            ShareLinkRevokedException.class,
+            ShareLinkExpiredException.class,
+            ShareLinkMaxUsesReachedException.class
+    })
     public ShareLink resolveValidLinkOrThrow(String rawToken, String ip, String ua) {
         String hash = TokenUtil.sha256Hex(rawToken);
 

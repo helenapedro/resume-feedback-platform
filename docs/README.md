@@ -4,11 +4,18 @@ Detailed project documentation lives here.
 
 ## Recommended Reading Order
 
-1. [Requirements](requirements.md)
-2. [Architecture](architecture.md)
-3. [Operations](operations.md)
+1. [Submission](submission.md) — Challenge entry overview
+2. [Requirements](requirements.md)
+3. [Architecture](architecture.md)
+4. [Operations](operations.md)
 
 ## Documents
+
+### [Submission](submission.md)
+
+- Code challenge summary and entry pitch
+- Key differentiators and evaluation strengths
+- Demo workflow with sample payloads
 
 ### [Requirements](requirements.md)
 

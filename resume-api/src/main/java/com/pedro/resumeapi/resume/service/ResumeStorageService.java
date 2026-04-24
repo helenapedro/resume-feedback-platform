@@ -9,7 +9,9 @@ import com.pedro.resumeapi.security.CurrentUser;
 import com.pedro.resumeapi.storage.S3PresignService;
 import com.pedro.resumeapi.storage.StorageBackend;
 import com.pedro.resumeapi.storage.StorageProperties;
+import com.pedro.resumeapi.storage.LocalStorageService;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,7 @@ public class ResumeStorageService {
     private final S3PresignService presignService;
     private final StorageProperties storageProperties;
     private final CurrentUser currentUser;
+    private final ObjectProvider<LocalStorageService> localStorageService;
 
     @Transactional(readOnly = true)
     public DownloadPayload downloadVersionOwner(UUID resumeId, UUID versionId) {
@@ -74,8 +77,13 @@ public class ResumeStorageService {
                 ? "application/octet-stream"
                 : version.getContentType();
 
-        if (storageProperties.getBackend() != StorageBackend.S3) {
-            throw new IllegalStateException("Only S3 storage backend is supported");
+        if (storageProperties.getBackend() == StorageBackend.LOCAL) {
+            LocalStorageService local = localStorageService.getIfAvailable();
+            if (local == null) {
+                throw new IllegalStateException("Local storage backend is not available");
+            }
+            Resource resource = local.loadAsResource(version.getStorageKey());
+            return new DownloadPayload(resource, filename, contentType, null);
         }
 
         var presigned = (attachment

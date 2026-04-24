@@ -1,5 +1,10 @@
 # Codex Creator Challenge Submission
 
-This repository is a backend-first AI resume feedback platform with a strong operational architecture.
+Resume Feedback Platform is a live product for improving resumes with AI feedback, version history, and controlled collaboration.
 
-See `docs/submission.md` for the full challenge entry.
+Start with:
+
+- [JUDGES_GUIDE.md](JUDGES_GUIDE.md)
+- [docs/submission.md](docs/submission.md)
+- [docs/codex-build-story.md](docs/codex-build-story.md)
+- [DEMO.md](DEMO.md)

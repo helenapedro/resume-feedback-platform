@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/resume_feedback?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: app
+    password: app
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/resume_feedback
+      uuid-representation: standard
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    properties:
+      security.protocol: PLAINTEXT
+      ssl.keystore.key:
+      ssl.keystore.certificate.chain:
+      ssl.truststore.certificates:
+
+app:
+  storage:
+    backend: LOCAL
+  ai-jobs:
+    kafka-enabled: true

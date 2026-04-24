@@ -36,14 +36,23 @@ If you use local Mongo as well, run it in Docker or provide `SPRING_DATA_MONGODB
 Run API:
 
 ```bash
-./mvnw -pl resume-api spring-boot:run
+./mvnw -pl resume-api spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
 Run worker:
 
 ```bash
-./mvnw -pl resume-worker spring-boot:run
+./mvnw -pl resume-worker spring-boot:run -Dspring-boot.run.profiles=dev
 ```
+
+The `dev` profile uses local defaults for:
+
+- MySQL: `jdbc:mysql://localhost:3306/resume_feedback`
+- MongoDB: `mongodb://localhost:27017/resume_feedback`
+- Kafka: `localhost:9092`
+- API JWT settings and local file storage under `./var/resumes`
+
+Production runs should continue to rely on environment variables. The current hosted deployment does not require paid Heroku Kafka or Redis add-ons.
 
 ## Configuration
 
@@ -55,11 +64,11 @@ Run worker:
 | `SPRING_DATASOURCE_USERNAME` | Yes | API/Worker | MySQL user |
 | `SPRING_DATASOURCE_PASSWORD` | Yes | API/Worker | MySQL password |
 | `SPRING_DATA_MONGODB_URI` | Yes | API/Worker | MongoDB URI |
-| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | Yes | API/Worker | Kafka brokers |
+| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | No | API/Worker | Needed only when Kafka integration is enabled |
 | `GEMINI_API_KEY` | Yes (AI feedback) | Worker | Gemini API key |
 | `KAFKA_PREFIX` | No | API/Worker | Optional topic/group prefix |
 
-### Kafka SSL (Production Pattern)
+### Kafka SSL (Optional Integration)
 
 Worker and API support Heroku-style Kafka SSL properties through:
 
@@ -93,10 +102,11 @@ Run module tests:
 
 ### Current Production Topology
 
+- Frontend: React + TypeScript app hosted on AWS Amplify
 - App runtime: Heroku (`web` + `worker`)
-- Relational database: Hostinger MySQL
-- Document database: MongoDB (managed cluster)
-- Messaging/cache: Heroku Kafka and Heroku Redis
+- Relational database: MySQL
+- Document database: MongoDB
+- Messaging/cache: Kafka and Redis are supported in code, but not used in the current low-cost Heroku deployment
 
 Recommended release validation:
 
@@ -114,13 +124,13 @@ Recommended release validation:
 
 ### Typical checks
 
-- Ensure worker is up and subscribed to AI jobs topic
-- Verify Kafka consumer group authorization
+- Ensure worker is up and polling pending AI jobs
+- If Kafka is enabled, verify consumer group authorization
 - Verify `GEMINI_API_KEY` is set for worker
 - Inspect failed jobs (`errorCode`, `errorDetail`) for root cause
 
 ### Common failure patterns
 
-- Serialization issues (for example `Instant`) in Kafka payloads
+- Serialization issues (for example `Instant`) in Kafka payloads when Kafka is enabled
 - Event published before transaction commit (resolved by after-commit publication)
-- Broker SSL/auth misconfiguration
+- Broker SSL/auth misconfiguration when Kafka is enabled

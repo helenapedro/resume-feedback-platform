@@ -1,6 +1,8 @@
 package com.pedro.resumeapi.ai.service;
 
 import com.pedro.resumeapi.ai.domain.AiJob;
+import com.pedro.resumeapi.ai.kafka.AiJobEventPublisher;
+import com.pedro.resumeapi.ai.mapper.AiJobMapper;
 import com.pedro.resumeapi.ai.repository.AiJobRepository;
 import com.pedro.resumeapi.api.error.AiJobNotFoundException;
 import com.pedro.resumeapi.api.error.ForbiddenException;
@@ -16,6 +18,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.UUID;
 
@@ -26,6 +30,7 @@ public class AiJobService {
     private final ResumeRepository resumeRepository;
     private final ResumeVersionRepository resumeVersionRepository;
     private final CurrentUser currentUser;
+    private final AiJobEventPublisher aiJobEventPublisher;
 
     @Transactional
     public AiJob createForVersion(ResumeVersion version) {
@@ -47,7 +52,9 @@ public class AiJobService {
         job.setLanguage(language == null ? Language.EN : language);
 
         try {
-            return repo.save(job);
+            AiJob saved = repo.saveAndFlush(job);
+            publishAfterCommit(saved);
+            return saved;
         } catch (DataIntegrityViolationException ex) {
             return repo.findByIdempotencyKey(idempotencyKey)
                     .orElseThrow(() -> ex);
@@ -81,5 +88,20 @@ public class AiJobService {
         }
         return resumeVersionRepository.findByIdAndResume_Id(versionId, resumeId)
                 .orElseThrow(VersionNotFoundException::new);
+    }
+
+    private void publishAfterCommit(AiJob job) {
+        var message = AiJobMapper.toMessage(job);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    aiJobEventPublisher.publish(message);
+                }
+            });
+            return;
+        }
+
+        aiJobEventPublisher.publish(message);
     }
 }
