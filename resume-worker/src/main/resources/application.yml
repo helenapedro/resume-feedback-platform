@@ -43,7 +43,7 @@ app:
       max-attempts: 5
       initial-backoff: PT10S
       max-backoff: PT5M
-      poll-interval: PT30S
+      poll-interval: ${APP_AI_JOBS_POLL_INTERVAL:PT5S}
   ai-feedback:
     model: gemini-1.5-flash
     prompt-version: v1

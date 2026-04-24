@@ -39,6 +39,7 @@ app:
       client-ids: ${GOOGLE_OAUTH_CLIENT_IDS:}
       token-info-url: ${GOOGLE_OAUTH_TOKEN_INFO_URL:https://oauth2.googleapis.com/tokeninfo}
   ai-jobs:
+    kafka-enabled: ${APP_AI_JOBS_KAFKA_ENABLED:false}
     topic: ${KAFKA_PREFIX:}resume-ai-jobs
   storage:
     backend: S3

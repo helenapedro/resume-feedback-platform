@@ -19,6 +19,8 @@ spring:
     bootstrap-servers: localhost:9092
 
 app:
+  ai-jobs:
+    kafka-enabled: true
   storage:
     backend: LOCAL
     local-dir: ./var/resumes
