@@ -8,7 +8,6 @@ import com.pedro.resumeworker.ai.gemini.GeminiClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -18,7 +17,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -31,15 +29,21 @@ class AiFeedbackFactoryTest {
     @Mock
     private ResumeTextExtractor resumeTextExtractor;
 
+    @Mock
+    private AiFeedbackPromptBuilder promptBuilder;
+
+    @Mock
+    private AiFeedbackDocumentMapper documentMapper;
+
     private AiFeedbackFactory factory;
 
     @BeforeEach
     void setUp() {
-        factory = new AiFeedbackFactory("v2", 12000, geminiClient, resumeTextExtractor);
+        factory = new AiFeedbackFactory(geminiClient, resumeTextExtractor, promptBuilder, documentMapper);
     }
 
     @Test
-    void buildUsesRecruiterStylePromptAndReturnsFeedbackDocument() {
+    void buildDelegatesPromptingProviderCallAndDocumentMapping() {
         UUID jobId = UUID.randomUUID();
         UUID resumeId = UUID.randomUUID();
         UUID resumeVersionId = UUID.randomUUID();
@@ -56,38 +60,29 @@ class AiFeedbackFactoryTest {
         ResumeVersion version = new ResumeVersion();
         version.setId(resumeVersionId);
 
-        when(resumeTextExtractor.extract(version)).thenReturn(Optional.of("Built Kafka pipelines and Spring Boot services."));
-        when(geminiClient.generateFeedbackWithDiagnostics(org.mockito.ArgumentMatchers.anyString()))
-                .thenReturn(new GeminiClient.GeminiCallResult(
-                        Optional.of(new GeminiClient.GeminiFeedback(
-                                "Strong mid-level resume with clear ownership; needs sharper senior-level signaling.",
-                                List.of("Experience: Strong impact and ownership evidence."),
-                                List.of("Projects: Add clearer system design tradeoffs.")
-                        )),
-                        null,
-                        null));
+        String resumeText = "Built Kafka pipelines and Spring Boot services.";
+        String prompt = "prompt";
+        GeminiClient.GeminiFeedback feedback = new GeminiClient.GeminiFeedback(
+                "Strong mid-level resume with clear ownership; needs sharper senior-level signaling.",
+                List.of("Experience: Strong impact and ownership evidence."),
+                List.of("Projects: Add clearer system design tradeoffs."));
+        GeminiClient.GeminiCallResult result = new GeminiClient.GeminiCallResult(Optional.of(feedback), null, null);
+
+        AiFeedbackDocument mappedDocument = new AiFeedbackDocument();
+        mappedDocument.setPromptVersion("v3");
+        mappedDocument.setModel("gemini-test");
+
+        when(resumeTextExtractor.extract(version)).thenReturn(Optional.of(resumeText));
+        when(promptBuilder.build(message, resumeText, Language.EN)).thenReturn(prompt);
+        when(geminiClient.generateFeedbackWithDiagnostics(prompt)).thenReturn(result);
         when(geminiClient.effectiveModel()).thenReturn("gemini-test");
+        when(documentMapper.toDocument(message, feedback, "gemini-test")).thenReturn(mappedDocument);
 
         AiFeedbackDocument document = factory.build(message, version);
 
-        ArgumentCaptor<String> promptCaptor = ArgumentCaptor.forClass(String.class);
-        verify(geminiClient).generateFeedbackWithDiagnostics(promptCaptor.capture());
-        String prompt = promptCaptor.getValue();
-
-        assertTrue(prompt.contains("technical recruiter or hiring manager"));
-        assertTrue(prompt.contains("how competitive the resume is now"));
-        assertTrue(prompt.contains("system design signals"));
-        assertTrue(prompt.contains("Experience:"));
-
-        assertEquals(jobId, document.getJobId());
-        assertEquals(resumeId, document.getResumeId());
-        assertEquals(resumeVersionId, document.getResumeVersionId());
-        assertEquals(ownerId, document.getOwnerId());
-        assertEquals("gemini-test", document.getModel());
-        assertEquals("v2", document.getPromptVersion());
-        assertEquals("Strong mid-level resume with clear ownership; needs sharper senior-level signaling.",
-                document.getSummary());
-        assertEquals(List.of("Experience: Strong impact and ownership evidence."), document.getStrengths());
-        assertEquals(List.of("Projects: Add clearer system design tradeoffs."), document.getImprovements());
+        verify(promptBuilder).build(message, resumeText, Language.EN);
+        verify(geminiClient).generateFeedbackWithDiagnostics(prompt);
+        verify(documentMapper).toDocument(message, feedback, "gemini-test");
+        assertEquals(mappedDocument, document);
     }
 }
