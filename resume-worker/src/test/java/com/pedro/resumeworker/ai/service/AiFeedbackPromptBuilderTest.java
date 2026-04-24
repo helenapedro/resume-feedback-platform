@@ -7,14 +7,16 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AiFeedbackPromptBuilderTest {
 
-    private final AiFeedbackPromptBuilder builder = new AiFeedbackPromptBuilder(12000);
+    private final AiFeedbackPromptBuilder builder =
+            new AiFeedbackPromptBuilder(12000, new PromptTemplateLoader());
 
     @Test
-    void buildCreatesRecruiterFocusedPromptWithSharperOutputContract() {
+    void buildUsesClasspathTemplateAndInjectsFeedbackPromptValues() {
         AiJobRequestedMessage message = new AiJobRequestedMessage(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
@@ -31,5 +33,6 @@ class AiFeedbackPromptBuilderTest {
         assertTrue(prompt.contains("Each item must state the problem, what to change in the resume, and why"));
         assertTrue(prompt.contains("Start every item with a target area"));
         assertTrue(prompt.contains("Resume extracted (raw text):"));
+        assertFalse(prompt.contains("{{JOB_ID}}"));
     }
 }

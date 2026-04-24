@@ -6,31 +6,28 @@ import com.pedro.common.ai.mongo.AiFeedbackDocument;
 import com.pedro.common.ai.mongo.AiProgressDocument;
 import com.pedro.resumeworker.ai.domain.ResumeVersion;
 import com.pedro.resumeworker.ai.gemini.GeminiClient;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.util.List;
 
 @Component
-@Slf4j
 public class AiProgressFactory {
 
     private final String promptVersion;
-    private final int maxResumeChars;
     private final GeminiClient geminiClient;
     private final ResumeTextExtractor resumeTextExtractor;
+    private final AiProgressPromptBuilder promptBuilder;
 
     public AiProgressFactory(
             @Value("${app.ai-feedback.prompt-version:v1}") String promptVersion,
-            @Value("${app.ai-feedback.max-resume-chars:12000}") int maxResumeChars,
             GeminiClient geminiClient,
-            ResumeTextExtractor resumeTextExtractor) {
+            ResumeTextExtractor resumeTextExtractor,
+            AiProgressPromptBuilder promptBuilder) {
         this.promptVersion = promptVersion;
-        this.maxResumeChars = maxResumeChars;
         this.geminiClient = geminiClient;
         this.resumeTextExtractor = resumeTextExtractor;
+        this.promptBuilder = promptBuilder;
     }
 
     public AiProgressDocument build(
@@ -44,8 +41,14 @@ public class AiProgressFactory {
         Language language = message.language() == null ? Language.EN : message.language();
 
         GeminiClient.GeminiProgressCallResult result = geminiClient.generateProgressAnalysisWithDiagnostics(
-                buildPrompt(message, currentVersion, previousVersion, currentResumeText, previousResumeText,
-                        previousFeedback, language));
+                promptBuilder.build(
+                        message,
+                        currentVersion,
+                        previousVersion,
+                        currentResumeText,
+                        previousResumeText,
+                        previousFeedback,
+                        language));
         GeminiClient.GeminiProgressAnalysis progress = result.analysis().orElse(null);
         if (progress == null) {
             throw new AiJobDomainException(
@@ -71,136 +74,5 @@ public class AiProgressFactory {
         doc.setUnchangedIssues(progress.unchangedIssues());
         doc.setNewIssues(progress.newIssues());
         return doc;
-    }
-
-    private String buildPrompt(
-            AiJobRequestedMessage message,
-            ResumeVersion currentVersion,
-            ResumeVersion previousVersion,
-            String currentResumeText,
-            String previousResumeText,
-            AiFeedbackDocument previousFeedback,
-            Language language) {
-        String previousFeedbackSection = previousFeedback == null
-                ? (language == Language.PT ? "Feedback anterior: NAO DISPONIVEL" : "Previous feedback: NOT AVAILABLE")
-                : """
-                        %s:
-                        - summary: %s
-                        - strengths: %s
-                        - improvements: %s
-                        """.formatted(
-                        language == Language.PT ? "Feedback anterior dado ao utilizador"
-                                : "Previous feedback delivered to the user",
-                        sanitize(previousFeedback.getSummary(), language),
-                        sanitizeList(previousFeedback.getStrengths()),
-                        sanitizeList(previousFeedback.getImprovements()));
-
-        if (language == Language.PT) {
-            return """
-                    Voce e um revisor especializado em curriculos.
-                    Compare a nova versao com a versao anterior e com o feedback anterior.
-                    Escreva em portugues de Portugal, objetivo, sem frases genericas e sem markdown.
-                    RETORNE O JSON EM UMA UNICA LINHA.
-                    Responda SOMENTE com JSON valido no formato:
-                    {
-                      "summary": "resumo curto sobre a progressao",
-                      "progressStatus": "MELHOROU|ESTAVEL|REGREDIU",
-                      "progressScore": 0,
-                      "improvedAreas": ["ate 3 melhorias concretas"],
-                      "unchangedIssues": ["ate 3 problemas que continuam"],
-                      "newIssues": ["ate 3 novos problemas introduzidos"]
-                    }
-                    Regras:
-                    - Baseie-se no curriculo anterior, no curriculo atual e no feedback anterior.
-                    - progressScore deve ser inteiro entre 0 e 100.
-                    - Se nao houver evidencia suficiente, use listas vazias em vez de inventar.
-                    - Nao use aspas duplas dentro dos valores de texto.
-                    - Nao inclua quebra de linha nos valores.
-                    - Escape corretamente quaisquer caracteres especiais.
-
-                    Metadados:
-                    - jobId: %s
-                    - resumeId: %s
-                    - currentResumeVersionId: %s
-                    - baselineResumeVersionId: %s
-                    - ownerId: %s
-                    - limite de caracteres analisados: %s
-
-                    Curriculo anterior (texto bruto):
-                    %s
-
-                    %s
-
-                    Curriculo atual (texto bruto):
-                    %s
-                    """.formatted(
-                    message.jobId(),
-                    message.resumeId(),
-                    currentVersion.getId(),
-                    previousVersion.getId(),
-                    message.ownerId(),
-                    maxResumeChars,
-                    sanitize(previousResumeText, language),
-                    previousFeedbackSection,
-                    sanitize(currentResumeText, language));
-        }
-
-        return """
-                You are a resume reviewer.
-                Compare the new version with the previous version and the previous feedback.
-                Write in clear English, objective, without generic phrases, and without markdown.
-                RETURN THE JSON IN A SINGLE LINE.
-                Respond ONLY with valid JSON in the format:
-                {
-                  "summary": "short summary of the progression",
-                  "progressStatus": "IMPROVED|UNCHANGED|DECLINED",
-                  "progressScore": 0,
-                  "improvedAreas": ["up to 3 concrete improvements"],
-                  "unchangedIssues": ["up to 3 issues that remain"],
-                  "newIssues": ["up to 3 newly introduced issues"]
-                }
-                Rules:
-                - Base your analysis on the previous resume, the current resume, and the previous feedback.
-                - progressScore must be an integer between 0 and 100.
-                - If there is insufficient evidence, use empty lists instead of making things up.
-                - Do not use double quotes inside text values.
-                - Do not include line breaks in values.
-                - Escape any special characters correctly.
-
-                Metadata:
-                - jobId: %s
-                - resumeId: %s
-                - currentResumeVersionId: %s
-                - baselineResumeVersionId: %s
-                - ownerId: %s
-                - analyzed character limit: %s
-
-                Previous resume (raw text):
-                %s
-
-                %s
-
-                Current resume (raw text):
-                %s
-                """.formatted(
-                message.jobId(),
-                message.resumeId(),
-                currentVersion.getId(),
-                previousVersion.getId(),
-                message.ownerId(),
-                maxResumeChars,
-                sanitize(previousResumeText, language),
-                previousFeedbackSection,
-                sanitize(currentResumeText, language));
-    }
-
-    private String sanitize(String value, Language language) {
-        return value == null || value.isBlank()
-                ? (language == Language.PT ? "NAO DISPONIVEL" : "NOT AVAILABLE")
-                : value;
-    }
-
-    private String sanitizeList(List<String> values) {
-        return values == null || values.isEmpty() ? "[]" : values.toString();
     }
 }
