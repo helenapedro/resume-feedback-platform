@@ -47,10 +47,10 @@
           <mxGeometry height="30" width="90" x="411" y="502" as="geometry" />
         </mxCell>
         <mxCell id="VFF8-l2gBmdx6id8xDhi-26" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;b&gt;Spring Boot&lt;/b&gt;" vertex="1">
-          <mxGeometry height="15.12" width="88" x="29" y="340.88" as="geometry" />
+          <mxGeometry height="15.12" width="88" x="34.5" y="344.88" as="geometry" />
         </mxCell>
         <mxCell id="VFF8-l2gBmdx6id8xDhi-27" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;b&gt;&lt;i&gt;common&lt;/i&gt;&lt;/b&gt;" vertex="1">
-          <mxGeometry height="30" width="60" x="44.5" y="273" as="geometry" />
+          <mxGeometry height="30" width="60" x="54" y="272" as="geometry" />
         </mxCell>
         <mxCell id="le4c1NbOkVE1zIPAg1GN-1" edge="1" parent="1" source="VFF8-l2gBmdx6id8xDhi-2" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0;exitDx=0;exitDy=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" target="VFF8-l2gBmdx6id8xDhi-4" value="">
           <mxGeometry height="50" relative="1" width="50" as="geometry">
@@ -61,11 +61,6 @@
         <mxCell id="le4c1NbOkVE1zIPAg1GN-2" connectable="0" parent="le4c1NbOkVE1zIPAg1GN-1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;b&gt;[3] &lt;/b&gt;store&lt;div&gt;resume file&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="-0.2261" as="geometry">
             <mxPoint x="25" y="6" as="offset" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="le4c1NbOkVE1zIPAg1GN-57" connectable="0" parent="le4c1NbOkVE1zIPAg1GN-1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Text" vertex="1">
-          <mxGeometry relative="1" x="0.0368" y="-2" as="geometry">
-            <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="le4c1NbOkVE1zIPAg1GN-3" edge="1" parent="1" source="VFF8-l2gBmdx6id8xDhi-2" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=1;exitDx=10;exitDy=0;exitPerimeter=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="">
