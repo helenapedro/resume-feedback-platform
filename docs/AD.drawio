@@ -179,6 +179,18 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="le4c1NbOkVE1zIPAg1GN-34" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;b&gt;AWS S3&lt;/b&gt;" vertex="1">
+          <mxGeometry height="30" width="60" x="766" y="58" as="geometry" />
+        </mxCell>
+        <mxCell id="le4c1NbOkVE1zIPAg1GN-35" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;b&gt;redis&lt;/b&gt;" vertex="1">
+          <mxGeometry height="30" width="74" x="759" y="196" as="geometry" />
+        </mxCell>
+        <mxCell id="le4c1NbOkVE1zIPAg1GN-36" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;b&gt;Kafka&lt;/b&gt;" vertex="1">
+          <mxGeometry height="49.12" width="74" x="381" y="284.44" as="geometry" />
+        </mxCell>
+        <mxCell id="le4c1NbOkVE1zIPAg1GN-37" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;b&gt;MongoDB&lt;/b&gt;" vertex="1">
+          <mxGeometry height="30" width="60" x="234" y="326" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
