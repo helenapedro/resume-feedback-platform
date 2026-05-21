@@ -268,7 +268,7 @@ public class GeminiClient {
         root.set("contents", objectMapper.valueToTree(List.of(content)));
 
         ObjectNode config = objectMapper.createObjectNode();
-        config.put("temperature", 0.1d);
+        config.put("temperature", properties.temperature());
         config.put("maxOutputTokens", properties.maxOutputTokens());
         config.put("responseMimeType", "application/json");
         if (useResponseSchema) {
@@ -291,6 +291,8 @@ public class GeminiClient {
 
         ObjectNode strengths = objectMapper.createObjectNode();
         strengths.put("type", "ARRAY");
+        strengths.put("minItems", 4);
+        strengths.put("maxItems", 5);
         ObjectNode strengthsItems = objectMapper.createObjectNode();
         strengthsItems.put("type", "STRING");
         strengths.set("items", strengthsItems);
@@ -298,6 +300,8 @@ public class GeminiClient {
 
         ObjectNode improvements = objectMapper.createObjectNode();
         improvements.put("type", "ARRAY");
+        improvements.put("minItems", 4);
+        improvements.put("maxItems", 5);
         ObjectNode improvementsItems = objectMapper.createObjectNode();
         improvementsItems.put("type", "STRING");
         improvements.set("items", improvementsItems);
@@ -329,6 +333,8 @@ public class GeminiClient {
 
         ObjectNode progressScore = objectMapper.createObjectNode();
         progressScore.put("type", "INTEGER");
+        progressScore.put("minimum", 0);
+        progressScore.put("maximum", 100);
         propertiesNode.set("progressScore", progressScore);
 
         ObjectNode improvedAreas = objectMapper.createObjectNode();
@@ -367,14 +373,33 @@ public class GeminiClient {
 
     private boolean isUsable(GeminiFeedback feedback) {
         return feedback != null
-                && StringUtils.hasText(feedback.summary());
+                && StringUtils.hasText(feedback.summary())
+                && feedback.strengths() != null
+                && feedback.strengths().size() >= 4
+                && feedback.improvements() != null
+                && feedback.improvements().size() >= 4;
     }
 
     private boolean isUsable(GeminiProgressAnalysis analysis) {
         return analysis != null
                 && StringUtils.hasText(analysis.summary())
                 && StringUtils.hasText(analysis.progressStatus())
-                && analysis.progressScore() != null;
+                && analysis.progressScore() != null
+                && isConsistentProgressScore(analysis.progressStatus(), analysis.progressScore());
+    }
+
+    private boolean isConsistentProgressScore(String progressStatus, Integer progressScore) {
+        if (progressScore == null) {
+            return false;
+        }
+        String normalizedStatus = progressStatus == null ? "" : progressStatus.trim().toUpperCase();
+        if ("IMPROVED".equals(normalizedStatus)) {
+            return progressScore > 0;
+        }
+        if ("DECLINED".equals(normalizedStatus)) {
+            return progressScore == 0;
+        }
+        return progressScore >= 0 && progressScore <= 100;
     }
 
     private String extractJsonObject(String rawText) {
@@ -441,15 +466,16 @@ public class GeminiClient {
 
     private GeminiCallResult requestJsonRepair(String malformedResponse) {
         String repairPrompt = """
-                Converta o texto abaixo para JSON valido em UMA LINHA, sem markdown, sem comentarios.
-                Saida obrigatoria:
-                {"summary":"...","strengths":["..."],"improvements":["..."]}
-                Regras:
-                - Escape aspas internas corretamente.
-                - Remova quebras de linha dentro de strings.
-                - Se faltar algum campo, complete com texto curto e objetivo.
+                Convert the text below into valid JSON in ONE LINE, with no markdown and no comments.
+                Write every text value in English only.
+                Required output:
+                {"summary":"...","strengths":["4 to 5 specific English items"],"improvements":["4 to 5 specific English items"]}
+                Rules:
+                - Escape internal quotes correctly.
+                - Remove line breaks inside strings.
+                - If a field is missing, complete it with concise, resume-specific English text.
 
-                Texto a corrigir:
+                Text to repair:
                 %s
                 """.formatted(malformedResponse);
         return requestFeedback(repairPrompt, false, false);
@@ -457,15 +483,18 @@ public class GeminiClient {
 
     private GeminiProgressCallResult requestProgressJsonRepair(String malformedResponse) {
         String repairPrompt = """
-                Converta o texto abaixo para JSON valido em UMA LINHA, sem markdown, sem comentarios.
-                Saida obrigatoria:
-                {"summary":"...","progressStatus":"MELHOROU","progressScore":0,"improvedAreas":["..."],"unchangedIssues":["..."],"newIssues":["..."]}
-                Regras:
-                - Escape aspas internas corretamente.
-                - Remova quebras de linha dentro de strings.
-                - Se faltar algum campo, complete com texto curto e objetivo.
+                Convert the text below into valid JSON in ONE LINE, with no markdown and no comments.
+                Write every text value in English only.
+                Required output:
+                {"summary":"...","progressStatus":"IMPROVED","progressScore":75,"improvedAreas":["..."],"unchangedIssues":["..."],"newIssues":["..."]}
+                Rules:
+                - progressStatus must be IMPROVED, UNCHANGED, or DECLINED.
+                - progressScore must be greater than 0 when progressStatus is IMPROVED.
+                - Escape internal quotes correctly.
+                - Remove line breaks inside strings.
+                - If a field is missing, complete it with concise, resume-specific English text.
 
-                Texto a corrigir:
+                Text to repair:
                 %s
                 """.formatted(malformedResponse);
         return requestProgressAnalysis(repairPrompt, false, false);

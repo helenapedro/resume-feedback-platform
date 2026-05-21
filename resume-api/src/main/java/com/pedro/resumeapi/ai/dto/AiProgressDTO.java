@@ -17,6 +17,7 @@ public record AiProgressDTO(
         String summary,
         String progressStatus,
         Integer progressScore,
+        Integer score,
         List<String> improvedAreas,
         List<String> unchangedIssues,
         List<String> newIssues

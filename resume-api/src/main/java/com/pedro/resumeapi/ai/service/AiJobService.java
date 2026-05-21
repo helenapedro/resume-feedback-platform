@@ -49,7 +49,7 @@ public class AiJobService {
         job.setStatus(AiJob.Status.PENDING);
         job.setAttemptCount(0);
         job.setIdempotencyKey(idempotencyKey);
-        job.setLanguage(language == null ? Language.EN : language);
+        job.setLanguage(Language.EN);
 
         try {
             AiJob saved = repo.saveAndFlush(job);
@@ -77,7 +77,7 @@ public class AiJobService {
     public AiJob regenerateForVersion(UUID resumeId, UUID versionId, Language language) {
         ResumeVersion version = getOwnedVersion(resumeId, versionId);
         String idempotencyKey = version.getId() + ":regen:" + UUID.randomUUID();
-        return createForVersion(version, idempotencyKey, language);
+        return createForVersion(version, idempotencyKey, Language.EN);
     }
 
     private ResumeVersion getOwnedVersion(UUID resumeId, UUID versionId) {

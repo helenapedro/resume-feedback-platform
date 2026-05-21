@@ -49,10 +49,41 @@ class AiProgressPromptBuilderTest {
                 Language.EN);
 
         assertTrue(prompt.contains("You are a resume reviewer."));
+        assertTrue(prompt.contains("Write only in clear English"));
         assertTrue(prompt.contains("Previous feedback delivered to the user"));
         assertTrue(prompt.contains("Current version text"));
         assertTrue(prompt.contains("Previous version text"));
         assertTrue(prompt.contains("Needs clearer impact framing."));
         assertFalse(prompt.contains("{{JOB_ID}}"));
+    }
+
+    @Test
+    void buildAlwaysUsesEnglishTemplateEvenWhenPortugueseIsRequested() {
+        AiJobRequestedMessage message = new AiJobRequestedMessage(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                Instant.now(),
+                Language.PT);
+
+        ResumeVersion currentVersion = new ResumeVersion();
+        currentVersion.setId(UUID.randomUUID());
+
+        ResumeVersion previousVersion = new ResumeVersion();
+        previousVersion.setId(UUID.randomUUID());
+
+        String prompt = builder.build(
+                message,
+                currentVersion,
+                previousVersion,
+                "Curriculo atual",
+                "Curriculo anterior",
+                null,
+                Language.PT);
+
+        assertTrue(prompt.contains("Write only in clear English"));
+        assertTrue(prompt.contains("Previous feedback: NOT AVAILABLE"));
+        assertFalse(prompt.contains("Feedback anterior"));
     }
 }

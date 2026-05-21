@@ -72,6 +72,7 @@ public class AiProgressService {
                 doc.getSummary(),
                 doc.getProgressStatus(),
                 doc.getProgressScore(),
+                doc.getProgressScore(),
                 doc.getImprovedAreas(),
                 doc.getUnchangedIssues(),
                 doc.getNewIssues()

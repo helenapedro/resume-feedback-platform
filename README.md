@@ -4,9 +4,16 @@ Resume Feedback Platform is a live product for uploading resumes, generating AI 
 
 This repo is the backend monorepo behind the hosted app at `https://feedback.hmpedro.com`. The frontend is a separate React + TypeScript application hosted on AWS Amplify, while this repository contains the Spring Boot API and worker services deployed on Heroku. It is also the project package for the Codex Creator Challenge.
 
+## Recognition
+
+Resume Feedback Platform was featured in the Handshake AI Showcase through the OpenAI Developers x Handshake Codex Creator Challenge.
+
+- Showcase project: `https://app.joinhandshake.com/ai-showcase?project_id=3056375`
+
 ## What judges should see first
 
 - Live app: `https://feedback.hmpedro.com`
+- Handshake AI Showcase: `https://app.joinhandshake.com/ai-showcase?project_id=3056375`
 - Hosted frontend flow: landing page, auth, resume library, profile, version history, AI feedback, comments, and share links
 - Judge guide: [JUDGES_GUIDE.md](JUDGES_GUIDE.md)
 - Demo guide: [DEMO.md](DEMO.md)

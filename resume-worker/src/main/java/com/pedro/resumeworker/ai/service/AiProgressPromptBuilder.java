@@ -14,14 +14,12 @@ public class AiProgressPromptBuilder {
 
     private final int maxResumeChars;
     private final String englishTemplate;
-    private final String portugueseTemplate;
 
     public AiProgressPromptBuilder(
             @Value("${app.ai-feedback.max-resume-chars:12000}") int maxResumeChars,
             PromptTemplateLoader promptTemplateLoader) {
         this.maxResumeChars = maxResumeChars;
         this.englishTemplate = promptTemplateLoader.load("prompts/ai-progress-en.md");
-        this.portugueseTemplate = promptTemplateLoader.load("prompts/ai-progress-pt.md");
     }
 
     public String build(
@@ -32,24 +30,21 @@ public class AiProgressPromptBuilder {
             String previousResumeText,
             AiFeedbackDocument previousFeedback,
             Language language) {
-        String template = language == Language.PT ? portugueseTemplate : englishTemplate;
-        return template
+        return englishTemplate
                 .replace("{{JOB_ID}}", String.valueOf(message.jobId()))
                 .replace("{{RESUME_ID}}", String.valueOf(message.resumeId()))
                 .replace("{{CURRENT_RESUME_VERSION_ID}}", String.valueOf(currentVersion.getId()))
                 .replace("{{BASELINE_RESUME_VERSION_ID}}", String.valueOf(previousVersion.getId()))
                 .replace("{{OWNER_ID}}", String.valueOf(message.ownerId()))
                 .replace("{{MAX_RESUME_CHARS}}", String.valueOf(maxResumeChars))
-                .replace("{{PREVIOUS_RESUME_TEXT}}", sanitize(previousResumeText, language))
-                .replace("{{PREVIOUS_FEEDBACK_SECTION}}", buildPreviousFeedbackSection(previousFeedback, language))
-                .replace("{{CURRENT_RESUME_TEXT}}", sanitize(currentResumeText, language));
+                .replace("{{PREVIOUS_RESUME_TEXT}}", sanitize(previousResumeText))
+                .replace("{{PREVIOUS_FEEDBACK_SECTION}}", buildPreviousFeedbackSection(previousFeedback))
+                .replace("{{CURRENT_RESUME_TEXT}}", sanitize(currentResumeText));
     }
 
-    private String buildPreviousFeedbackSection(AiFeedbackDocument previousFeedback, Language language) {
+    private String buildPreviousFeedbackSection(AiFeedbackDocument previousFeedback) {
         if (previousFeedback == null) {
-            return language == Language.PT
-                    ? "Feedback anterior: NAO DISPONIVEL"
-                    : "Previous feedback: NOT AVAILABLE";
+            return "Previous feedback: NOT AVAILABLE";
         }
         return """
                 %s:
@@ -57,15 +52,15 @@ public class AiProgressPromptBuilder {
                 - strengths: %s
                 - improvements: %s
                 """.formatted(
-                language == Language.PT ? "Feedback anterior dado ao utilizador" : "Previous feedback delivered to the user",
-                sanitize(previousFeedback.getSummary(), language),
+                "Previous feedback delivered to the user",
+                sanitize(previousFeedback.getSummary()),
                 sanitizeList(previousFeedback.getStrengths()),
                 sanitizeList(previousFeedback.getImprovements()));
     }
 
-    private String sanitize(String value, Language language) {
+    private String sanitize(String value) {
         return value == null || value.isBlank()
-                ? (language == Language.PT ? "NAO DISPONIVEL" : "NOT AVAILABLE")
+                ? "NOT AVAILABLE"
                 : value;
     }
 

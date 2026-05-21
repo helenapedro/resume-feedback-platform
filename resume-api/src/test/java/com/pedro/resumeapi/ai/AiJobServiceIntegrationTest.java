@@ -97,7 +97,7 @@ class AiJobServiceIntegrationTest {
         assertEquals(resume.getId(), message.resumeId());
         assertEquals(version.getId(), message.resumeVersionId());
         assertEquals(owner.getId(), message.ownerId());
-        assertEquals(Language.PT, message.language());
+        assertEquals(Language.EN, message.language());
     }
 
     @TestConfiguration
