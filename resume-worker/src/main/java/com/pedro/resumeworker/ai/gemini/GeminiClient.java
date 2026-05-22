@@ -377,7 +377,9 @@ public class GeminiClient {
                 && feedback.strengths() != null
                 && feedback.strengths().size() >= 4
                 && feedback.improvements() != null
-                && feedback.improvements().size() >= 4;
+                && feedback.improvements().size() >= 4
+                && feedback.strengths().stream().allMatch(this::isSpecificFeedbackItem)
+                && feedback.improvements().stream().allMatch(this::isSpecificFeedbackItem);
     }
 
     private boolean isUsable(GeminiProgressAnalysis analysis) {
@@ -385,7 +387,27 @@ public class GeminiClient {
                 && StringUtils.hasText(analysis.summary())
                 && StringUtils.hasText(analysis.progressStatus())
                 && analysis.progressScore() != null
-                && isConsistentProgressScore(analysis.progressStatus(), analysis.progressScore());
+                && isConsistentProgressScore(analysis.progressStatus(), analysis.progressScore())
+                && isConsistentProgressLists(analysis);
+    }
+
+    private boolean isSpecificFeedbackItem(String item) {
+        return wordCount(item) >= 10 && item.contains(":");
+    }
+
+    private boolean isSpecificProgressItem(String item) {
+        return wordCount(item) >= 8 && item.contains(":");
+    }
+
+    private boolean isConsistentProgressLists(GeminiProgressAnalysis analysis) {
+        boolean listsAreSpecific = analysis.improvedAreas().stream().allMatch(this::isSpecificProgressItem)
+                && analysis.unchangedIssues().stream().allMatch(this::isSpecificProgressItem)
+                && analysis.newIssues().stream().allMatch(this::isSpecificProgressItem);
+        if (!listsAreSpecific) {
+            return false;
+        }
+        String normalizedStatus = analysis.progressStatus() == null ? "" : analysis.progressStatus().trim().toUpperCase();
+        return !"IMPROVED".equals(normalizedStatus) || !analysis.improvedAreas().isEmpty();
     }
 
     private boolean isConsistentProgressScore(String progressStatus, Integer progressScore) {
@@ -534,8 +556,8 @@ public class GeminiClient {
             return null;
         }
         String summary = feedback.summary() == null ? "" : feedback.summary().trim();
-        List<String> strengths = sanitizeList(feedback.strengths());
-        List<String> improvements = sanitizeList(feedback.improvements());
+        List<String> strengths = sanitizeFeedbackList(feedback.strengths());
+        List<String> improvements = sanitizeFeedbackList(feedback.improvements());
         return new GeminiFeedback(summary, strengths, improvements);
     }
 
@@ -548,10 +570,22 @@ public class GeminiClient {
         Integer progressScore = analysis.progressScore() == null
                 ? null
                 : Math.max(0, Math.min(100, analysis.progressScore()));
-        List<String> improvedAreas = sanitizeList(analysis.improvedAreas());
-        List<String> unchangedIssues = sanitizeList(analysis.unchangedIssues());
-        List<String> newIssues = sanitizeList(analysis.newIssues());
+        List<String> improvedAreas = sanitizeProgressList(analysis.improvedAreas());
+        List<String> unchangedIssues = sanitizeProgressList(analysis.unchangedIssues());
+        List<String> newIssues = sanitizeProgressList(analysis.newIssues());
         return new GeminiProgressAnalysis(summary, progressStatus, progressScore, improvedAreas, unchangedIssues, newIssues);
+    }
+
+    private List<String> sanitizeFeedbackList(List<String> input) {
+        return sanitizeList(input).stream()
+                .filter(this::isSpecificFeedbackItem)
+                .toList();
+    }
+
+    private List<String> sanitizeProgressList(List<String> input) {
+        return sanitizeList(input).stream()
+                .filter(this::isSpecificProgressItem)
+                .toList();
     }
 
     private List<String> sanitizeList(List<String> input) {
@@ -561,9 +595,28 @@ public class GeminiClient {
         return input.stream()
                 .filter(StringUtils::hasText)
                 .map(String::trim)
+                .filter(item -> !isEmptyListPlaceholder(item))
                 .distinct()
                 .limit(5)
                 .toList();
+    }
+
+    private boolean isEmptyListPlaceholder(String item) {
+        String normalized = item == null ? "" : item.trim().toLowerCase();
+        return normalized.equals("none")
+                || normalized.equals("none identified")
+                || normalized.equals("no issues")
+                || normalized.equals("no new issues")
+                || normalized.equals("no items")
+                || normalized.equals("not applicable")
+                || normalized.equals("n/a");
+    }
+
+    private int wordCount(String item) {
+        if (!StringUtils.hasText(item)) {
+            return 0;
+        }
+        return item.trim().split("\\s+").length;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

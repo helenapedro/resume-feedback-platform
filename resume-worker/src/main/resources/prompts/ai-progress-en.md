@@ -8,9 +8,9 @@ Respond ONLY with valid JSON in the format:
   "summary": "short summary of the progression",
   "progressStatus": "IMPROVED|UNCHANGED|DECLINED",
   "progressScore": 75,
-  "improvedAreas": ["up to 3 concrete improvements"],
-  "unchangedIssues": ["up to 3 issues that remain"],
-  "newIssues": ["up to 3 newly introduced issues"]
+  "improvedAreas": ["Projects: The current version adds the Resume Feedback Platform with async AI jobs and version-aware analysis, which makes the AI product work more visible than the previous version."],
+  "unchangedIssues": ["up to 3 evidence-backed issues that remain"],
+  "newIssues": ["up to 3 evidence-backed newly introduced issues"]
 }
 Rules:
 - Base your analysis on the previous resume, the current resume, and the previous feedback.
@@ -20,7 +20,11 @@ Rules:
 - If progressStatus is UNCHANGED, progressScore must be 0-20.
 - If progressStatus is DECLINED, progressScore must be 0.
 - Each item must name the changed section, role, project, technology, domain, metric, or missing evidence it refers to.
+- Each list item must be a complete evidence-backed sentence, not a short label.
 - If there is insufficient evidence, use empty lists instead of making things up.
+- Use an empty array, not text such as "None identified", when a category has no items.
+- Do not say the current version addressed a request unless the previous feedback explicitly made that request.
+- Do not call an event, challenge, company, platform, or result "recognized" unless that exact recognition is present in the resume or previous feedback.
 - Do not copy non-English phrases from the resume into output values.
 - Do not use double quotes inside text values.
 - Do not include line breaks in values.

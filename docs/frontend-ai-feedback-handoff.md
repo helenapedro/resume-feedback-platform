@@ -10,11 +10,14 @@ Current frontend problems visible in production:
 - `Strength Signals` and `Gaps to Close` are treated like fixed-size sections.
 - The progress score card always shows `0/100`.
 - Feedback text is too generic because the UI is only surfacing short labels and may be truncating or slicing richer backend content.
+- Progress cards can show `None identified` as a real bullet when the correct UI state should be an empty-state message.
 
 Backend changes are in place for new generations:
 
 - New AI feedback is English-only.
 - New feedback targets 4 to 5 strengths and 4 to 5 gaps.
+- New backend validation rejects short generic labels such as `Backend development expertise`, `System architecture design`, or `Leadership potential`.
+- New backend normalization filters placeholder list items such as `None identified`.
 - New progress analysis returns a meaningful version-to-version improvement score.
 - The progress API now returns both `progressScore` and `score` for compatibility.
 
@@ -149,6 +152,7 @@ Do not:
 - Use `.slice(0, 2)`.
 - Collapse items into short generated labels.
 - Replace backend text with frontend template text.
+- Extract only the text before or after a colon.
 
 ### Gaps to Close
 
@@ -213,6 +217,8 @@ Render every item in each list. If a list is empty, keep the current empty state
 - Still needs work: `No items in this category for the current comparison.`
 - New issues: `No items in this category for the current comparison.`
 
+Never render `None identified`, `No issues`, `N/A`, or similar placeholder strings as list bullets. If a legacy payload contains only those strings, treat that list as empty.
+
 ## Loading, Empty, Error, and Legacy States
 
 ### Loading
@@ -260,6 +266,7 @@ Old records may have:
 - Portuguese text.
 - Two-item strengths or gaps.
 - `progressScore: 0` even when status says improved.
+- Placeholder list values such as `None identified`.
 
 Detect legacy feedback:
 
@@ -271,6 +278,8 @@ const isLegacyFeedback =
 For legacy feedback:
 
 - Still render the data that exists.
+- If legacy list items are short labels, render them as-is but show the regenerate notice.
+- Treat placeholder items like `None identified` as empty-state values, not real bullets.
 - Show a small non-blocking notice near the regenerate button.
 - Encourage regeneration.
 
@@ -309,6 +318,8 @@ line-height: 1.45;
 ```
 
 Avoid ellipsis for feedback items. These are the core product value, not metadata labels.
+
+Do not create frontend summaries such as `Backend development expertise`, `System architecture design`, or `AI Challenge Contributions` from longer backend items. The UI should show backend item text exactly, because the evidence inside that text is what prevents hallucination-like display.
 
 ## Suggested Component Logic
 
@@ -375,6 +386,8 @@ The implementation is done when all of the following are true:
 - `Strength Signals` count equals `feedback.strengths.length`.
 - `Gaps to Close` count equals `feedback.improvements.length`.
 - All returned strength and improvement items are visible.
+- No frontend code shortens backend items into generic labels.
+- Placeholder strings such as `None identified`, `No issues`, or `N/A` are rendered as empty states, not bullets.
 - The UI handles 0, 1, 2, 4, 5, and 6 list items without layout breakage.
 - The progress score card reads from `progress.progressScore` first, then `progress.score`.
 - The progress score card does not show `0/100` while loading or when the score field is absent.
@@ -454,4 +467,3 @@ Switch quickly between v1 and v2. Verify:
 - `promptVersion: v3` means the backend used the English-only, richer feedback prompt.
 - Progress scoring is generated only for versions that have a previous version and baseline feedback.
 - The frontend should not compute its own AI score from list counts.
-
