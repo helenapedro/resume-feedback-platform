@@ -6,15 +6,15 @@ This repo is the backend monorepo behind the hosted app at `https://feedback.hmp
 
 ## Recognition
 
-Resume Feedback Platform is featured in the Handshake AI Showcase.
+**Resume Feedback Platform is featured in the [Handshake AI Showcase](https://app.joinhandshake.com/ai-showcase?project_id=3056375) as part of the OpenAI Developers x Handshake Codex Creator Challenge.**
 
-- Showcase project: `https://app.joinhandshake.com/ai-showcase?project_id=3056375`
+![Handshake Featured Image](https://resume-feedback-platform.s3.us-east-1.amazonaws.com/images/handshake_feature.png)
 
 ## Start here
 
 - Live app: `https://feedback.hmpedro.com`
 - Handshake AI Showcase: `https://app.joinhandshake.com/ai-showcase?project_id=3056375`
-- Hosted frontend flow: landing page, auth, resume library, profile, version history, AI feedback, comments, and share links
+- Frontend repo: `https://github.com/helenapedro/ui_ai-powered-resume-feedback-platform`
 - Demo guide: [DEMO.md](DEMO.md)
 - API reference: [docs/API.md](docs/API.md)
 - Architecture: [docs/architecture.md](docs/architecture.md)
@@ -23,10 +23,10 @@ Resume Feedback Platform is featured in the Handshake AI Showcase.
 ## Why the product is useful
 
 - Real product, not a toy endpoint set: there is a deployed UI and a working end-to-end workflow.
-- AI feedback is asynchronous: uploads stay responsive while a background worker processes Gemini jobs.
+- AI feedback is asynchronous: uploads stay responsive while a background worker processes LLM jobs.
 - Version-aware analysis: the platform compares resume versions instead of treating each upload in isolation.
 - Shareable review workflow: token-based links, comments, and access auditing support recruiter or mentor review.
-- Practical engineering choices: MySQL for transactional state, MongoDB for AI artifacts, optional Kafka support for event-driven processing, and production-friendly cost controls such as worker polling and disabled Redis-backed rate limiting.
+- Practical engineering choices: MySQL for transactional state, MongoDB for AI artifacts, Kafka for event-driven processing, and Redis-backed rate limiting.
 
 ## Core product flow
 
