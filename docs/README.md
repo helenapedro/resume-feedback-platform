@@ -4,18 +4,12 @@ Detailed project documentation lives here.
 
 ## Recommended Reading Order
 
-1. [Submission](submission.md) — Challenge entry overview
-2. [Requirements](requirements.md)
-3. [Architecture](architecture.md)
-4. [Operations](operations.md)
+1. [Requirements](requirements.md) - product capabilities and system expectations
+2. [Architecture](architecture.md) - service boundaries and data flow
+3. [API Reference](API.md) - backend endpoint summary
+4. [Operations](operations.md) - local setup, deployment, and troubleshooting
 
 ## Documents
-
-### [Submission](submission.md)
-
-- Code challenge summary and entry pitch
-- Key differentiators and evaluation strengths
-- Demo workflow with sample payloads
 
 ### [Requirements](requirements.md)
 
@@ -29,17 +23,17 @@ Detailed project documentation lives here.
 - Data flow and integration strategy
 - Persistence strategy
 
+### [API Reference](API.md)
+
+- Authentication, profile, resume, share-link, comment, and AI endpoints
+- Request and response shape notes
+- Error contract summary
+
 ### [Operations](operations.md)
 
 - Local setup and runtime configuration
 - Testing and deployment workflow
 - Monitoring and troubleshooting checklist
-
-### [Submission](submission.md)
-
-- Code challenge summary and entry pitch
-- Key differentiators and evaluation strengths
-- Demo workflow and judging points
 
 ## Module Docs
 

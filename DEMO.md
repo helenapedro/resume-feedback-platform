@@ -49,7 +49,7 @@ Expected result:
 - worker connects to MySQL, MongoDB, and Kafka
 - AI jobs move from `PENDING` to `DONE` when processed
 
-## 4. Five-minute evaluator workflow
+## 4. Five-minute product workflow
 
 1. Register or log in
 2. Upload a resume PDF
@@ -77,7 +77,7 @@ After login, these endpoints validate the core execution path:
 
 - The upload flow is real
 - The async AI pipeline is real
-- Kafka-backed job orchestration is wired
+- Kafka-backed job orchestration is available for local or event-driven deployments
 - AI feedback retrieval works
 - Version-aware progress analysis works
 - The product supports sharing and collaboration workflows

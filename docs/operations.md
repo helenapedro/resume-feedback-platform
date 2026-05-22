@@ -22,8 +22,7 @@ docker compose -f docker/docker-compose.yml up -d
 docker compose -f docker/docker-compose.kafka.yml up -d
 ```
 
-This brings up local dependencies used during development (MySQL/Redis and Kafka stack).
-If you use local Mongo as well, run it in Docker or provide `SPRING_DATA_MONGODB_URI`.
+This brings up local dependencies used during development: MySQL, MongoDB, Redis, and the Kafka stack.
 
 ### Build
 

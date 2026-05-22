@@ -9,7 +9,7 @@ This project is not presented as "AI generated code." It is presented as a real 
 - Fixed startup and dependency issues across `resume-api`, `resume-worker`, and `common`.
 - Tightened the async AI handoff path by ensuring publish-after-commit behavior is correct when Kafka is enabled.
 - Added focused integration and worker tests around the highest-risk paths.
-- Reworked the submission docs so the hosted app, demo path, and product story are obvious.
+- Reworked the project docs so the hosted app, demo path, and product story are obvious.
 
 ## Concrete examples
 
@@ -18,19 +18,19 @@ This project is not presented as "AI generated code." It is presented as a real 
 - Worker tests cover both successful processing and retry scheduling on failures.
 - Local development now supports `LOCAL` file storage instead of assuming S3.
 
-## Why that matters for the challenge
+## Why that matters
 
-The strongest Codex entries are not just "I asked for code." They show that Codex helped move a real project forward:
+Codex was useful because it helped move a real product forward:
 
 - faster debugging
 - faster iteration on architecture
-- cleaner packaging for evaluators
+- clearer documentation and operational handoff
 - more confidence through targeted automated tests
 
-## Recommended framing in the submission
+## Recommended framing
 
 When describing how Codex helped, keep it specific:
 
 - "Codex helped me debug module wiring and local runtime configuration."
 - "Codex helped harden the async AI pipeline and add focused tests."
-- "Codex helped turn the repo into a submission-ready package with a clear judge path."
+- "Codex helped turn the repo into a clearer product package with a reliable local run path."

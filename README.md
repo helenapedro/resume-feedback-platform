@@ -2,25 +2,25 @@
 
 Resume Feedback Platform is a live product for uploading resumes, generating AI feedback, tracking improvements across versions, and sharing review links with controlled access.
 
-This repo is the backend monorepo behind the hosted app at `https://feedback.hmpedro.com`. The frontend is a separate React + TypeScript application hosted on AWS Amplify, while this repository contains the Spring Boot API and worker services deployed on Heroku. It is also the project package for the Codex Creator Challenge.
+This repo is the backend monorepo behind the hosted app at `https://feedback.hmpedro.com`. The frontend is a separate React + TypeScript application hosted on AWS Amplify, while this repository contains the Spring Boot API and worker services deployed on Heroku.
 
 ## Recognition
 
-Resume Feedback Platform was featured in the Handshake AI Showcase through the OpenAI Developers x Handshake Codex Creator Challenge.
+Resume Feedback Platform is featured in the Handshake AI Showcase.
 
 - Showcase project: `https://app.joinhandshake.com/ai-showcase?project_id=3056375`
 
-## What judges should see first
+## Start here
 
 - Live app: `https://feedback.hmpedro.com`
 - Handshake AI Showcase: `https://app.joinhandshake.com/ai-showcase?project_id=3056375`
 - Hosted frontend flow: landing page, auth, resume library, profile, version history, AI feedback, comments, and share links
-- Judge guide: [JUDGES_GUIDE.md](JUDGES_GUIDE.md)
 - Demo guide: [DEMO.md](DEMO.md)
-- Codex build story: [docs/codex-build-story.md](docs/codex-build-story.md)
-- Submission summary: [docs/submission.md](docs/submission.md)
+- API reference: [docs/API.md](docs/API.md)
+- Architecture: [docs/architecture.md](docs/architecture.md)
+- Operations: [docs/operations.md](docs/operations.md)
 
-## Why this entry is strong
+## Why the product is useful
 
 - Real product, not a toy endpoint set: there is a deployed UI and a working end-to-end workflow.
 - AI feedback is asynchronous: uploads stay responsive while a background worker processes Gemini jobs.
@@ -42,13 +42,13 @@ Resume Feedback Platform was featured in the Handshake AI Showcase through the O
 - `resume-worker`: background worker for AI feedback generation and progress analysis
 - `common`: shared message contracts and cross-module models
 
-## Quick evaluator path
+## Quick product path
 
 If you want the fastest way to understand the project:
 
 1. Open the live app at `https://feedback.hmpedro.com`
-2. Read [JUDGES_GUIDE.md](JUDGES_GUIDE.md)
-3. Skim [docs/submission.md](docs/submission.md)
+2. Review the product workflow in the hosted frontend
+3. Skim [docs/architecture.md](docs/architecture.md)
 4. Use [DEMO.md](DEMO.md) only if you want to run the stack locally
 
 ## Local development
@@ -72,7 +72,7 @@ For the full local walkthrough, see [DEMO.md](DEMO.md). For runtime details, see
 
 ## Focused execution coverage
 
-This repo now includes higher-signal automated coverage around the parts judges will care about most:
+This repo includes focused automated coverage around the highest-risk execution paths:
 
 - AI job creation and async handoff behavior are covered
 - Share-link validation records both successful and failed access audits
@@ -80,19 +80,17 @@ This repo now includes higher-signal automated coverage around the parts judges 
 
 ## Documentation
 
-- [JUDGES_GUIDE.md](JUDGES_GUIDE.md)
 - [DEMO.md](DEMO.md)
-- [FINAL_SUBMISSION.md](FINAL_SUBMISSION.md)
 - [Documentation Index](docs/README.md)
+- [API Reference](docs/API.md)
 - [Architecture](docs/architecture.md)
 - [Requirements](docs/requirements.md)
 - [Operations](docs/operations.md)
-- [Submission](docs/submission.md)
 - [Codex Build Story](docs/codex-build-story.md)
 
 ## Next improvements
 
 - Add a short public demo video or GIF-based walkthrough
-- Add richer before-vs-after resume examples in the submission packet
-- Add one thin judge account or scripted seeded demo data path
+- Add richer before-vs-after resume examples in the product documentation
+- Add one scripted seeded demo data path
 - Add a single end-to-end browser smoke test for the hosted frontend

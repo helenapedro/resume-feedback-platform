@@ -69,7 +69,7 @@ Example:
     "Clarity: The profile is easy to scan because the main data stack appears early."
   ],
   "improvements": [
-    "Experience: Add the size, frequency, or business use of each pipeline so the reader can judge operational scope.",
+    "Experience: Add the size, frequency, or business use of each pipeline so the reader can evaluate operational scope.",
     "Impact: Quantify dashboard, model, or data quality outcomes with metrics such as time saved, adoption, accuracy, or revenue influence.",
     "Seniority: Clarify whether the candidate owned architecture decisions, stakeholder tradeoffs, or production reliability.",
     "Projects: Replace generic project descriptions with problem, approach, stack, and measurable result."
@@ -319,7 +319,7 @@ line-height: 1.45;
 
 Avoid ellipsis for feedback items. These are the core product value, not metadata labels.
 
-Do not create frontend summaries such as `Backend development expertise`, `System architecture design`, or `AI Challenge Contributions` from longer backend items. The UI should show backend item text exactly, because the evidence inside that text is what prevents hallucination-like display.
+Do not create frontend summaries such as `Backend development expertise`, `System architecture design`, or `AI project contributions` from longer backend items. The UI should show backend item text exactly, because the evidence inside that text is what prevents hallucination-like display.
 
 ## Suggested Component Logic
 
