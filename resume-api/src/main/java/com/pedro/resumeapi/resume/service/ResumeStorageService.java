@@ -57,6 +57,17 @@ public class ResumeStorageService {
     }
 
     @Transactional(readOnly = true)
+    public String previewVersionUrlOwner(UUID resumeId, UUID versionId, String localFallbackUrl) {
+        DownloadPayload payload = previewVersionOwner(resumeId, versionId);
+
+        if (payload.isPresigned()) {
+            return payload.presignedUrl();
+        }
+
+        return localFallbackUrl;
+    }
+
+    @Transactional(readOnly = true)
     public DownloadPayload previewVersionPublic(UUID resumeId, UUID versionId) {
         return getPayload(resumeId, versionId, false);
     }

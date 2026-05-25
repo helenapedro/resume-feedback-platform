@@ -1,11 +1,13 @@
 package com.pedro.resumeapi.resume.web;
 
 import com.pedro.resumeapi.api.error.FileRequiredException;
+import com.pedro.resumeapi.resume.dto.ResumePreviewUrlDTO;
 import com.pedro.resumeapi.resume.dto.ResumeSummaryDTO;
 import com.pedro.resumeapi.resume.dto.ResumeVersionDTO;
 import com.pedro.resumeapi.resume.mapper.ResumeMapper;
 import com.pedro.resumeapi.resume.service.ResumeService;
 import com.pedro.resumeapi.resume.service.ResumeStorageService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.core.io.Resource;
@@ -130,5 +132,19 @@ public class ResumeController {
                 .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
                         "inline; filename=\"" + safeName + "\"")
                 .body(payload.resource());
+    }
+
+    @GetMapping("/{resumeId}/versions/{versionId}/preview-url")
+    public ResumePreviewUrlDTO previewUrl(
+            @PathVariable UUID resumeId,
+            @PathVariable UUID versionId,
+            HttpServletRequest request
+    ) {
+        String localFallbackUrl = request.getRequestURL()
+                .toString()
+                .replaceFirst("/preview-url$", "/preview");
+        return new ResumePreviewUrlDTO(
+                resumeStorageService.previewVersionUrlOwner(resumeId, versionId, localFallbackUrl)
+        );
     }
 }
