@@ -10,6 +10,8 @@ import java.util.UUID;
 public interface AiProgressRefRepository extends JpaRepository<AiProgressRef, UUID> {
     Optional<AiProgressRef> findTopByResumeVersion_IdOrderByProgressVersionDesc(UUID versionId);
 
+    Optional<AiProgressRef> findByResumeVersion_IdAndProgressVersion(UUID versionId, int progressVersion);
+
     List<AiProgressRef> findByResumeVersion_Resume_Id(UUID resumeId);
 
     void deleteByResumeVersion_Resume_Id(UUID resumeId);

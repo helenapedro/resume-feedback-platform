@@ -65,6 +65,19 @@ app:
         enabled: false
         requests: 120
         window: 1m
+  demo:
+    seed:
+      enabled: ${APP_DEMO_SEED_ENABLED:false}
+      email: ${APP_DEMO_SEED_EMAIL:demo@hmpedro.com}
+      password: ${APP_DEMO_SEED_PASSWORD:demo-password-change-me}
+      resume-title: ${APP_DEMO_SEED_RESUME_TITLE:Demo Resume - Product Manager}
+      s3-bucket: ${APP_DEMO_SEED_S3_BUCKET:resume-feedback-platform}
+      version-one-s3-object-key: ${APP_DEMO_SEED_V1_S3_OBJECT_KEY:seed/pdf1_v1.pdf}
+      version-two-s3-object-key: ${APP_DEMO_SEED_V2_S3_OBJECT_KEY:seed/pdf1_v1.pdf}
+      version-one-s3-version-id: ${APP_DEMO_SEED_V1_S3_VERSION_ID:}
+      version-two-s3-version-id: ${APP_DEMO_SEED_V2_S3_VERSION_ID:}
+      version-one-local-path: ${APP_DEMO_SEED_V1_LOCAL_PATH:docs/seed/pdf1_v1.pdf}
+      version-two-local-path: ${APP_DEMO_SEED_V2_LOCAL_PATH:docs/seed/pdf1_v2.pdf}
 
 logging:
   level:
