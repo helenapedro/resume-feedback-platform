@@ -62,6 +62,14 @@ Gemini:
 - `app.ai-feedback.max-resume-chars`
 - `app.ai-feedback.progress-enabled`
 
+OpenAI:
+
+- `OPENAI_API_KEY` (required when `APP_AI_PROVIDER=openai`)
+- `APP_AI_FEEDBACK_OPENAI_MODEL` overrides `APP_AI_MODEL` for OpenAI only. Default fallback: `gpt-4o-mini`.
+- `APP_AI_FEEDBACK_OPENAI_MAX_OUTPUT_TOKENS` overrides `APP_AI_MAX_OUTPUT_TOKENS` for OpenAI only.
+- `APP_AI_FEEDBACK_OPENAI_TEMPERATURE` overrides `APP_AI_TEMPERATURE` for OpenAI only.
+- `APP_AI_FEEDBACK_OPENAI_BASE_URL` defaults to `https://api.openai.com`.
+
 Cost-control environment overrides:
 
 - `APP_AI_FEEDBACK_MAX_RESUME_CHARS` limits resume text sent to Gemini. Default: `8000`. Progress analysis uses half of this value per resume version, with a minimum of `1500`, and sends head/tail excerpts instead of two full resume bodies.
