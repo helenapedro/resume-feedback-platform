@@ -13,7 +13,8 @@ Respond ONLY with valid JSON in the format:
   "newIssues": ["up to 3 evidence-backed newly introduced issues"]
 }
 Rules:
-- Base your analysis on the previous resume, the current resume, and the previous feedback.
+- Base your analysis on the previous resume excerpt, the current resume excerpt, and the previous feedback.
+- Because resume text may be excerpted for cost control, only describe changes that are visible in the provided excerpts or explicitly requested in the previous feedback.
 - progressScore must be an integer between 0 and 100 that measures how much the current version improved versus the baseline version, not the overall resume quality.
 - Use 0 only when there is no visible improvement or the current version declined. Use 1-39 for minor progress, 40-69 for meaningful but incomplete progress, 70-89 for strong progress, and 90-100 only when the current version clearly resolves most prior issues.
 - If progressStatus is IMPROVED, progressScore must be greater than 0.
@@ -37,11 +38,12 @@ Metadata:
 - baselineResumeVersionId: {{BASELINE_RESUME_VERSION_ID}}
 - ownerId: {{OWNER_ID}}
 - analyzed character limit: {{MAX_RESUME_CHARS}}
+- per-version progress excerpt limit: {{MAX_PROGRESS_RESUME_CHARS}}
 
-Previous resume (raw text):
+Previous resume excerpt:
 {{PREVIOUS_RESUME_TEXT}}
 
 {{PREVIOUS_FEEDBACK_SECTION}}
 
-Current resume (raw text):
+Current resume excerpt:
 {{CURRENT_RESUME_TEXT}}

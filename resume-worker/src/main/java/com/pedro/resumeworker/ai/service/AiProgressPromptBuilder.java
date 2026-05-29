@@ -13,12 +13,14 @@ import java.util.List;
 public class AiProgressPromptBuilder {
 
     private final int maxResumeChars;
+    private final int maxProgressResumeChars;
     private final String englishTemplate;
 
     public AiProgressPromptBuilder(
             @Value("${app.ai-feedback.max-resume-chars:12000}") int maxResumeChars,
             PromptTemplateLoader promptTemplateLoader) {
         this.maxResumeChars = maxResumeChars;
+        this.maxProgressResumeChars = Math.max(1500, maxResumeChars / 2);
         this.englishTemplate = promptTemplateLoader.load("prompts/ai-progress-en.md");
     }
 
@@ -37,9 +39,10 @@ public class AiProgressPromptBuilder {
                 .replace("{{BASELINE_RESUME_VERSION_ID}}", String.valueOf(previousVersion.getId()))
                 .replace("{{OWNER_ID}}", String.valueOf(message.ownerId()))
                 .replace("{{MAX_RESUME_CHARS}}", String.valueOf(maxResumeChars))
-                .replace("{{PREVIOUS_RESUME_TEXT}}", sanitize(previousResumeText))
+                .replace("{{MAX_PROGRESS_RESUME_CHARS}}", String.valueOf(maxProgressResumeChars))
+                .replace("{{PREVIOUS_RESUME_TEXT}}", buildResumeExcerpt(previousResumeText))
                 .replace("{{PREVIOUS_FEEDBACK_SECTION}}", buildPreviousFeedbackSection(previousFeedback))
-                .replace("{{CURRENT_RESUME_TEXT}}", sanitize(currentResumeText));
+                .replace("{{CURRENT_RESUME_TEXT}}", buildResumeExcerpt(currentResumeText));
     }
 
     private String buildPreviousFeedbackSection(AiFeedbackDocument previousFeedback) {
@@ -62,12 +65,24 @@ public class AiProgressPromptBuilder {
         if (value == null || value.isBlank()) {
             return "NOT AVAILABLE";
         }
-        String trimmed = value.trim();
-        if (trimmed.length() <= maxResumeChars) {
-            return trimmed;
+        return value.trim();
+    }
+
+    private String buildResumeExcerpt(String value) {
+        String sanitized = sanitize(value);
+        if ("NOT AVAILABLE".equals(sanitized) || sanitized.length() <= maxProgressResumeChars) {
+            return sanitized;
         }
-        return trimmed.substring(0, maxResumeChars)
-                + "\n[TRUNCATED: resume text exceeded configured analysis limit]";
+
+        int headChars = Math.max(750, maxProgressResumeChars * 2 / 3);
+        int tailChars = maxProgressResumeChars - headChars;
+        String head = sanitized.substring(0, headChars).trim();
+        String tail = sanitized.substring(sanitized.length() - tailChars).trim();
+        return """
+                %s
+                [TRUNCATED MIDDLE: resume excerpt limited for progress analysis]
+                %s
+                """.formatted(head, tail);
     }
 
     private String sanitizeList(List<String> values) {

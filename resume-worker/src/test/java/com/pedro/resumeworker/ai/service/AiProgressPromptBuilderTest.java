@@ -88,8 +88,8 @@ class AiProgressPromptBuilderTest {
     }
 
     @Test
-    void buildTruncatesBothResumeVersionsAtConfiguredLimit() {
-        AiProgressPromptBuilder smallBuilder = new AiProgressPromptBuilder(8, new PromptTemplateLoader());
+    void buildLimitsProgressResumeExcerptsToHalfTheConfiguredResumeLimit() {
+        AiProgressPromptBuilder smallBuilder = new AiProgressPromptBuilder(3000, new PromptTemplateLoader());
         AiJobRequestedMessage message = new AiJobRequestedMessage(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
@@ -108,14 +108,16 @@ class AiProgressPromptBuilderTest {
                 message,
                 currentVersion,
                 previousVersion,
-                "current-version-text",
-                "previous-version-text",
+                "current-start-" + "x".repeat(3000) + "-current-end",
+                "previous-start-" + "y".repeat(3000) + "-previous-end",
                 null,
                 Language.EN);
 
-        assertTrue(prompt.contains("current-"));
-        assertTrue(prompt.contains("previous"));
-        assertTrue(prompt.contains("[TRUNCATED: resume text exceeded configured analysis limit]"));
-        assertFalse(prompt.contains("version-text"));
+        assertTrue(prompt.contains("per-version progress excerpt limit: 1500"));
+        assertTrue(prompt.contains("current-start-"));
+        assertTrue(prompt.contains("-current-end"));
+        assertTrue(prompt.contains("previous-start-"));
+        assertTrue(prompt.contains("-previous-end"));
+        assertTrue(prompt.contains("[TRUNCATED MIDDLE: resume excerpt limited for progress analysis]"));
     }
 }
