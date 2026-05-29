@@ -4,7 +4,10 @@ import com.pedro.common.ai.AiJobRequestedMessage;
 import com.pedro.common.ai.Language;
 import com.pedro.common.ai.mongo.AiFeedbackDocument;
 import com.pedro.resumeworker.ai.domain.ResumeVersion;
-import com.pedro.resumeworker.ai.gemini.GeminiClient;
+import com.pedro.resumeworker.ai.provider.AiFeedbackResult;
+import com.pedro.resumeworker.ai.provider.AiProviderClient;
+import com.pedro.resumeworker.ai.provider.AiProviderFeedbackCallResult;
+import com.pedro.resumeworker.ai.provider.AiProviderRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +31,10 @@ import static org.mockito.Mockito.when;
 class AiFeedbackFactoryTest {
 
     @Mock
-    private GeminiClient geminiClient;
+    private AiProviderRegistry providerRegistry;
+
+    @Mock
+    private AiProviderClient providerClient;
 
     @Mock
     private ResumeTextExtractor resumeTextExtractor;
@@ -43,7 +49,7 @@ class AiFeedbackFactoryTest {
 
     @BeforeEach
     void setUp() {
-        factory = new AiFeedbackFactory(geminiClient, resumeTextExtractor, promptBuilder, documentMapper);
+        factory = new AiFeedbackFactory(providerRegistry, resumeTextExtractor, promptBuilder, documentMapper);
     }
 
     @Test
@@ -66,27 +72,28 @@ class AiFeedbackFactoryTest {
 
         String resumeText = "Built Kafka pipelines and Spring Boot services.";
         String prompt = "prompt";
-        GeminiClient.GeminiFeedback feedback = new GeminiClient.GeminiFeedback(
+        AiFeedbackResult feedback = new AiFeedbackResult(
                 "Strong mid-level resume with clear ownership; needs sharper senior-level signaling.",
                 List.of("Experience: Strong impact and ownership evidence."),
-                List.of("Projects: Add clearer system design tradeoffs."));
-        GeminiClient.GeminiCallResult result = new GeminiClient.GeminiCallResult(Optional.of(feedback), null, null);
+                List.of("Projects: Add clearer system design tradeoffs."),
+                "gemini:gemini-test");
+        AiProviderFeedbackCallResult result = new AiProviderFeedbackCallResult(Optional.of(feedback), null, null);
 
         AiFeedbackDocument mappedDocument = new AiFeedbackDocument();
         mappedDocument.setPromptVersion("v3");
-        mappedDocument.setModel("gemini-test");
+        mappedDocument.setModel("gemini:gemini-test");
 
         when(resumeTextExtractor.extract(version)).thenReturn(Optional.of(resumeText));
         when(promptBuilder.build(message, resumeText, Language.EN)).thenReturn(prompt);
-        when(geminiClient.generateFeedbackWithDiagnostics(prompt)).thenReturn(result);
-        when(geminiClient.effectiveModel()).thenReturn("gemini-test");
-        when(documentMapper.toDocument(message, feedback, "gemini-test")).thenReturn(mappedDocument);
+        when(providerRegistry.activeClient()).thenReturn(providerClient);
+        when(providerClient.generateFeedback(prompt)).thenReturn(result);
+        when(documentMapper.toDocument(message, feedback)).thenReturn(mappedDocument);
 
         AiFeedbackDocument document = factory.build(message, version);
 
         verify(promptBuilder).build(message, resumeText, Language.EN);
-        verify(geminiClient).generateFeedbackWithDiagnostics(prompt);
-        verify(documentMapper).toDocument(message, feedback, "gemini-test");
+        verify(providerClient).generateFeedback(prompt);
+        verify(documentMapper).toDocument(message, feedback);
         assertEquals(mappedDocument, document);
     }
 
@@ -108,6 +115,6 @@ class AiFeedbackFactoryTest {
 
         assertEquals("RESUME_TEXT_NOT_EXTRACTED", ex.getErrorCode());
         verify(promptBuilder, never()).build(any(), anyString(), any());
-        verify(geminiClient, never()).generateFeedbackWithDiagnostics(anyString());
+        verify(providerRegistry, never()).activeClient();
     }
 }

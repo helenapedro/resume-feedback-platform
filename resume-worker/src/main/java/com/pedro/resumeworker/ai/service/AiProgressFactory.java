@@ -5,7 +5,10 @@ import com.pedro.common.ai.Language;
 import com.pedro.common.ai.mongo.AiFeedbackDocument;
 import com.pedro.common.ai.mongo.AiProgressDocument;
 import com.pedro.resumeworker.ai.domain.ResumeVersion;
-import com.pedro.resumeworker.ai.gemini.GeminiClient;
+import com.pedro.resumeworker.ai.provider.AiProgressResult;
+import com.pedro.resumeworker.ai.provider.AiProviderClient;
+import com.pedro.resumeworker.ai.provider.AiProviderProgressCallResult;
+import com.pedro.resumeworker.ai.provider.AiProviderRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -15,17 +18,17 @@ import java.time.Instant;
 public class AiProgressFactory {
 
     private final String promptVersion;
-    private final GeminiClient geminiClient;
+    private final AiProviderRegistry providerRegistry;
     private final ResumeTextExtractor resumeTextExtractor;
     private final AiProgressPromptBuilder promptBuilder;
 
     public AiProgressFactory(
             @Value("${app.ai-feedback.prompt-version:v1}") String promptVersion,
-            GeminiClient geminiClient,
+            AiProviderRegistry providerRegistry,
             ResumeTextExtractor resumeTextExtractor,
             AiProgressPromptBuilder promptBuilder) {
         this.promptVersion = promptVersion;
-        this.geminiClient = geminiClient;
+        this.providerRegistry = providerRegistry;
         this.resumeTextExtractor = resumeTextExtractor;
         this.promptBuilder = promptBuilder;
     }
@@ -40,7 +43,8 @@ public class AiProgressFactory {
 
         Language language = message.language() == null ? Language.EN : message.language();
 
-        GeminiClient.GeminiProgressCallResult result = geminiClient.generateProgressAnalysisWithDiagnostics(
+        AiProviderClient providerClient = providerRegistry.activeClient();
+        AiProviderProgressCallResult result = providerClient.generateProgressAnalysis(
                 promptBuilder.build(
                         message,
                         currentVersion,
@@ -49,12 +53,12 @@ public class AiProgressFactory {
                         previousResumeText,
                         previousFeedback,
                         language));
-        GeminiClient.GeminiProgressAnalysis progress = result.analysis().orElse(null);
+        AiProgressResult progress = result.progress().orElse(null);
         if (progress == null) {
             throw new AiJobDomainException(
                     result.errorCode() == null ? "AI_PROVIDER_EMPTY_PROGRESS_RESPONSE" : result.errorCode(),
-                    "Gemini progress failure. jobId=%s resumeVersionId=%s baselineResumeVersionId=%s detail=%s"
-                            .formatted(message.jobId(), currentVersion.getId(), previousVersion.getId(),
+                    "AI provider progress failure. provider=%s jobId=%s resumeVersionId=%s baselineResumeVersionId=%s detail=%s"
+                            .formatted(providerClient.providerName(), message.jobId(), currentVersion.getId(), previousVersion.getId(),
                                     result.errorDetail()));
         }
 
@@ -65,7 +69,7 @@ public class AiProgressFactory {
         doc.setBaselineResumeVersionId(previousVersion.getId());
         doc.setOwnerId(message.ownerId());
         doc.setCreatedAt(Instant.now());
-        doc.setModel(geminiClient.effectiveModel());
+        doc.setModel(progress.providerModel());
         doc.setPromptVersion(promptVersion);
         doc.setSummary(progress.summary());
         doc.setProgressStatus(progress.progressStatus());

@@ -4,24 +4,27 @@ import com.pedro.common.ai.AiJobRequestedMessage;
 import com.pedro.common.ai.Language;
 import com.pedro.common.ai.mongo.AiFeedbackDocument;
 import com.pedro.resumeworker.ai.domain.ResumeVersion;
-import com.pedro.resumeworker.ai.gemini.GeminiClient;
+import com.pedro.resumeworker.ai.provider.AiFeedbackResult;
+import com.pedro.resumeworker.ai.provider.AiProviderClient;
+import com.pedro.resumeworker.ai.provider.AiProviderFeedbackCallResult;
+import com.pedro.resumeworker.ai.provider.AiProviderRegistry;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 @Component
 public class AiFeedbackFactory {
 
-    private final GeminiClient geminiClient;
+    private final AiProviderRegistry providerRegistry;
     private final ResumeTextExtractor resumeTextExtractor;
     private final AiFeedbackPromptBuilder promptBuilder;
     private final AiFeedbackDocumentMapper documentMapper;
 
     public AiFeedbackFactory(
-            GeminiClient geminiClient,
+            AiProviderRegistry providerRegistry,
             ResumeTextExtractor resumeTextExtractor,
             AiFeedbackPromptBuilder promptBuilder,
             AiFeedbackDocumentMapper documentMapper) {
-        this.geminiClient = geminiClient;
+        this.providerRegistry = providerRegistry;
         this.resumeTextExtractor = resumeTextExtractor;
         this.promptBuilder = promptBuilder;
         this.documentMapper = documentMapper;
@@ -37,20 +40,22 @@ public class AiFeedbackFactory {
         }
         Language language = message.language() == null ? Language.EN : message.language();
 
-        GeminiClient.GeminiCallResult result = geminiClient.generateFeedbackWithDiagnostics(
+        AiProviderClient providerClient = providerRegistry.activeClient();
+        AiProviderFeedbackCallResult result = providerClient.generateFeedback(
                 promptBuilder.build(message, resumeText, language));
-        GeminiClient.GeminiFeedback feedback = result.feedback().orElse(null);
+        AiFeedbackResult feedback = result.feedback().orElse(null);
         if (feedback == null) {
             throw new AiJobDomainException(
                     result.errorCode() == null ? "AI_PROVIDER_EMPTY_RESPONSE" : result.errorCode(),
-                    "Gemini feedback failure. jobId=%s resumeVersionId=%s extractedText=%s detail=%s"
+                    "AI provider feedback failure. provider=%s jobId=%s resumeVersionId=%s extractedText=%s detail=%s"
                             .formatted(
+                                    providerClient.providerName(),
                                     message.jobId(),
                                     message.resumeVersionId(),
                                     !resumeText.isBlank(),
                                     result.errorDetail()));
         }
 
-        return documentMapper.toDocument(message, feedback, geminiClient.effectiveModel());
+        return documentMapper.toDocument(message, feedback);
     }
 }

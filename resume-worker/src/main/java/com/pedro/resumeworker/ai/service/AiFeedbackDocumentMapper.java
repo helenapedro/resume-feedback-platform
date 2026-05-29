@@ -2,7 +2,7 @@ package com.pedro.resumeworker.ai.service;
 
 import com.pedro.common.ai.AiJobRequestedMessage;
 import com.pedro.common.ai.mongo.AiFeedbackDocument;
-import com.pedro.resumeworker.ai.gemini.GeminiClient;
+import com.pedro.resumeworker.ai.provider.AiFeedbackResult;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -19,15 +19,14 @@ public class AiFeedbackDocumentMapper {
 
     public AiFeedbackDocument toDocument(
             AiJobRequestedMessage message,
-            GeminiClient.GeminiFeedback feedback,
-            String model) {
+            AiFeedbackResult feedback) {
         AiFeedbackDocument doc = new AiFeedbackDocument();
         doc.setJobId(message.jobId());
         doc.setResumeId(message.resumeId());
         doc.setResumeVersionId(message.resumeVersionId());
         doc.setOwnerId(message.ownerId());
         doc.setCreatedAt(Instant.now());
-        doc.setModel(model);
+        doc.setModel(feedback.providerModel());
         doc.setPromptVersion(promptVersion);
         doc.setSummary(feedback.summary());
         doc.setStrengths(feedback.strengths());

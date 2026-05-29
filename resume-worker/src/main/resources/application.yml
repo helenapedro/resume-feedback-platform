@@ -37,6 +37,8 @@ spring:
       ssl.keystore.certificate.chain: ${SPRING_KAFKA_PROPERTIES_SSL_KEYSTORE_CERTIFICATE_CHAIN:${KAFKA_CLIENT_CERT:}}
       ssl.truststore.certificates: ${SPRING_KAFKA_PROPERTIES_SSL_TRUSTSTORE_CERTIFICATES:${KAFKA_TRUSTED_CERT:}}
 app:
+  ai:
+    provider: ${APP_AI_PROVIDER:gemini}
   storage:
     backend: ${APP_STORAGE_BACKEND:S3}
     s3:
@@ -50,7 +52,7 @@ app:
       max-backoff: ${APP_AI_JOBS_RETRY_MAX_BACKOFF:PT10M}
       poll-interval: ${APP_AI_JOBS_POLL_INTERVAL:PT5S}
   ai-feedback:
-    model: gemini-1.5-flash
+    model: ${APP_AI_MODEL:gemini-1.5-flash}
     prompt-version: v3
     progress-enabled: ${APP_AI_FEEDBACK_PROGRESS_ENABLED:true}
     max-resume-chars: ${APP_AI_FEEDBACK_MAX_RESUME_CHARS:8000}
@@ -58,9 +60,9 @@ app:
       enabled: true
       api-key: ${GEMINI_API_KEY:}
       base-url: https://generativelanguage.googleapis.com
-      model: ${APP_AI_FEEDBACK_GEMINI_MODEL:gemini-1.5-flash}
-      temperature: ${APP_AI_FEEDBACK_GEMINI_TEMPERATURE:0.2}
-      max-output-tokens: ${APP_AI_FEEDBACK_GEMINI_MAX_OUTPUT_TOKENS:1800}
+      model: ${APP_AI_FEEDBACK_GEMINI_MODEL:${APP_AI_MODEL:gemini-1.5-flash}}
+      temperature: ${APP_AI_FEEDBACK_GEMINI_TEMPERATURE:${APP_AI_TEMPERATURE:0.2}}
+      max-output-tokens: ${APP_AI_FEEDBACK_GEMINI_MAX_OUTPUT_TOKENS:${APP_AI_MAX_OUTPUT_TOKENS:1800}}
 
 logging:
   level:
