@@ -7,6 +7,7 @@ import com.pedro.resumeapi.ai.mongo.AiFeedbackMongoRepository;
 import com.pedro.resumeapi.ai.mongo.AiProgressMongoRepository;
 import com.pedro.resumeapi.ai.repository.AiFeedbackRefRepository;
 import com.pedro.resumeapi.ai.repository.AiProgressRefRepository;
+import com.pedro.resumeapi.demo.DemoAccountPolicy;
 import com.pedro.resumeapi.resume.domain.Resume;
 import com.pedro.resumeapi.resume.domain.ResumeVersion;
 import com.pedro.resumeapi.user.domain.User;
@@ -51,6 +52,7 @@ public class ResumeService {
     private final AccessAuditRepository accessAuditRepository;
     private final UserRepository userRepository;
     private final ResumeVersionFactory versionFactory;
+    private final DemoAccountPolicy demoAccountPolicy;
     private final AiJobService aiJobService;
     private final StorageProperties storageProperties;
     private final ObjectProvider<S3StorageService> s3StorageService;
@@ -71,6 +73,7 @@ public class ResumeService {
     @Transactional
     public Resume createResume(String title, MultipartFile file) throws IOException {
         User owner = getUser();
+        rejectDemoUpload(owner);
 
         Resume resume = new Resume();
         resume.setOwner(owner);
@@ -91,6 +94,7 @@ public class ResumeService {
     @Transactional
     public ResumeVersion addVersion(UUID resumeId, MultipartFile file) throws IOException {
         User owner = getUser();
+        rejectDemoUpload(owner);
 
         var resume = getMyResume(resumeId);
 
@@ -152,6 +156,12 @@ public class ResumeService {
     private User getUser() {
         return userRepository.findById(currentUser.id())
                 .orElseThrow(() -> new IllegalStateException("Owner not found"));
+    }
+
+    private void rejectDemoUpload(User owner) {
+        if (demoAccountPolicy.isDemoUser(owner)) {
+            throw new ForbiddenException("Demo account is read-only. Create your own account to upload a private resume.");
+        }
     }
 
     private void cleanupStoredFilesBestEffort(List<ResumeVersion> versions) {

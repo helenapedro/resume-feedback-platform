@@ -2,6 +2,7 @@ package com.pedro.resumeapi.resume.factory;
 
 import com.pedro.resumeapi.resume.domain.Resume;
 import com.pedro.resumeapi.resume.domain.ResumeVersion;
+import com.pedro.resumeapi.resume.service.ResumeUploadValidator;
 import com.pedro.resumeapi.user.domain.User;
 import com.pedro.resumeapi.storage.ResumeStorageWriter;
 import com.pedro.resumeapi.storage.StorageResult;
@@ -16,10 +17,13 @@ import java.io.IOException;
 public class ResumeVersionFactory {
 
     private final ResumeStorageWriter storageWriter;
+    private final ResumeUploadValidator uploadValidator;
 
     public ResumeVersion create(Resume resume, int version, MultipartFile file, User owner) throws IOException {
+        uploadValidator.validate(file);
+
         String original = defaultIfBlank(file.getOriginalFilename(), "resume.pdf");
-        String contentType = defaultIfBlank(file.getContentType(), "application/pdf");
+        String contentType = uploadValidator.normalizedContentType();
 
         ResumeVersion rv = new ResumeVersion();
         rv.setResume(resume);
