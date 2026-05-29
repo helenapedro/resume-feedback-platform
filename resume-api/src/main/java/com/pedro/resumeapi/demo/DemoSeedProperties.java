@@ -14,10 +14,13 @@ public class DemoSeedProperties {
     private String s3Bucket = "resume-feedback-platform";
     private String versionOneS3ObjectKey = "seed/pdf1_v1.pdf";
     private String versionTwoS3ObjectKey = "seed/pdf1_v1.pdf";
+    private String versionThreeS3ObjectKey = "seed/pdf1_v1.pdf";
     private String versionOneS3VersionId;
     private String versionTwoS3VersionId;
+    private String versionThreeS3VersionId;
     private String versionOneLocalPath = "docs/seed/pdf1_v1.pdf";
     private String versionTwoLocalPath = "docs/seed/pdf1_v2.pdf";
+    private String versionThreeLocalPath = "docs/seed/pdf1_v3.pdf";
 
     public boolean isEnabled() {
         return enabled;
@@ -75,6 +78,14 @@ public class DemoSeedProperties {
         this.versionTwoS3ObjectKey = versionTwoS3ObjectKey;
     }
 
+    public String getVersionThreeS3ObjectKey() {
+        return versionThreeS3ObjectKey;
+    }
+
+    public void setVersionThreeS3ObjectKey(String versionThreeS3ObjectKey) {
+        this.versionThreeS3ObjectKey = versionThreeS3ObjectKey;
+    }
+
     public String getVersionOneS3VersionId() {
         return versionOneS3VersionId;
     }
@@ -91,6 +102,14 @@ public class DemoSeedProperties {
         this.versionTwoS3VersionId = versionTwoS3VersionId;
     }
 
+    public String getVersionThreeS3VersionId() {
+        return versionThreeS3VersionId;
+    }
+
+    public void setVersionThreeS3VersionId(String versionThreeS3VersionId) {
+        this.versionThreeS3VersionId = versionThreeS3VersionId;
+    }
+
     public String getVersionOneLocalPath() {
         return versionOneLocalPath;
     }
@@ -105,5 +124,13 @@ public class DemoSeedProperties {
 
     public void setVersionTwoLocalPath(String versionTwoLocalPath) {
         this.versionTwoLocalPath = versionTwoLocalPath;
+    }
+
+    public String getVersionThreeLocalPath() {
+        return versionThreeLocalPath;
+    }
+
+    public void setVersionThreeLocalPath(String versionThreeLocalPath) {
+        this.versionThreeLocalPath = versionThreeLocalPath;
     }
 }

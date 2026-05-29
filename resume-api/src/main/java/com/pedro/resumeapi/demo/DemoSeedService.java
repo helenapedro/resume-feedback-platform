@@ -42,17 +42,23 @@ public class DemoSeedService {
     private static final UUID RESUME_ID = UUID.fromString("ef86f963-f07a-4b6f-9427-86fa45496e1d");
     private static final UUID VERSION_ONE_ID = UUID.fromString("f74e53b6-88b1-47c4-8e37-0412f0d87546");
     private static final UUID VERSION_TWO_ID = UUID.fromString("093fe2de-a754-45af-a6aa-18d04f67d60f");
+    private static final UUID VERSION_THREE_ID = UUID.fromString("c701624c-de83-4784-a3be-b5c3a8bd9690");
     private static final UUID JOB_ONE_ID = UUID.fromString("5c6ff8eb-c6de-48a7-88e3-cbdf8c525746");
     private static final UUID JOB_TWO_ID = UUID.fromString("ddaa6b30-67fc-48f8-9a73-2c3c16b8b6f6");
+    private static final UUID JOB_THREE_ID = UUID.fromString("99e7b9fa-f445-42bc-af52-6cbff1c8a237");
     private static final UUID FEEDBACK_REF_ONE_ID = UUID.fromString("f96982b4-134a-4144-9738-7460d5549594");
     private static final UUID FEEDBACK_REF_TWO_ID = UUID.fromString("00dff0da-3590-4f7a-8299-4c829bb64fbf");
-    private static final UUID PROGRESS_REF_ID = UUID.fromString("e4b219e6-e54f-4db8-b71f-0d3fc2734092");
+    private static final UUID FEEDBACK_REF_THREE_ID = UUID.fromString("f7d9f7d8-7c9e-4d6f-8a15-0f9d4a5b8d31");
+    private static final UUID PROGRESS_REF_TWO_ID = UUID.fromString("e4b219e6-e54f-4db8-b71f-0d3fc2734092");
+    private static final UUID PROGRESS_REF_THREE_ID = UUID.fromString("7b0f9c1a-2e5b-4f9d-b7f2-8d34f4b8f913");
 
     private static final String MODEL = "seeded-demo";
     private static final String PROMPT_VERSION = "demo-v1";
     private static final String FEEDBACK_DOC_ONE_ID = "seed-feedback-v1";
     private static final String FEEDBACK_DOC_TWO_ID = "seed-feedback-v2";
-    private static final String PROGRESS_DOC_ID = "seed-progress-v2";
+    private static final String FEEDBACK_DOC_THREE_ID = "seed-feedback-v3";
+    private static final String PROGRESS_DOC_TWO_ID = "seed-progress-v2";
+    private static final String PROGRESS_DOC_THREE_ID = "seed-progress-v3";
 
     private final DemoSeedProperties properties;
     private final UserRepository userRepository;
@@ -76,6 +82,7 @@ public class DemoSeedService {
     public DemoSeedIds seedDemoData() {
         Instant createdAt = Instant.parse("2026-05-25T17:30:00Z");
         Instant versionTwoCreatedAt = Instant.parse("2026-05-25T17:37:00Z");
+        Instant versionThreeCreatedAt = Instant.parse("2026-05-29T23:33:59Z");
 
         User user = seedUser(createdAt);
         Resume resume = seedResume(user, createdAt);
@@ -103,12 +110,25 @@ public class DemoSeedService {
                 properties.getVersionTwoS3VersionId(),
                 versionTwoCreatedAt
         );
+        ResumeVersion versionThree = seedVersion(
+                VERSION_THREE_ID,
+                resume,
+                user,
+                3,
+                "pdf1_v3.pdf",
+                110797L,
+                localPath(properties.getVersionThreeLocalPath()),
+                properties.getVersionThreeS3ObjectKey(),
+                properties.getVersionThreeS3VersionId(),
+                versionThreeCreatedAt
+        );
 
-        resume.setCurrentVersion(versionTwo);
+        resume.setCurrentVersion(versionThree);
         resumeRepository.save(resume);
 
         seedDoneJob(JOB_ONE_ID, versionOne, "demo:" + VERSION_ONE_ID, createdAt);
         seedDoneJob(JOB_TWO_ID, versionTwo, "demo:" + VERSION_TWO_ID, versionTwoCreatedAt);
+        seedDoneJob(JOB_THREE_ID, versionThree, "demo:" + VERSION_THREE_ID, versionThreeCreatedAt);
 
         seedFeedback(versionOne, user.getId(), JOB_ONE_ID, FEEDBACK_DOC_ONE_ID, FEEDBACK_REF_ONE_ID, createdAt, versionOneSummary(),
                 List.of(
@@ -137,9 +157,23 @@ public class DemoSeedService {
                 )
         );
 
-        seedProgress(versionOne, versionTwo, user.getId(), JOB_TWO_ID, versionTwoCreatedAt);
+        seedFeedback(versionThree, user.getId(), JOB_THREE_ID, FEEDBACK_DOC_THREE_ID, FEEDBACK_REF_THREE_ID, versionThreeCreatedAt, versionThreeSummary(),
+                List.of(
+                        "Version 3 presents a stronger software engineering narrative with clearer backend, API, and database evidence.",
+                        "The resume is easier to scan because the strongest technical contributions are now closer to the top.",
+                        "The candidate's project work is more credible because it connects implementation details to user-facing outcomes."
+                ),
+                List.of(
+                        "Some impact claims still need tighter metrics, such as latency, usage, revenue, or operational time saved.",
+                        "The AI-related project should clarify scope, model/provider choices, and production constraints.",
+                        "The skills section should stay aligned with technologies shown directly in the experience and project bullets."
+                )
+        );
 
-        return new DemoSeedIds(user.getId(), RESUME_ID, VERSION_ONE_ID, VERSION_TWO_ID);
+        seedProgress(versionOne, versionTwo, user.getId(), JOB_TWO_ID, PROGRESS_DOC_TWO_ID, PROGRESS_REF_TWO_ID, versionTwoCreatedAt);
+        seedProgress(versionTwo, versionThree, user.getId(), JOB_THREE_ID, PROGRESS_DOC_THREE_ID, PROGRESS_REF_THREE_ID, versionThreeCreatedAt);
+
+        return new DemoSeedIds(user.getId(), RESUME_ID, VERSION_ONE_ID, VERSION_TWO_ID, VERSION_THREE_ID);
     }
 
     private User seedUser(Instant createdAt) {
@@ -247,9 +281,15 @@ public class DemoSeedService {
         aiFeedbackRefRepository.save(ref);
     }
 
-    private void seedProgress(ResumeVersion versionOne, ResumeVersion versionTwo, UUID ownerId, UUID jobId, Instant createdAt) {
-        AiProgressDocument document = aiProgressMongoRepository.findById(PROGRESS_DOC_ID).orElseGet(AiProgressDocument::new);
-        document.setId(PROGRESS_DOC_ID);
+    private void seedProgress(ResumeVersion versionOne,
+                              ResumeVersion versionTwo,
+                              UUID ownerId,
+                              UUID jobId,
+                              String mongoDocId,
+                              UUID refId,
+                              Instant createdAt) {
+        AiProgressDocument document = aiProgressMongoRepository.findById(mongoDocId).orElseGet(AiProgressDocument::new);
+        document.setId(mongoDocId);
         document.setJobId(jobId);
         document.setResumeId(RESUME_ID);
         document.setResumeVersionId(versionTwo.getId());
@@ -258,12 +298,14 @@ public class DemoSeedService {
         document.setCreatedAt(createdAt);
         document.setModel(MODEL);
         document.setPromptVersion(PROMPT_VERSION);
-        document.setSummary("Version 2 resolves the highest-value issue from Version 1: the resume now proves impact with measurable outcomes. The remaining work is mostly about prioritization depth and sharper evidence around customer segments.");
+        int baseline = versionOne.getVersionNumber();
+        int target = versionTwo.getVersionNumber();
+        document.setSummary("Version " + target + " improves on Version " + baseline + " by making the resume more evidence-based and easier to evaluate. The remaining work is mostly about sharper metrics, clearer prioritization, and tighter technical positioning.");
         document.setProgressStatus("IMPROVED");
         document.setProgressScore(76);
         document.setImprovedAreas(List.of(
-                "Resolved: Version 1 had activity-based bullets; Version 2 adds measurable outcomes for activation, delivery speed, and reporting adoption.",
-                "Resolved: The summary now targets product management more clearly instead of using a generic cross-functional profile.",
+                "Resolved: Version " + baseline + " had more activity-based bullets; Version " + target + " adds stronger outcome and scope signals.",
+                "Resolved: The summary is more targeted and gives recruiters a clearer role fit.",
                 "Improved: The strongest projects are easier to scan because the revised bullets lead with result, scope, and tool context."
         ));
         document.setUnchangedIssues(List.of(
@@ -272,18 +314,18 @@ public class DemoSeedService {
                 "Still needs work: The skills section remains broader than the evidence shown in the experience section."
         ));
         document.setNewIssues(List.of(
-                "Regression: Version 2 adds more quantified detail, but two bullets are now dense enough that a recruiter may need a second read."
+                "Regression: Version " + target + " adds more detail, but a few bullets may need trimming for faster recruiter scanning."
         ));
         aiProgressMongoRepository.save(document);
 
         AiProgressRef ref = aiProgressRefRepository
                 .findByResumeVersion_IdAndProgressVersion(versionTwo.getId(), 1)
                 .orElseGet(AiProgressRef::new);
-        ref.setId(ref.getId() == null ? PROGRESS_REF_ID : ref.getId());
+        ref.setId(ref.getId() == null ? refId : ref.getId());
         ref.setResumeVersion(versionTwo);
         ref.setBaselineResumeVersion(versionOne);
         ref.setProgressVersion(1);
-        ref.setMongoDocId(PROGRESS_DOC_ID);
+        ref.setMongoDocId(mongoDocId);
         ref.setModel(MODEL);
         ref.setPromptVersion(PROMPT_VERSION);
         ref.setCreatedAt(createdAt);
@@ -298,6 +340,10 @@ public class DemoSeedService {
         return "Version 2 is materially stronger because it converts several generic delivery bullets into outcome-based evidence. It now demonstrates an iteration loop: the candidate responded to feedback, added metrics, and made the product story easier to trust.";
     }
 
+    private String versionThreeSummary() {
+        return "Version 3 is the strongest demo version because it shifts the resume toward a clearer software engineering story. It gives recruiters more technical evidence while preserving the before-and-after improvement arc from earlier versions.";
+    }
+
     private String localPath(String path) {
         return Path.of(path).toAbsolutePath().normalize().toString();
     }
@@ -306,6 +352,6 @@ public class DemoSeedService {
         return StringUtils.hasText(value) ? value : null;
     }
 
-    public record DemoSeedIds(UUID userId, UUID resumeId, UUID versionOneId, UUID versionTwoId) {
+    public record DemoSeedIds(UUID userId, UUID resumeId, UUID versionOneId, UUID versionTwoId, UUID versionThreeId) {
     }
 }

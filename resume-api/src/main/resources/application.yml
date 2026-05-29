@@ -77,10 +77,13 @@ app:
       s3-bucket: ${APP_DEMO_SEED_S3_BUCKET:resume-feedback-platform}
       version-one-s3-object-key: ${APP_DEMO_SEED_V1_S3_OBJECT_KEY:seed/pdf1_v1.pdf}
       version-two-s3-object-key: ${APP_DEMO_SEED_V2_S3_OBJECT_KEY:seed/pdf1_v1.pdf}
+      version-three-s3-object-key: ${APP_DEMO_SEED_V3_S3_OBJECT_KEY:seed/pdf1_v1.pdf}
       version-one-s3-version-id: ${APP_DEMO_SEED_V1_S3_VERSION_ID:}
       version-two-s3-version-id: ${APP_DEMO_SEED_V2_S3_VERSION_ID:}
+      version-three-s3-version-id: ${APP_DEMO_SEED_V3_S3_VERSION_ID:}
       version-one-local-path: ${APP_DEMO_SEED_V1_LOCAL_PATH:docs/seed/pdf1_v1.pdf}
       version-two-local-path: ${APP_DEMO_SEED_V2_LOCAL_PATH:docs/seed/pdf1_v2.pdf}
+      version-three-local-path: ${APP_DEMO_SEED_V3_LOCAL_PATH:docs/seed/pdf1_v3.pdf}
 
 logging:
   level:
