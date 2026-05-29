@@ -321,8 +321,8 @@ public class GeminiClient {
 
         ObjectNode strengths = objectMapper.createObjectNode();
         strengths.put("type", "ARRAY");
-        strengths.put("minItems", 4);
-        strengths.put("maxItems", 5);
+        strengths.put("minItems", 3);
+        strengths.put("maxItems", 3);
         ObjectNode strengthsItems = objectMapper.createObjectNode();
         strengthsItems.put("type", "STRING");
         strengths.set("items", strengthsItems);
@@ -330,8 +330,8 @@ public class GeminiClient {
 
         ObjectNode improvements = objectMapper.createObjectNode();
         improvements.put("type", "ARRAY");
-        improvements.put("minItems", 4);
-        improvements.put("maxItems", 5);
+        improvements.put("minItems", 3);
+        improvements.put("maxItems", 3);
         ObjectNode improvementsItems = objectMapper.createObjectNode();
         improvementsItems.put("type", "STRING");
         improvements.set("items", improvementsItems);
@@ -419,9 +419,9 @@ public class GeminiClient {
         return feedback != null
                 && StringUtils.hasText(feedback.summary())
                 && feedback.strengths() != null
-                && feedback.strengths().size() >= 4
+                && feedback.strengths().size() >= 3
                 && feedback.improvements() != null
-                && feedback.improvements().size() >= 4
+                && feedback.improvements().size() >= 3
                 && feedback.strengths().stream().allMatch(this::isSpecificFeedbackItem)
                 && feedback.improvements().stream().allMatch(this::isSpecificFeedbackItem);
     }
@@ -535,7 +535,7 @@ public class GeminiClient {
                 Convert the text below into valid JSON in ONE LINE, with no markdown and no comments.
                 Write every text value in English only.
                 Required output:
-                {"summary":"...","strengths":["4 to 5 specific English items"],"improvements":["4 to 5 specific English items"]}
+                {"summary":"...","strengths":["3 specific English items"],"improvements":["3 specific English items"]}
                 Rules:
                 - Escape internal quotes correctly.
                 - Remove line breaks inside strings.

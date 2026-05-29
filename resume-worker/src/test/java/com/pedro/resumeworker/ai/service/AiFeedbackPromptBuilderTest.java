@@ -30,7 +30,7 @@ class AiFeedbackPromptBuilderTest {
         assertTrue(prompt.contains("senior technical recruiter"));
         assertTrue(prompt.contains("Write only in English"));
         assertTrue(prompt.contains("what tier the resume reads at today"));
-        assertTrue(prompt.contains("4 or 5 strengths"));
+        assertTrue(prompt.contains("exactly 3 strengths"));
         assertTrue(prompt.contains("Each item must state the problem, what to change in the resume, and why"));
         assertTrue(prompt.contains("Start every item with a target area"));
         assertTrue(prompt.contains("Resume extracted (raw text):"));

@@ -58,6 +58,7 @@ Gemini:
 Cost-control environment overrides:
 
 - `APP_AI_FEEDBACK_MAX_RESUME_CHARS` limits resume text sent to Gemini. Default: `8000`. Progress analysis uses half of this value per resume version, with a minimum of `1500`, and sends head/tail excerpts instead of two full resume bodies.
+- Feedback responses are intentionally compact: one short summary, 3 strengths, and 3 improvements. This keeps the JSON under Gemini output limits and reduces retry churn.
 - `APP_AI_FEEDBACK_GEMINI_MAX_OUTPUT_TOKENS` limits generated JSON size. Default: `1800`. Avoid setting this too low; truncated JSON causes failed jobs and can cost more through retries.
 - `APP_AI_FEEDBACK_GEMINI_TEMPERATURE` lowers variation. Default: `0.2`.
 - `APP_AI_FEEDBACK_PROGRESS_ENABLED=false` disables version-to-version progress calls. This can roughly halve AI calls for second and later resume versions.

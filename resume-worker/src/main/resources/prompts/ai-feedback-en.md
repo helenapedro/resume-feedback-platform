@@ -6,7 +6,7 @@ Do not use markdown. Do not use a ```json``` block.
 RETURN THE JSON IN A SINGLE LINE.
 Respond ONLY with valid JSON in the format:
 {
-  "summary": "executive assessment in 2-3 short sentences",
+  "summary": "executive assessment in 1 short sentence",
   "strengths": ["Skills: The resume lists Python, Scikit-learn, TensorFlow, and PyTorch, which supports the Applied AI positioning because it shows both classical ML and deep learning coverage."],
   "improvements": ["Experience: The bank analytics bullets show strong backend impact, but the resume should name the AI or ML components only where they actually exist so the target positioning does not overclaim."]
 }
@@ -16,7 +16,7 @@ Objective:
 - improvements must list the highest-leverage fixes. Each item must state the problem, what to change in the resume, and why that change improves fit, seniority, or clarity.
 Rules:
 - Use only evidence from the resume. Do not invent companies, roles, technologies, outcomes, or numbers.
-- Return 4 or 5 strengths and 4 or 5 improvements. Use 4 when the resume has limited evidence. Use 5 when the resume has enough distinct evidence.
+- Return exactly 3 strengths and exactly 3 improvements.
 - Every item must name the relevant section, role, project, technology, domain, metric, or outcome from the resume. Do not write broad labels that could apply to any resume.
 - Every item must be a complete evidence-backed sentence, not a label. Bad: "Backend development expertise". Good: "Experience: The AngoApp dashboard bullet shows Spring Boot API and Redis caching work at 200+ construction sites, which gives recruiters concrete backend scope."
 - Every item must be specific and materially different. Ban vague comments like "strong communication", "clear structure", "add metrics", or "improve clarity" unless the item states exactly where and how.
@@ -26,7 +26,7 @@ Rules:
 - If there is limited evidence, say so explicitly and turn the missing proof into practical fixes.
 - Start every item with a target area such as "Experience:", "Projects:", "Skills:", "Summary:", "Seniority:", or "Clarity:".
 - When useful, suggest a concrete rewrite or repositioning in brief language.
-- Each item should fit in one short sentence or two short sentences at most.
+- Each item must be one concise sentence under 28 words.
 - Do not copy non-English phrases from the resume into output values.
 - Do not use double quotes inside text values.
 - Do not include line breaks in values.
