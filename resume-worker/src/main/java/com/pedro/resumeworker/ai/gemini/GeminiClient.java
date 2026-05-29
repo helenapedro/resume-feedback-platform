@@ -58,13 +58,16 @@ public class GeminiClient {
         if (strictAttempt.feedback().isPresent()) {
             return strictAttempt;
         }
-        if ("AI_PROVIDER_BLOCKED".equals(strictAttempt.errorCode())) {
+        if (isTerminalProviderFailure(strictAttempt.errorCode())) {
             return strictAttempt;
         }
 
         // Fallback attempt: remove schema constraints to recover from provider-side structured output issues.
         GeminiCallResult fallbackAttempt = requestFeedback(prompt, false, true);
         if (fallbackAttempt.feedback().isPresent()) {
+            return fallbackAttempt;
+        }
+        if (isTerminalProviderFailure(fallbackAttempt.errorCode())) {
             return fallbackAttempt;
         }
         if ("AI_PROVIDER_INVALID_JSON".equals(fallbackAttempt.errorCode())) {
@@ -89,12 +92,15 @@ public class GeminiClient {
         if (strictAttempt.analysis().isPresent()) {
             return strictAttempt;
         }
-        if ("AI_PROVIDER_BLOCKED".equals(strictAttempt.errorCode())) {
+        if (isTerminalProviderFailure(strictAttempt.errorCode())) {
             return strictAttempt;
         }
 
         GeminiProgressCallResult fallbackAttempt = requestProgressAnalysis(prompt, false, true);
         if (fallbackAttempt.analysis().isPresent()) {
+            return fallbackAttempt;
+        }
+        if (isTerminalProviderFailure(fallbackAttempt.errorCode())) {
             return fallbackAttempt;
         }
         if ("AI_PROVIDER_INVALID_JSON".equals(fallbackAttempt.errorCode())) {
@@ -146,8 +152,8 @@ public class GeminiClient {
             }
 
             String text = geminiResponse.firstText();
+            String finishReason = geminiResponse.firstFinishReason();
             if (!StringUtils.hasText(text)) {
-                String finishReason = geminiResponse.firstFinishReason();
                 log.warn("Gemini returned empty content (schema={}) body={}",
                         useResponseSchema,
                         truncateForLog(response.body()));
@@ -157,6 +163,18 @@ public class GeminiClient {
                 return GeminiCallResult.failure(
                         "AI_PROVIDER_EMPTY_RESPONSE",
                         "No text in candidates. finishReason=" + finishReason);
+            }
+            if ("MAX_TOKENS".equalsIgnoreCase(finishReason)) {
+                log.warn("Gemini feedback hit max output tokens (schema={}) text={}",
+                        useResponseSchema,
+                        truncateForLog(text));
+                return GeminiCallResult.failure("AI_PROVIDER_MAX_TOKENS", "finishReason=MAX_TOKENS");
+            }
+            if (looksTruncatedJson(text)) {
+                log.warn("Gemini feedback returned truncated JSON (schema={}) text={}",
+                        useResponseSchema,
+                        truncateForLog(text));
+                return GeminiCallResult.failure("AI_PROVIDER_TRUNCATED_JSON", truncateForLog(text));
             }
 
             GeminiCallResult parsed = parseFeedbackResult(text, useResponseSchema);
@@ -210,8 +228,8 @@ public class GeminiClient {
             }
 
             String text = geminiResponse.firstText();
+            String finishReason = geminiResponse.firstFinishReason();
             if (!StringUtils.hasText(text)) {
-                String finishReason = geminiResponse.firstFinishReason();
                 log.warn("Gemini returned empty progress content (schema={}) body={}",
                         useResponseSchema,
                         truncateForLog(response.body()));
@@ -221,6 +239,18 @@ public class GeminiClient {
                 return GeminiProgressCallResult.failure(
                         "AI_PROVIDER_EMPTY_RESPONSE",
                         "No text in candidates. finishReason=" + finishReason);
+            }
+            if ("MAX_TOKENS".equalsIgnoreCase(finishReason)) {
+                log.warn("Gemini progress hit max output tokens (schema={}) text={}",
+                        useResponseSchema,
+                        truncateForLog(text));
+                return GeminiProgressCallResult.failure("AI_PROVIDER_MAX_TOKENS", "finishReason=MAX_TOKENS");
+            }
+            if (looksTruncatedJson(text)) {
+                log.warn("Gemini progress returned truncated JSON (schema={}) text={}",
+                        useResponseSchema,
+                        truncateForLog(text));
+                return GeminiProgressCallResult.failure("AI_PROVIDER_TRUNCATED_JSON", truncateForLog(text));
             }
 
             GeminiProgressCallResult parsed = parseProgressResult(text, useResponseSchema);
@@ -369,6 +399,20 @@ public class GeminiClient {
         required.add("newIssues");
         schema.set("required", required);
         return schema;
+    }
+
+    private boolean isTerminalProviderFailure(String errorCode) {
+        return "AI_PROVIDER_BLOCKED".equals(errorCode)
+                || "AI_PROVIDER_MAX_TOKENS".equals(errorCode)
+                || "AI_PROVIDER_TRUNCATED_JSON".equals(errorCode);
+    }
+
+    private boolean looksTruncatedJson(String text) {
+        if (!StringUtils.hasText(text)) {
+            return false;
+        }
+        String trimmed = text.trim();
+        return trimmed.startsWith("{") && !trimmed.endsWith("}");
     }
 
     private boolean isUsable(GeminiFeedback feedback) {
