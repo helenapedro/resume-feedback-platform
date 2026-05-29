@@ -59,9 +59,15 @@ public class AiProgressPromptBuilder {
     }
 
     private String sanitize(String value) {
-        return value == null || value.isBlank()
-                ? "NOT AVAILABLE"
-                : value;
+        if (value == null || value.isBlank()) {
+            return "NOT AVAILABLE";
+        }
+        String trimmed = value.trim();
+        if (trimmed.length() <= maxResumeChars) {
+            return trimmed;
+        }
+        return trimmed.substring(0, maxResumeChars)
+                + "\n[TRUNCATED: resume text exceeded configured analysis limit]";
     }
 
     private String sanitizeList(List<String> values) {

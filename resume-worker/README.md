@@ -52,11 +52,21 @@ Gemini:
 - `app.ai-feedback.gemini.model`
 - `app.ai-feedback.gemini.temperature`
 - `app.ai-feedback.gemini.max-output-tokens`
+- `app.ai-feedback.max-resume-chars`
+- `app.ai-feedback.progress-enabled`
+
+Cost-control environment overrides:
+
+- `APP_AI_FEEDBACK_MAX_RESUME_CHARS` limits resume text sent to Gemini. Default: `8000`.
+- `APP_AI_FEEDBACK_GEMINI_MAX_OUTPUT_TOKENS` limits generated JSON size. Default: `900`.
+- `APP_AI_FEEDBACK_GEMINI_TEMPERATURE` lowers variation. Default: `0.2`.
+- `APP_AI_FEEDBACK_PROGRESS_ENABLED=false` disables version-to-version progress calls. This can roughly halve AI calls for second and later resume versions.
+- `APP_AI_JOBS_RETRY_MAX_ATTEMPTS` caps failed-job retries. Default: `3`.
 
 ## Runtime Behavior
 
 - If Kafka is enabled, topic: `${KAFKA_PREFIX}resume-ai-jobs` and consumer group: `${KAFKA_PREFIX}resume-worker`
-- The current Heroku deployment relies on the scheduler path that polls `PENDING` jobs from MySQL
+- The scheduler polls `PENDING` jobs only when Kafka is disabled. When Kafka is enabled, it only retries due failed jobs.
 - Failed jobs are retried on schedule until max attempts are reached.
 - Progress analysis is skipped for the first version of a resume, or when the previous version has no stored baseline feedback yet.
 

@@ -32,9 +32,19 @@ public class AiFeedbackPromptBuilder {
         if (resumeText == null || resumeText.isBlank()) {
             return "Resume extracted: NOT AVAILABLE";
         }
+        String boundedResumeText = truncate(resumeText);
         return """
                 Resume extracted (raw text):
                 %s
-                """.formatted(resumeText);
+                """.formatted(boundedResumeText);
+    }
+
+    private String truncate(String value) {
+        String trimmed = value.trim();
+        if (trimmed.length() <= maxResumeChars) {
+            return trimmed;
+        }
+        return trimmed.substring(0, maxResumeChars)
+                + "\n[TRUNCATED: resume text exceeded configured analysis limit]";
     }
 }

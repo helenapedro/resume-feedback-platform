@@ -9,6 +9,7 @@ import com.pedro.resumeworker.ai.repository.AiJobRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -23,14 +24,18 @@ public class AiJobRetryScheduler {
     private final AiJobRepository aiJobRepository;
     private final AiJobProcessor processor;
     private final AiJobRetryProperties retryProperties;
+    @Value("${app.ai-jobs.kafka-enabled:false}")
+    private boolean kafkaEnabled;
 
     @Scheduled(fixedDelayString = "${app.ai-jobs.retry.poll-interval:PT30S}")
     @Transactional
     public void retryFailedJobs() {
-        List<AiJob> pendingJobs = aiJobRepository.findTop50ByStatusOrderByCreatedAtAsc(
-                AiJob.Status.PENDING);
-        for (AiJob job : pendingJobs) {
-            processJob(job);
+        if (!kafkaEnabled) {
+            List<AiJob> pendingJobs = aiJobRepository.findTop50ByStatusOrderByCreatedAtAsc(
+                    AiJob.Status.PENDING);
+            for (AiJob job : pendingJobs) {
+                processJob(job);
+            }
         }
 
         List<AiJob> dueJobs = aiJobRepository.findTop50ByStatusAndNextRetryAtBeforeOrderByNextRetryAtAsc(

@@ -86,4 +86,36 @@ class AiProgressPromptBuilderTest {
         assertTrue(prompt.contains("Previous feedback: NOT AVAILABLE"));
         assertFalse(prompt.contains("Feedback anterior"));
     }
+
+    @Test
+    void buildTruncatesBothResumeVersionsAtConfiguredLimit() {
+        AiProgressPromptBuilder smallBuilder = new AiProgressPromptBuilder(8, new PromptTemplateLoader());
+        AiJobRequestedMessage message = new AiJobRequestedMessage(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                Instant.now(),
+                Language.EN);
+
+        ResumeVersion currentVersion = new ResumeVersion();
+        currentVersion.setId(UUID.randomUUID());
+
+        ResumeVersion previousVersion = new ResumeVersion();
+        previousVersion.setId(UUID.randomUUID());
+
+        String prompt = smallBuilder.build(
+                message,
+                currentVersion,
+                previousVersion,
+                "current-version-text",
+                "previous-version-text",
+                null,
+                Language.EN);
+
+        assertTrue(prompt.contains("current-"));
+        assertTrue(prompt.contains("previous"));
+        assertTrue(prompt.contains("[TRUNCATED: resume text exceeded configured analysis limit]"));
+        assertFalse(prompt.contains("version-text"));
+    }
 }

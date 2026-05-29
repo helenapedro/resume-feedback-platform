@@ -16,6 +16,7 @@ import com.pedro.resumeworker.ai.repository.AiProgressRefRepository;
 import com.pedro.resumeworker.ai.repository.ResumeVersionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -37,6 +38,8 @@ public class AiJobProcessor {
     private final AiFeedbackFactory feedbackFactory;
     private final AiProgressFactory progressFactory;
     private final AiJobRetryProperties retryProperties;
+    @Value("${app.ai-feedback.progress-enabled:true}")
+    private boolean progressEnabled = true;
 
     public void process(AiJobRequestedMessage message) {
         if (message.resumeVersionId() == null) {
@@ -52,6 +55,10 @@ public class AiJobProcessor {
         AiJob job = jobOpt.get();
         if (job.getStatus() == AiJob.Status.DONE) {
             log.info("AI job already completed: {}", job.getId());
+            return;
+        }
+        if (job.getStatus() == AiJob.Status.PROCESSING) {
+            log.info("AI job already processing: {}", job.getId());
             return;
         }
         if (job.getStatus() == AiJob.Status.FAILED) {
@@ -158,6 +165,11 @@ public class AiJobProcessor {
     }
 
     private void maybeCreateProgress(AiJobRequestedMessage message, ResumeVersion currentVersion) {
+        if (!progressEnabled) {
+            log.info("Skipping AI progress for resumeVersionId={} because progress generation is disabled",
+                    currentVersion.getId());
+            return;
+        }
         if (currentVersion.getResumeId() == null || currentVersion.getVersionNumber() == null) {
             return;
         }

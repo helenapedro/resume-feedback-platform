@@ -53,4 +53,22 @@ class AiFeedbackPromptBuilderTest {
         assertTrue(prompt.contains("Resume extracted (raw text):"));
         assertFalse(prompt.contains("Curriculo extraido"));
     }
+
+    @Test
+    void buildTruncatesResumeTextAtConfiguredLimit() {
+        AiFeedbackPromptBuilder smallBuilder = new AiFeedbackPromptBuilder(12, new PromptTemplateLoader());
+        AiJobRequestedMessage message = new AiJobRequestedMessage(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                Instant.now(),
+                Language.EN);
+
+        String prompt = smallBuilder.build(message, "abcdefghijklXYZTAIL", Language.EN);
+
+        assertTrue(prompt.contains("abcdefghijkl"));
+        assertTrue(prompt.contains("[TRUNCATED: resume text exceeded configured analysis limit]"));
+        assertFalse(prompt.contains("XYZTAIL"));
+    }
 }
