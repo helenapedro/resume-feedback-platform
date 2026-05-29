@@ -17,6 +17,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -84,5 +88,26 @@ class AiFeedbackFactoryTest {
         verify(geminiClient).generateFeedbackWithDiagnostics(prompt);
         verify(documentMapper).toDocument(message, feedback, "gemini-test");
         assertEquals(mappedDocument, document);
+    }
+
+    @Test
+    void buildFailsBeforeProviderCallWhenResumeTextCannotBeExtracted() {
+        AiJobRequestedMessage message = new AiJobRequestedMessage(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                Instant.now(),
+                Language.EN);
+        ResumeVersion version = new ResumeVersion();
+        version.setId(message.resumeVersionId());
+
+        when(resumeTextExtractor.extract(version)).thenReturn(Optional.empty());
+
+        AiJobDomainException ex = assertThrows(AiJobDomainException.class, () -> factory.build(message, version));
+
+        assertEquals("RESUME_TEXT_NOT_EXTRACTED", ex.getErrorCode());
+        verify(promptBuilder, never()).build(any(), anyString(), any());
+        verify(geminiClient, never()).generateFeedbackWithDiagnostics(anyString());
     }
 }

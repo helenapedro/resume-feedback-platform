@@ -6,6 +6,7 @@ import com.pedro.common.ai.mongo.AiFeedbackDocument;
 import com.pedro.resumeworker.ai.domain.ResumeVersion;
 import com.pedro.resumeworker.ai.gemini.GeminiClient;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 public class AiFeedbackFactory {
@@ -28,6 +29,12 @@ public class AiFeedbackFactory {
 
     public AiFeedbackDocument build(AiJobRequestedMessage message, ResumeVersion resumeVersion) {
         String resumeText = resumeTextExtractor.extract(resumeVersion).orElse("");
+        if (!StringUtils.hasText(resumeText)) {
+            throw new AiJobDomainException(
+                    "RESUME_TEXT_NOT_EXTRACTED",
+                    "Resume text could not be extracted. jobId=%s resumeVersionId=%s"
+                            .formatted(message.jobId(), message.resumeVersionId()));
+        }
         Language language = message.language() == null ? Language.EN : message.language();
 
         GeminiClient.GeminiCallResult result = geminiClient.generateFeedbackWithDiagnostics(

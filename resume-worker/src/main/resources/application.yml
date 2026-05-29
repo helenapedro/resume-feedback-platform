@@ -60,7 +60,7 @@ app:
       base-url: https://generativelanguage.googleapis.com
       model: ${APP_AI_FEEDBACK_GEMINI_MODEL:gemini-1.5-flash}
       temperature: ${APP_AI_FEEDBACK_GEMINI_TEMPERATURE:0.2}
-      max-output-tokens: ${APP_AI_FEEDBACK_GEMINI_MAX_OUTPUT_TOKENS:1200}
+      max-output-tokens: ${APP_AI_FEEDBACK_GEMINI_MAX_OUTPUT_TOKENS:1800}
 
 logging:
   level:

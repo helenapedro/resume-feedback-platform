@@ -6,7 +6,6 @@ import com.pedro.resumeworker.ai.config.AiJobRetryProperties;
 import com.pedro.resumeworker.ai.domain.AiJob;
 import com.pedro.resumeworker.ai.domain.ResumeVersion;
 import com.pedro.resumeworker.ai.repository.AiJobRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +27,6 @@ public class AiJobRetryScheduler {
     private boolean kafkaEnabled;
 
     @Scheduled(fixedDelayString = "${app.ai-jobs.retry.poll-interval:PT30S}")
-    @Transactional
     public void retryFailedJobs() {
         if (!kafkaEnabled) {
             List<AiJob> pendingJobs = aiJobRepository.findTop50ByStatusOrderByCreatedAtAsc(
