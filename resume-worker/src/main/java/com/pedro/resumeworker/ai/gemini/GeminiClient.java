@@ -43,6 +43,10 @@ public class GeminiClient {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
+        log.info("Gemini client configured model={} maxOutputTokens={} temperature={}",
+                effectiveModel(),
+                properties.maxOutputTokens(),
+                properties.temperature());
     }
 
     public Optional<GeminiFeedback> generateFeedback(String prompt) {
@@ -165,8 +169,9 @@ public class GeminiClient {
                         "No text in candidates. finishReason=" + finishReason);
             }
             if ("MAX_TOKENS".equalsIgnoreCase(finishReason)) {
-                log.warn("Gemini feedback hit max output tokens (schema={}) text={}",
+                log.warn("Gemini feedback hit max output tokens (schema={} maxOutputTokens={}) text={}",
                         useResponseSchema,
+                        properties.maxOutputTokens(),
                         truncateForLog(text));
                 return GeminiCallResult.failure("AI_PROVIDER_MAX_TOKENS", "finishReason=MAX_TOKENS");
             }
@@ -241,8 +246,9 @@ public class GeminiClient {
                         "No text in candidates. finishReason=" + finishReason);
             }
             if ("MAX_TOKENS".equalsIgnoreCase(finishReason)) {
-                log.warn("Gemini progress hit max output tokens (schema={}) text={}",
+                log.warn("Gemini progress hit max output tokens (schema={} maxOutputTokens={}) text={}",
                         useResponseSchema,
+                        properties.maxOutputTokens(),
                         truncateForLog(text));
                 return GeminiProgressCallResult.failure("AI_PROVIDER_MAX_TOKENS", "finishReason=MAX_TOKENS");
             }
