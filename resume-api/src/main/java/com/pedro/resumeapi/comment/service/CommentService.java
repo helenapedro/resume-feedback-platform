@@ -7,6 +7,7 @@ import com.pedro.resumeapi.comment.domain.Comment;
 import com.pedro.resumeapi.comment.dto.CreateCommentRequest;
 import com.pedro.resumeapi.comment.dto.UpdateCommentRequest;
 import com.pedro.resumeapi.comment.repository.CommentRepository;
+import com.pedro.resumeapi.demo.DemoAccountPolicy;
 import com.pedro.resumeapi.resume.domain.Resume;
 import com.pedro.resumeapi.resume.domain.ResumeVersion;
 import com.pedro.resumeapi.resume.repository.ResumeVersionRepository;
@@ -33,11 +34,13 @@ public class CommentService {
     private final ResumeVersionRepository resumeVersionRepo;
     private final UserRepository userRepo;
     private final ShareLinkService shareLinkService;
+    private final DemoAccountPolicy demoAccountPolicy;
 
     private final Clock clock = Clock.systemUTC();
 
     @Transactional
     public Comment createOwner(UUID resumeId, UUID versionId, UUID ownerId, CreateCommentRequest req) {
+        requireMutableAccount(ownerId);
         Resume resume = resumeService.getMyResume(resumeId);
 
         if (!resume.getOwner().getId().equals(ownerId)) {
@@ -83,7 +86,8 @@ public class CommentService {
     }
 
     @Transactional
-    public void deleteOwner(UUID resumeId, UUID versionId, UUID commentId) {
+    public void deleteOwner(UUID resumeId, UUID versionId, UUID commentId, UUID requesterId) {
+        requireMutableAccount(requesterId);
         resumeService.getMyResume(resumeId);
 
         resumeVersionRepo.findByIdAndResume_Id(versionId, resumeId)
@@ -93,6 +97,26 @@ public class CommentService {
                 .orElseThrow(() -> new IllegalArgumentException("COMMENT_NOT_FOUND"));
 
         deleteCommentThread(comment);
+    }
+
+    @Transactional
+    public Comment updateOwner(UUID resumeId, UUID versionId, UUID commentId, UUID requesterId, UpdateCommentRequest req) {
+        requireMutableAccount(requesterId);
+        resumeService.getMyResume(resumeId);
+
+        resumeVersionRepo.findByIdAndResume_Id(versionId, resumeId)
+                .orElseThrow(() -> new IllegalArgumentException("VERSION_NOT_FOUND"));
+
+        Comment comment = commentRepo.findByIdAndResumeVersion_Id(commentId, versionId)
+                .orElseThrow(() -> new IllegalArgumentException("COMMENT_NOT_FOUND"));
+
+        if (comment.getAuthorUser() == null || !requesterId.equals(comment.getAuthorUser().getId())) {
+            throw new ForbiddenException("You cannot update this comment");
+        }
+
+        comment.setBody(req.body());
+        comment.setAnchorRef(req.anchorRef());
+        return commentRepo.save(comment);
     }
 
     @Transactional
@@ -121,6 +145,7 @@ public class CommentService {
     public Comment createPublic(String token, String ip, String ua, UUID requesterId, CreateCommentRequest req) {
         ShareLink link = shareLinkService.resolveValidLinkOrThrow(token, ip, ua);
         requireCommentPermission(link, ip, ua);
+        requireMutableAccount(requesterId);
 
         ResumeVersion current = link.getResume().getCurrentVersion();
         if (current == null) {
@@ -208,6 +233,7 @@ public class CommentService {
     public Comment updatePublic(String token, UUID commentId, UUID requesterId, String ip, String ua, UpdateCommentRequest req) {
         ShareLink link = shareLinkService.resolveValidLinkOrThrow(token, ip, ua);
         requireCommentPermission(link, ip, ua);
+        requireMutableAccount(requesterId);
 
         ResumeVersion current = link.getResume().getCurrentVersion();
         if (current == null) {
@@ -217,7 +243,7 @@ public class CommentService {
         Comment comment = commentRepo.findByIdAndResumeVersion_Id(commentId, current.getId())
                 .orElseThrow(() -> new IllegalArgumentException("COMMENT_NOT_FOUND"));
 
-        if (!canManageComment(link, comment, requesterId)) {
+        if (!canEditComment(comment, requesterId)) {
             throw new ForbiddenException("You cannot update this comment");
         }
 
@@ -230,6 +256,7 @@ public class CommentService {
     public void deletePublic(String token, UUID commentId, UUID requesterId, String ip, String ua) {
         ShareLink link = shareLinkService.resolveValidLinkOrThrow(token, ip, ua);
         requireCommentPermission(link, ip, ua);
+        requireMutableAccount(requesterId);
 
         ResumeVersion current = link.getResume().getCurrentVersion();
         if (current == null) {
@@ -275,5 +302,15 @@ public class CommentService {
             return true;
         }
         return comment.getAuthorUser() != null && requesterId.equals(comment.getAuthorUser().getId());
+    }
+
+    private boolean canEditComment(Comment comment, UUID requesterId) {
+        return comment.getAuthorUser() != null && requesterId.equals(comment.getAuthorUser().getId());
+    }
+
+    private void requireMutableAccount(UUID userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+        demoAccountPolicy.requireMutableAccount(user);
     }
 }

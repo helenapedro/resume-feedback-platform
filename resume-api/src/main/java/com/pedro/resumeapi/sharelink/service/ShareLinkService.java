@@ -3,6 +3,7 @@ package com.pedro.resumeapi.sharelink.service;
 import com.pedro.resumeapi.accessaudit.domain.AccessAudit;
 import com.pedro.resumeapi.api.error.*;
 import com.pedro.resumeapi.accessaudit.repository.AccessAuditRepository;
+import com.pedro.resumeapi.demo.DemoAccountPolicy;
 import com.pedro.resumeapi.sharelink.repository.ShareLinkRepository;
 import com.pedro.resumeapi.user.repository.UserRepository;
 import com.pedro.resumeapi.resume.domain.Resume;
@@ -28,6 +29,7 @@ public class ShareLinkService {
     private final AccessAuditRepository auditRepo;
     private final ResumeService resumeService;
     private final UserRepository userRepository;
+    private final DemoAccountPolicy demoAccountPolicy;
     private final Clock clock = Clock.systemUTC();
 
     @Transactional
@@ -38,6 +40,9 @@ public class ShareLinkService {
                                         UUID ownerId
     ) {
         Resume resume = resumeService.getMyResume(resumeId);
+        User owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+        demoAccountPolicy.requireMutableAccount(owner);
 
         String token = TokenUtil.newToken();
         String tokenHash = TokenUtil.sha256Hex(token);
@@ -100,6 +105,9 @@ public class ShareLinkService {
     @Transactional
     public void revoke(UUID resumeId, UUID linkId, UUID ownerId) {
         Resume resume = resumeService.getMyResume(resumeId);
+        User owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+        demoAccountPolicy.requireMutableAccount(owner);
 
         ShareLink link = shareLinkRepo.findById(linkId)
                 .orElseThrow(() -> new IllegalArgumentException("SHARE_LINK_NOT_FOUND"));

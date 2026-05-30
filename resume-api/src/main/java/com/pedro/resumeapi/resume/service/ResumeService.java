@@ -120,6 +120,8 @@ public class ResumeService {
 
     @Transactional
     public void deleteResume(UUID resumeId) {
+        demoAccountPolicy.requireMutableAccount(getUser());
+
         Resume resume = getMyResume(resumeId);
         List<ResumeVersion> versions = versionRepository.findByResume_IdOrderByVersionNumberDesc(resumeId);
 
@@ -159,9 +161,7 @@ public class ResumeService {
     }
 
     private void rejectDemoUpload(User owner) {
-        if (demoAccountPolicy.isDemoUser(owner)) {
-            throw new ForbiddenException("Demo account is read-only. Create your own account to upload a private resume.");
-        }
+        demoAccountPolicy.requireMutableAccount(owner);
     }
 
     private void cleanupStoredFilesBestEffort(List<ResumeVersion> versions) {

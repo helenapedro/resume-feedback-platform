@@ -1,5 +1,6 @@
 package com.pedro.resumeapi.user.service;
 
+import com.pedro.resumeapi.demo.DemoAccountPolicy;
 import com.pedro.resumeapi.security.CurrentUser;
 import com.pedro.resumeapi.storage.AvatarStorageService;
 import com.pedro.resumeapi.user.domain.User;
@@ -20,6 +21,7 @@ public class UserProfileService {
     private final UserRepository userRepository;
     private final CurrentUser currentUser;
     private final AvatarStorageService avatarStorageService;
+    private final DemoAccountPolicy demoAccountPolicy;
 
     @Transactional(readOnly = true)
     public UserProfileDTO getMyProfile() {
@@ -32,6 +34,7 @@ public class UserProfileService {
     public UserProfileDTO updateMyProfile(UpdateUserProfileRequest request) {
         User user = userRepository.findById(currentUser.id())
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+        demoAccountPolicy.requireMutableAccount(user);
 
         user.setFullName(normalize(request.fullName()));
         user.setPhone(normalize(request.phone()));
@@ -46,6 +49,7 @@ public class UserProfileService {
     public UserProfileDTO uploadMyAvatar(MultipartFile file) throws IOException {
         User user = userRepository.findById(currentUser.id())
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+        demoAccountPolicy.requireMutableAccount(user);
 
         String avatarUrl = avatarStorageService.store(user.getId(), file);
         user.setAvatarUrl(avatarUrl);

@@ -1,6 +1,7 @@
 package com.pedro.resumeapi.user.service;
 
 import com.pedro.resumeapi.comment.repository.CommentRepository;
+import com.pedro.resumeapi.demo.DemoAccountPolicy;
 import com.pedro.resumeapi.resume.service.ResumeService;
 import com.pedro.resumeapi.security.CurrentUser;
 import com.pedro.resumeapi.user.domain.User;
@@ -17,11 +18,14 @@ public class UserAccountService {
     private final UserRepository userRepository;
     private final ResumeService resumeService;
     private final CommentRepository commentRepository;
+    private final DemoAccountPolicy demoAccountPolicy;
 
     @Transactional
     public void deactivateMyAccount() {
         User user = userRepository.findById(currentUser.id())
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+        demoAccountPolicy.requireMutableAccount(user);
+
         user.setEnabled(false);
         userRepository.save(user);
     }
@@ -30,6 +34,7 @@ public class UserAccountService {
     public void deleteMyAccountPermanently() {
         User user = userRepository.findById(currentUser.id())
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+        demoAccountPolicy.requireMutableAccount(user);
 
         // Remove all owned resumes and dependent data/files first.
         resumeService.listMyResumes().forEach(resume -> resumeService.deleteResume(resume.getId()));
@@ -40,4 +45,3 @@ public class UserAccountService {
         userRepository.delete(user);
     }
 }
-

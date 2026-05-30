@@ -2,6 +2,7 @@ package com.pedro.resumeapi.comment.web;
 
 import com.pedro.resumeapi.comment.dto.CommentDTO;
 import com.pedro.resumeapi.comment.dto.CreateCommentRequest;
+import com.pedro.resumeapi.comment.dto.UpdateCommentRequest;
 import com.pedro.resumeapi.comment.mapper.CommentMapper;
 import com.pedro.resumeapi.comment.service.CommentService;
 import com.pedro.resumeapi.security.CurrentUser;
@@ -42,13 +43,24 @@ public class CommentOwnerController {
         return CommentMapper.toDTO(saved);
     }
 
+    @PatchMapping("/{commentId}")
+    public CommentDTO update(
+            @PathVariable UUID resumeId,
+            @PathVariable UUID versionId,
+            @PathVariable UUID commentId,
+            @Valid @RequestBody UpdateCommentRequest req
+    ) {
+        var saved = commentService.updateOwner(resumeId, versionId, commentId, currentUser.id(), req);
+        return CommentMapper.toDTO(saved);
+    }
+
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> delete(
             @PathVariable UUID resumeId,
             @PathVariable UUID versionId,
             @PathVariable UUID commentId
     ) {
-        commentService.deleteOwner(resumeId, versionId, commentId);
+        commentService.deleteOwner(resumeId, versionId, commentId, currentUser.id());
         return ResponseEntity.noContent().build();
     }
 }
