@@ -69,6 +69,10 @@ app:
         requests: 120
         window: 1m
   demo:
+    session:
+      enabled: ${APP_DEMO_SESSION_ENABLED:false}
+    account:
+      login-enabled: ${APP_DEMO_ACCOUNT_LOGIN_ENABLED:false}
     seed:
       enabled: ${APP_DEMO_SEED_ENABLED:false}
       email: ${APP_DEMO_SEED_EMAIL:demo@hmpedro.com}

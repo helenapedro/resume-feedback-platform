@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/demo")
-@ConditionalOnProperty(name = "app.demo.seed.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "app.demo.session.enabled", havingValue = "true")
 public class DemoSessionController {
 
     private final DemoSeedService demoSeedService;

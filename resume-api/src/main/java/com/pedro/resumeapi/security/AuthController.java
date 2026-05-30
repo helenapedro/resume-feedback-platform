@@ -1,6 +1,7 @@
 package com.pedro.resumeapi.security;
 
 import com.pedro.resumeapi.api.error.UnauthorizedException;
+import com.pedro.resumeapi.demo.DemoAccountPolicy;
 import com.pedro.resumeapi.user.domain.User;
 import com.pedro.resumeapi.auth.dto.AuthResponse;
 import com.pedro.resumeapi.auth.dto.GoogleAuthRequest;
@@ -23,6 +24,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final GoogleTokenVerifierService googleTokenVerifierService;
+    private final DemoAccountPolicy demoAccountPolicy;
 
     @PostMapping("/register")
     public AuthResponse register(@RequestBody RegisterRequest req) {
@@ -49,7 +51,10 @@ public class AuthController {
 
     @PostMapping("/login")
     public AuthResponse login(@RequestBody LoginRequest req) {
-        var user = userRepository.findByEmail(req.email().trim().toLowerCase())
+        String email = req.email().trim().toLowerCase();
+        demoAccountPolicy.requireLoginAllowed(email);
+
+        var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("invalid credentials"));
 
         if (!user.isEnabled()) throw new IllegalArgumentException("user disabled");
@@ -106,7 +111,10 @@ public class AuthController {
         if (req.email() == null || req.email().isBlank()) throw new IllegalArgumentException("email required");
         if (req.password() == null || req.password().isBlank()) throw new IllegalArgumentException("password required");
 
-        var user = userRepository.findByEmail(req.email().trim().toLowerCase())
+        String email = req.email().trim().toLowerCase();
+        demoAccountPolicy.requireLoginAllowed(email);
+
+        var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("invalid credentials"));
 
         if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
