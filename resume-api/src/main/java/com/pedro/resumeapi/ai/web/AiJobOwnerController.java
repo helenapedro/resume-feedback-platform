@@ -32,7 +32,7 @@ public class AiJobOwnerController {
     public AiJobDTO regenerate(
             @PathVariable UUID resumeId,
             @PathVariable UUID versionId,
-            @RequestParam(name = "language", defaultValue = "EN") Language language) {
+            @RequestParam(name = "language", defaultValue = "AUTO") Language language) {
         return AiJobMapper.toDTO(aiJobService.regenerateForVersion(resumeId, versionId, language));
     }
 }

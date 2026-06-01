@@ -58,7 +58,7 @@ class AiProgressPromptBuilderTest {
     }
 
     @Test
-    void buildAlwaysUsesEnglishTemplateEvenWhenPortugueseIsRequested() {
+    void buildUsesPortugueseTemplateWhenPortugueseIsRequested() {
         AiJobRequestedMessage message = new AiJobRequestedMessage(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
@@ -82,9 +82,10 @@ class AiProgressPromptBuilderTest {
                 null,
                 Language.PT);
 
-        assertTrue(prompt.contains("Write only in clear English"));
-        assertTrue(prompt.contains("Previous feedback: NOT AVAILABLE"));
-        assertFalse(prompt.contains("Feedback anterior"));
+        assertTrue(prompt.contains("revisor especializado em curriculos"));
+        assertTrue(prompt.contains("Escreva em portugues"));
+        assertTrue(prompt.contains("Feedback anterior: INDISPONIVEL"));
+        assertFalse(prompt.contains("Write only in clear English"));
     }
 
     @Test

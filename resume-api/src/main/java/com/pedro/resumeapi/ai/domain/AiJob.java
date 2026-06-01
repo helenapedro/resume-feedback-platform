@@ -42,7 +42,7 @@ public class AiJob {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "language", nullable = false, length = 10)
-    private Language language = Language.EN;
+    private Language language = Language.AUTO;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -74,7 +74,7 @@ public class AiJob {
         if (status == null)
             status = Status.PENDING;
         if (language == null)
-            language = Language.EN;
+            language = Language.AUTO;
     }
 
     @PreUpdate

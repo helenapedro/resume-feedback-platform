@@ -44,12 +44,22 @@ class AiFeedbackFactoryTest {
 
     @Mock
     private AiFeedbackDocumentMapper documentMapper;
+    @Mock
+    private ResumeLanguageDetector languageDetector;
+    @Mock
+    private ResumeDocumentClassifier documentClassifier;
 
     private AiFeedbackFactory factory;
 
     @BeforeEach
     void setUp() {
-        factory = new AiFeedbackFactory(providerRegistry, resumeTextExtractor, promptBuilder, documentMapper);
+        factory = new AiFeedbackFactory(
+                providerRegistry,
+                resumeTextExtractor,
+                promptBuilder,
+                documentMapper,
+                languageDetector,
+                documentClassifier);
     }
 
     @Test
@@ -83,7 +93,11 @@ class AiFeedbackFactoryTest {
         mappedDocument.setPromptVersion("v3");
         mappedDocument.setModel("gemini:gemini-test");
 
-        when(resumeTextExtractor.extract(version)).thenReturn(Optional.of(resumeText));
+        ResumeTextExtractor.ResumeTextExtraction extraction =
+                new ResumeTextExtractor.ResumeTextExtraction(resumeText, 2);
+        when(resumeTextExtractor.extractWithMetadata(version)).thenReturn(Optional.of(extraction));
+        when(documentClassifier.isLikelyResume(extraction)).thenReturn(true);
+        when(languageDetector.resolve(Language.EN, resumeText)).thenReturn(Language.EN);
         when(promptBuilder.build(message, resumeText, Language.EN)).thenReturn(prompt);
         when(providerRegistry.activeClient()).thenReturn(providerClient);
         when(providerClient.generateFeedback(prompt)).thenReturn(result);
@@ -109,11 +123,35 @@ class AiFeedbackFactoryTest {
         ResumeVersion version = new ResumeVersion();
         version.setId(message.resumeVersionId());
 
-        when(resumeTextExtractor.extract(version)).thenReturn(Optional.empty());
+        when(resumeTextExtractor.extractWithMetadata(version)).thenReturn(Optional.empty());
 
         AiJobDomainException ex = assertThrows(AiJobDomainException.class, () -> factory.build(message, version));
 
         assertEquals("RESUME_TEXT_NOT_EXTRACTED", ex.getErrorCode());
+        verify(promptBuilder, never()).build(any(), anyString(), any());
+        verify(providerRegistry, never()).activeClient();
+    }
+
+    @Test
+    void buildFailsBeforeProviderCallWhenDocumentDoesNotLookLikeResume() {
+        AiJobRequestedMessage message = new AiJobRequestedMessage(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                Instant.now(),
+                Language.AUTO);
+        ResumeVersion version = new ResumeVersion();
+        version.setId(message.resumeVersionId());
+
+        ResumeTextExtractor.ResumeTextExtraction extraction =
+                new ResumeTextExtractor.ResumeTextExtraction("chapter one long book text", 153);
+        when(resumeTextExtractor.extractWithMetadata(version)).thenReturn(Optional.of(extraction));
+        when(documentClassifier.isLikelyResume(extraction)).thenReturn(false);
+
+        AiJobDomainException ex = assertThrows(AiJobDomainException.class, () -> factory.build(message, version));
+
+        assertEquals("RESUME_DOCUMENT_NOT_DETECTED", ex.getErrorCode());
         verify(promptBuilder, never()).build(any(), anyString(), any());
         verify(providerRegistry, never()).activeClient();
     }

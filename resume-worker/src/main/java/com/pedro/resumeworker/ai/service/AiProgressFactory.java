@@ -21,16 +21,19 @@ public class AiProgressFactory {
     private final AiProviderRegistry providerRegistry;
     private final ResumeTextExtractor resumeTextExtractor;
     private final AiProgressPromptBuilder promptBuilder;
+    private final ResumeLanguageDetector languageDetector;
 
     public AiProgressFactory(
             @Value("${app.ai-feedback.prompt-version:v1}") String promptVersion,
             AiProviderRegistry providerRegistry,
             ResumeTextExtractor resumeTextExtractor,
-            AiProgressPromptBuilder promptBuilder) {
+            AiProgressPromptBuilder promptBuilder,
+            ResumeLanguageDetector languageDetector) {
         this.promptVersion = promptVersion;
         this.providerRegistry = providerRegistry;
         this.resumeTextExtractor = resumeTextExtractor;
         this.promptBuilder = promptBuilder;
+        this.languageDetector = languageDetector;
     }
 
     public AiProgressDocument build(
@@ -41,7 +44,7 @@ public class AiProgressFactory {
         String currentResumeText = resumeTextExtractor.extract(currentVersion).orElse("");
         String previousResumeText = resumeTextExtractor.extract(previousVersion).orElse("");
 
-        Language language = message.language() == null ? Language.EN : message.language();
+        Language language = languageDetector.resolve(message.language(), currentResumeText);
 
         AiProviderClient providerClient = providerRegistry.activeClient();
         AiProviderProgressCallResult result = providerClient.generateProgressAnalysis(

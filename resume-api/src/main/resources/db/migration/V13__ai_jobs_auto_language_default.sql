@@ -1,0 +1,2 @@
+ALTER TABLE ai_jobs
+    ALTER COLUMN language SET DEFAULT 'AUTO';

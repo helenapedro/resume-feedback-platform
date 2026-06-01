@@ -26,7 +26,7 @@ public class AiJobMapper {
                                 job.getErrorCode(),
                                 job.getErrorDetail(),
                                 job.getNextRetryAt(),
-                                job.getLanguage() == null ? Language.EN.name() : job.getLanguage().name());
+                                job.getLanguage() == null ? Language.AUTO.name() : job.getLanguage().name());
         }
 
         public static AiJobRequestedMessage toMessage(AiJob job) {
@@ -46,6 +46,6 @@ public class AiJobMapper {
                                 job.getResumeVersion() == null ? null : job.getResumeVersion().getId(),
                                 ownerId,
                                 createdAt,
-                                job.getLanguage() == null ? Language.EN : job.getLanguage());
+                                job.getLanguage() == null ? Language.AUTO : job.getLanguage());
         }
 }

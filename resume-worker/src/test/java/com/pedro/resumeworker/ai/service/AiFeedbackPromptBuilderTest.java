@@ -38,7 +38,7 @@ class AiFeedbackPromptBuilderTest {
     }
 
     @Test
-    void buildAlwaysUsesEnglishTemplateEvenWhenPortugueseIsRequested() {
+    void buildUsesPortugueseTemplateWhenPortugueseIsRequested() {
         AiJobRequestedMessage message = new AiJobRequestedMessage(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
@@ -49,9 +49,10 @@ class AiFeedbackPromptBuilderTest {
 
         String prompt = builder.build(message, "Experiencia em analytics.", Language.PT);
 
-        assertTrue(prompt.contains("Write only in English"));
-        assertTrue(prompt.contains("Resume extracted (raw text):"));
-        assertFalse(prompt.contains("Curriculo extraido"));
+        assertTrue(prompt.contains("recruiter tecnico senior"));
+        assertTrue(prompt.contains("Escreva em portugues"));
+        assertTrue(prompt.contains("Curriculo extraido (texto bruto):"));
+        assertFalse(prompt.contains("Write only in English"));
     }
 
     @Test

@@ -33,6 +33,10 @@ public class ResumeTextExtractor {
     }
 
     public Optional<String> extract(ResumeVersion version) {
+        return extractWithMetadata(version).map(ResumeTextExtraction::text);
+    }
+
+    public Optional<ResumeTextExtraction> extractWithMetadata(ResumeVersion version) {
         if (version == null) {
             return Optional.empty();
         }
@@ -70,19 +74,19 @@ public class ResumeTextExtractor {
                 return Optional.empty();
             }
 
-            String text = extractTextFromPdf(bytes);
+            ResumeTextExtraction extraction = extractTextFromPdf(bytes);
 
-            if (!StringUtils.hasText(text)) {
+            if (!StringUtils.hasText(extraction.text())) {
                 return Optional.empty();
             }
 
-            String normalized = normalizeText(text);
+            String normalized = normalizeText(extraction.text());
 
             if (normalized.length() > maxResumeChars) {
                 normalized = normalized.substring(0, maxResumeChars);
             }
 
-            return Optional.of(normalized);
+            return Optional.of(new ResumeTextExtraction(normalized, extraction.pageCount()));
 
         } catch (Exception ex) {
             log.warn("Could not extract resume text for resumeVersionId={}: {}",
@@ -92,12 +96,12 @@ public class ResumeTextExtractor {
         }
     }
 
-    private String extractTextFromPdf(byte[] pdfBytes) throws IOException {
+    private ResumeTextExtraction extractTextFromPdf(byte[] pdfBytes) throws IOException {
 
         try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
             PDFTextStripper stripper = new PDFTextStripper();
 
-            return stripper.getText(doc);
+            return new ResumeTextExtraction(stripper.getText(doc), doc.getNumberOfPages());
         }
     }
 
@@ -108,5 +112,8 @@ public class ResumeTextExtractor {
                 .replaceAll("\\n{3,}", "\n\n")
                 .replaceAll(" {2,}", " ")
                 .trim();
+    }
+
+    public record ResumeTextExtraction(String text, int pageCount) {
     }
 }

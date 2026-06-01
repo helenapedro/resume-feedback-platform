@@ -97,7 +97,19 @@ class AiJobServiceIntegrationTest {
         assertEquals(resume.getId(), message.resumeId());
         assertEquals(version.getId(), message.resumeVersionId());
         assertEquals(owner.getId(), message.ownerId());
-        assertEquals(Language.EN, message.language());
+        assertEquals(Language.PT, message.language());
+    }
+
+    @Test
+    void createForVersionDefaultsToAutoLanguage() {
+        AiJob job = aiJobService.createForVersion(version, "version-auto");
+
+        assertEquals(Language.AUTO, job.getLanguage());
+
+        ArgumentCaptor<AiJobRequestedMessage> captor = ArgumentCaptor.forClass(AiJobRequestedMessage.class);
+        verify(aiJobEventPublisher, times(1)).publish(captor.capture());
+
+        assertEquals(Language.AUTO, captor.getValue().language());
     }
 
     @TestConfiguration
