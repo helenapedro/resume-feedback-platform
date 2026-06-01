@@ -134,9 +134,14 @@ public class AiJobProcessor {
             job.setErrorCode(ex.getClass().getSimpleName());
         }
         job.setErrorDetail(truncateErrorDetail(ex.getMessage()));
-        job.setNextRetryAt(calculateNextRetryAt(job));
+        job.setNextRetryAt(isTerminalUserInputError(job.getErrorCode()) ? null : calculateNextRetryAt(job));
         aiJobRepository.save(job);
         log.error("AI job failed: {}", job.getId(), ex);
+    }
+
+    private boolean isTerminalUserInputError(String errorCode) {
+        return "RESUME_DOCUMENT_NOT_DETECTED".equals(errorCode)
+                || "RESUME_TEXT_NOT_EXTRACTED".equals(errorCode);
     }
 
     private int nextFeedbackVersion(UUID resumeVersionId) {

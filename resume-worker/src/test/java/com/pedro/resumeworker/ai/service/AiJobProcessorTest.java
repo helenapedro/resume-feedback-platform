@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.never;
@@ -173,6 +174,47 @@ class AiJobProcessorTest {
         assertEquals("PROMPT_INVALID", job.getErrorCode());
         assertEquals("Prompt assembly failed", job.getErrorDetail());
         assertNotNull(job.getNextRetryAt());
+
+        verify(aiFeedbackRefRepository, never()).save(any());
+        verify(aiProgressRefRepository, never()).save(any());
+        verify(aiJobRepository, atLeast(2)).save(job);
+    }
+
+    @Test
+    void processTerminalUserInputFailureDoesNotScheduleRetry() {
+        UUID jobId = UUID.randomUUID();
+        UUID versionId = UUID.randomUUID();
+
+        AiJobRequestedMessage message = new AiJobRequestedMessage(
+                jobId,
+                UUID.randomUUID(),
+                versionId,
+                UUID.randomUUID(),
+                Instant.now(),
+                Language.AUTO);
+
+        AiJob job = new AiJob();
+        job.setId(jobId);
+        job.setStatus(AiJob.Status.PENDING);
+
+        ResumeVersion currentVersion = new ResumeVersion();
+        currentVersion.setId(versionId);
+        currentVersion.setResumeId(UUID.randomUUID());
+        currentVersion.setVersionNumber(1);
+
+        when(aiJobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(resumeVersionRepository.findById(versionId)).thenReturn(Optional.of(currentVersion));
+        when(feedbackFactory.build(message, currentVersion))
+                .thenThrow(new AiJobDomainException(
+                        "RESUME_DOCUMENT_NOT_DETECTED",
+                        "This file does not look like a resume/CV."));
+
+        processor.process(message);
+
+        assertEquals(AiJob.Status.FAILED, job.getStatus());
+        assertEquals("RESUME_DOCUMENT_NOT_DETECTED", job.getErrorCode());
+        assertEquals("This file does not look like a resume/CV.", job.getErrorDetail());
+        assertNull(job.getNextRetryAt());
 
         verify(aiFeedbackRefRepository, never()).save(any());
         verify(aiProgressRefRepository, never()).save(any());

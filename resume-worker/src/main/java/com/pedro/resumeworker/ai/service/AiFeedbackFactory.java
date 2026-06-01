@@ -42,14 +42,12 @@ public class AiFeedbackFactory {
         if (!StringUtils.hasText(resumeText)) {
             throw new AiJobDomainException(
                     "RESUME_TEXT_NOT_EXTRACTED",
-                    "Resume text could not be extracted. jobId=%s resumeVersionId=%s"
-                            .formatted(message.jobId(), message.resumeVersionId()));
+                    "We could not read enough text from this PDF to generate feedback. Please upload a text-based resume/CV PDF.");
         }
         if (!documentClassifier.isLikelyResume(extraction)) {
             throw new AiJobDomainException(
                     "RESUME_DOCUMENT_NOT_DETECTED",
-                    "Uploaded PDF does not look like a resume. jobId=%s resumeVersionId=%s pageCount=%s"
-                            .formatted(message.jobId(), message.resumeVersionId(), extraction.pageCount()));
+                    "This file does not look like a resume/CV. Please upload a resume or CV PDF instead of a book, article, or long document.");
         }
         Language language = languageDetector.resolve(message.language(), resumeText);
 

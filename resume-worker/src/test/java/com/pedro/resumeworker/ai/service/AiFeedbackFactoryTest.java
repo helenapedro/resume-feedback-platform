@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -128,6 +129,7 @@ class AiFeedbackFactoryTest {
         AiJobDomainException ex = assertThrows(AiJobDomainException.class, () -> factory.build(message, version));
 
         assertEquals("RESUME_TEXT_NOT_EXTRACTED", ex.getErrorCode());
+        assertFalse(ex.getMessage().contains("jobId"));
         verify(promptBuilder, never()).build(any(), anyString(), any());
         verify(providerRegistry, never()).activeClient();
     }
@@ -152,6 +154,9 @@ class AiFeedbackFactoryTest {
         AiJobDomainException ex = assertThrows(AiJobDomainException.class, () -> factory.build(message, version));
 
         assertEquals("RESUME_DOCUMENT_NOT_DETECTED", ex.getErrorCode());
+        assertEquals(
+                "This file does not look like a resume/CV. Please upload a resume or CV PDF instead of a book, article, or long document.",
+                ex.getMessage());
         verify(promptBuilder, never()).build(any(), anyString(), any());
         verify(providerRegistry, never()).activeClient();
     }
