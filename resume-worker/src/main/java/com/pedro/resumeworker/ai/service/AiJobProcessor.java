@@ -16,6 +16,7 @@ import com.pedro.resumeworker.ai.repository.AiProgressRefRepository;
 import com.pedro.resumeworker.ai.repository.ResumeVersionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -179,20 +180,25 @@ public class AiJobProcessor {
             return;
         }
 
-        Optional<ResumeVersion> previousVersionOpt = resumeVersionRepository
-                .findTopByResumeIdAndVersionNumberLessThanOrderByVersionNumberDesc(
+        Optional<AiFeedbackRef> baselineRefOpt = aiFeedbackRefRepository
+                .findLatestPreviousFeedbackRefs(
                         currentVersion.getResumeId(),
-                        currentVersion.getVersionNumber());
-        if (previousVersionOpt.isEmpty()) {
+                        currentVersion.getVersionNumber(),
+                        PageRequest.of(0, 1))
+                .stream()
+                .findFirst();
+        if (baselineRefOpt.isEmpty()) {
             return;
         }
 
-        ResumeVersion previousVersion = previousVersionOpt.get();
+        AiFeedbackRef baselineRef = baselineRefOpt.get();
+        ResumeVersion previousVersion = baselineRef.getResumeVersion();
         Optional<AiFeedbackDocument> previousFeedbackOpt = feedbackMongoRepository
-                .findTopByResumeVersionIdOrderByCreatedAtDesc(previousVersion.getId());
+                .findById(baselineRef.getMongoDocId());
         if (previousFeedbackOpt.isEmpty()) {
-            log.info("Skipping AI progress for resumeVersionId={} because baseline feedback is missing",
-                    currentVersion.getId());
+            log.info("Skipping AI progress for resumeVersionId={} because baseline feedback document is missing for baselineResumeVersionId={}",
+                    currentVersion.getId(),
+                    previousVersion.getId());
             return;
         }
 

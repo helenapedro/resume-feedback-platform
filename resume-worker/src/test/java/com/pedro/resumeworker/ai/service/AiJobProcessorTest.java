@@ -5,6 +5,7 @@ import com.pedro.common.ai.Language;
 import com.pedro.common.ai.mongo.AiFeedbackDocument;
 import com.pedro.common.ai.mongo.AiProgressDocument;
 import com.pedro.resumeworker.ai.config.AiJobRetryProperties;
+import com.pedro.resumeworker.ai.domain.AiFeedbackRef;
 import com.pedro.resumeworker.ai.domain.AiJob;
 import com.pedro.resumeworker.ai.domain.ResumeVersion;
 import com.pedro.resumeworker.ai.mongo.AiFeedbackMongoRepository;
@@ -108,6 +109,11 @@ class AiJobProcessorTest {
         AiFeedbackDocument baselineFeedback = new AiFeedbackDocument();
         baselineFeedback.setId("baseline-doc");
 
+        AiFeedbackRef baselineRef = new AiFeedbackRef();
+        baselineRef.setResumeVersion(previousVersion);
+        baselineRef.setFeedbackVersion(1);
+        baselineRef.setMongoDocId("baseline-doc");
+
         AiProgressDocument progressDoc = new AiProgressDocument();
         progressDoc.setId("progress-doc-1");
         progressDoc.setModel("gemini-test");
@@ -119,9 +125,9 @@ class AiJobProcessorTest {
         when(feedbackMongoRepository.save(feedbackDoc)).thenReturn(feedbackDoc);
         when(aiFeedbackRefRepository.findTopByResumeVersion_IdOrderByFeedbackVersionDesc(currentVersionId))
                 .thenReturn(Optional.empty());
-        when(resumeVersionRepository.findTopByResumeIdAndVersionNumberLessThanOrderByVersionNumberDesc(resumeId, 2))
-                .thenReturn(Optional.of(previousVersion));
-        when(feedbackMongoRepository.findTopByResumeVersionIdOrderByCreatedAtDesc(previousVersionId))
+        when(aiFeedbackRefRepository.findLatestPreviousFeedbackRefs(resumeId, 2, org.springframework.data.domain.PageRequest.of(0, 1)))
+                .thenReturn(List.of(baselineRef));
+        when(feedbackMongoRepository.findById("baseline-doc"))
                 .thenReturn(Optional.of(baselineFeedback));
         when(progressFactory.build(message, currentVersion, previousVersion, baselineFeedback)).thenReturn(progressDoc);
         when(progressMongoRepository.save(progressDoc)).thenReturn(progressDoc);
@@ -138,6 +144,75 @@ class AiJobProcessorTest {
         verify(aiFeedbackRefRepository).save(any());
         verify(aiProgressRefRepository).save(any());
         verify(aiJobRepository, atLeast(2)).save(job);
+    }
+
+    @Test
+    void processProgressUsesLatestPreviousVersionWithFeedback() {
+        UUID jobId = UUID.randomUUID();
+        UUID resumeId = UUID.randomUUID();
+        UUID currentVersionId = UUID.randomUUID();
+        UUID validBaselineVersionId = UUID.randomUUID();
+        UUID ownerId = UUID.randomUUID();
+
+        AiJobRequestedMessage message = new AiJobRequestedMessage(
+                jobId,
+                resumeId,
+                currentVersionId,
+                ownerId,
+                Instant.now(),
+                Language.AUTO);
+
+        AiJob job = new AiJob();
+        job.setId(jobId);
+        job.setStatus(AiJob.Status.PENDING);
+
+        ResumeVersion currentVersion = new ResumeVersion();
+        currentVersion.setId(currentVersionId);
+        currentVersion.setResumeId(resumeId);
+        currentVersion.setVersionNumber(3);
+
+        ResumeVersion validBaselineVersion = new ResumeVersion();
+        validBaselineVersion.setId(validBaselineVersionId);
+        validBaselineVersion.setResumeId(resumeId);
+        validBaselineVersion.setVersionNumber(1);
+
+        AiFeedbackDocument feedbackDoc = new AiFeedbackDocument();
+        feedbackDoc.setId("feedback-doc-v3");
+        feedbackDoc.setModel("gemini-test");
+        feedbackDoc.setPromptVersion("v1");
+
+        AiFeedbackDocument baselineFeedback = new AiFeedbackDocument();
+        baselineFeedback.setId("feedback-doc-v1");
+
+        AiFeedbackRef baselineRef = new AiFeedbackRef();
+        baselineRef.setResumeVersion(validBaselineVersion);
+        baselineRef.setFeedbackVersion(1);
+        baselineRef.setMongoDocId("feedback-doc-v1");
+
+        AiProgressDocument progressDoc = new AiProgressDocument();
+        progressDoc.setId("progress-doc-v3");
+        progressDoc.setModel("gemini-test");
+        progressDoc.setPromptVersion("v1");
+
+        when(aiJobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(resumeVersionRepository.findById(currentVersionId)).thenReturn(Optional.of(currentVersion));
+        when(feedbackFactory.build(message, currentVersion)).thenReturn(feedbackDoc);
+        when(feedbackMongoRepository.save(feedbackDoc)).thenReturn(feedbackDoc);
+        when(aiFeedbackRefRepository.findTopByResumeVersion_IdOrderByFeedbackVersionDesc(currentVersionId))
+                .thenReturn(Optional.empty());
+        when(aiFeedbackRefRepository.findLatestPreviousFeedbackRefs(resumeId, 3, org.springframework.data.domain.PageRequest.of(0, 1)))
+                .thenReturn(List.of(baselineRef));
+        when(feedbackMongoRepository.findById("feedback-doc-v1")).thenReturn(Optional.of(baselineFeedback));
+        when(progressFactory.build(message, currentVersion, validBaselineVersion, baselineFeedback)).thenReturn(progressDoc);
+        when(progressMongoRepository.save(progressDoc)).thenReturn(progressDoc);
+        when(aiProgressRefRepository.findTopByResumeVersion_IdOrderByProgressVersionDesc(currentVersionId))
+                .thenReturn(Optional.empty());
+
+        processor.process(message);
+
+        assertEquals(AiJob.Status.DONE, job.getStatus());
+        verify(progressFactory).build(message, currentVersion, validBaselineVersion, baselineFeedback);
+        verify(aiProgressRefRepository).save(any());
     }
 
     @Test
