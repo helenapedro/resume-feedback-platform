@@ -7,6 +7,7 @@ import com.pedro.resumeapi.resume.repository.ResumeRepository;
 import com.pedro.resumeapi.resume.repository.ResumeVersionRepository;
 import com.pedro.resumeapi.security.CurrentUser;
 import com.pedro.resumeapi.storage.S3PresignService;
+import com.pedro.resumeapi.storage.S3StorageService;
 import com.pedro.resumeapi.storage.StorageBackend;
 import com.pedro.resumeapi.storage.StorageProperties;
 import com.pedro.resumeapi.storage.LocalStorageService;
@@ -28,6 +29,7 @@ public class ResumeStorageService {
     private final StorageProperties storageProperties;
     private final CurrentUser currentUser;
     private final ObjectProvider<LocalStorageService> localStorageService;
+    private final ObjectProvider<S3StorageService> s3StorageService;
 
     @Transactional(readOnly = true)
     public DownloadPayload downloadVersionOwner(UUID resumeId, UUID versionId) {
@@ -97,9 +99,16 @@ public class ResumeStorageService {
             return new DownloadPayload(resource, filename, contentType, null);
         }
 
-        var presigned = (attachment
-                ? presignService.presignDownload(version, safeName, contentType)
-                : presignService.presignPreview(version, safeName, contentType))
+        if (!attachment) {
+            S3StorageService s3 = s3StorageService.getIfAvailable();
+            if (s3 == null) {
+                throw new IllegalStateException("S3 storage backend is not available");
+            }
+            Resource resource = s3.loadAsResource(version.getS3Bucket(), version.getS3ObjectKey(), version.getS3VersionId());
+            return new DownloadPayload(resource, filename, contentType, null);
+        }
+
+        var presigned = presignService.presignDownload(version, safeName, contentType)
                 .map(Object::toString)
                 .orElse(null);
 

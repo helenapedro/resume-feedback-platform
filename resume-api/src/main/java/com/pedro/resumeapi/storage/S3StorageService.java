@@ -5,9 +5,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
@@ -81,6 +84,21 @@ public class S3StorageService {
             request.versionId(versionId);
         }
         s3Client.deleteObject(request.build());
+    }
+
+    public Resource loadAsResource(String bucket, String objectKey, String versionId) {
+        if (!StringUtils.hasText(bucket) || !StringUtils.hasText(objectKey)) {
+            throw new IllegalStateException("S3 object metadata is missing");
+        }
+
+        GetObjectRequest.Builder request = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(objectKey);
+        if (StringUtils.hasText(versionId)) {
+            request.versionId(versionId);
+        }
+
+        return new InputStreamResource(s3Client.getObject(request.build()));
     }
 
     public void storeAvatar(String objectKey, MultipartFile file, String contentType) throws IOException {
