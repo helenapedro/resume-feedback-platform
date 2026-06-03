@@ -100,6 +100,7 @@ class ShareLinkServiceIntegrationTest {
         var created = shareLinkService.create(
                 resume.getId(),
                 ShareLink.Permission.VIEW,
+                true,
                 Instant.now().plusSeconds(3600),
                 3,
                 owner.getId());
@@ -120,6 +121,7 @@ class ShareLinkServiceIntegrationTest {
         var created = shareLinkService.create(
                 resume.getId(),
                 ShareLink.Permission.COMMENT,
+                true,
                 Instant.now().plusSeconds(3600),
                 null,
                 owner.getId());
@@ -141,6 +143,7 @@ class ShareLinkServiceIntegrationTest {
         var created = shareLinkService.create(
                 resume.getId(),
                 ShareLink.Permission.VIEW,
+                true,
                 Instant.now().minusSeconds(10),
                 null,
                 owner.getId());
