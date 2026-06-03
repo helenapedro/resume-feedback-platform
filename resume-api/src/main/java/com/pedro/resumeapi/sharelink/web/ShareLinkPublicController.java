@@ -27,6 +27,7 @@ public class ShareLinkPublicController {
                 resume.getId(),
                 current == null ? null : current.getId(),
                 link.getPermission(),
+                link.isAllowDownload(),
                 link.getExpiresAt()
         );
     }

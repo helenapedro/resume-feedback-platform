@@ -8,6 +8,7 @@ import java.util.UUID;
 public record ShareLinkDTO (
     UUID id,
     ShareLink.Permission permission,
+    boolean allowDownload,
     Instant expiresAt,
     Instant revokedAt,
     Integer maxUses,

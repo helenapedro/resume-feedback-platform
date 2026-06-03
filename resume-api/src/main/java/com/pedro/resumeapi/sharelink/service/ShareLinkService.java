@@ -35,6 +35,7 @@ public class ShareLinkService {
     @Transactional
     public CreateShareLinkResult create(UUID resumeId,
                                         ShareLink.Permission perm,
+                                        boolean allowDownload,
                                         Instant expiresAt,
                                         Integer maxUses,
                                         UUID ownerId
@@ -52,13 +53,14 @@ public class ShareLinkService {
         ShareLink link = new ShareLink();
         link.setResume(resume);
         link.setPermission(perm);
+        link.setAllowDownload(allowDownload);
         link.setExpiresAt(expiresAt);
         link.setMaxUses(maxUses);
         link.setTokenHash(tokenHash);
         link.setCreatedBy(ownerRef);
 
         shareLinkRepo.save(link);
-        return new CreateShareLinkResult(link.getId(), token, perm, expiresAt, maxUses);
+        return new CreateShareLinkResult(link.getId(), token, perm, allowDownload, expiresAt, maxUses);
     }
 
     @Transactional
@@ -158,6 +160,7 @@ public class ShareLinkService {
             UUID id,
             String token,
             ShareLink.Permission permission,
+            boolean allowDownload,
             Instant expiresAt,
             Integer maxUses
     ) {}

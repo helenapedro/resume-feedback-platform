@@ -9,6 +9,7 @@ public record CreateShareLinkResponse(
         UUID id,
         String token,
         ShareLink.Permission permission,
+        boolean allowDownload,
         Instant expiresAt,
         Integer maxUses
 ) {}

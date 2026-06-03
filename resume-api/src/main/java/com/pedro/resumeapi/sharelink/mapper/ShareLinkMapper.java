@@ -13,6 +13,7 @@ public class ShareLinkMapper {
         return new ShareLinkDTO(
                 link.getId(),
                 link.getPermission(),
+                link.isAllowDownload(),
                 link.getExpiresAt(),
                 link.getRevokedAt(),
                 link.getMaxUses(),

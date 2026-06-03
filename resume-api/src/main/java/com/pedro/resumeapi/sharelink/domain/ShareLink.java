@@ -36,6 +36,9 @@ public class ShareLink {
     @Column(name = "permission", nullable = false, length = 20)
     private Permission permission;
 
+    @Column(name = "allow_download", nullable = false)
+    private boolean allowDownload = true;
+
     @Column(name = "expires_at")
     private Instant expiresAt;
 

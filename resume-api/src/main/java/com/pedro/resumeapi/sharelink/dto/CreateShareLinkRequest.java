@@ -6,6 +6,7 @@ import java.time.Instant;
 
 public record CreateShareLinkRequest(
         ShareLink.Permission permission,
+        Boolean allowDownload,
         Instant expiresAt,
         Integer maxUses
 ) { }

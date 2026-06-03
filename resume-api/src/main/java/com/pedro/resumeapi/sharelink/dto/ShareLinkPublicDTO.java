@@ -9,5 +9,6 @@ public record ShareLinkPublicDTO(
         UUID resumeId,
         UUID currentVersionId,
         ShareLink.Permission permission,
+        boolean allowDownload,
         Instant expiresAt
 ) {}

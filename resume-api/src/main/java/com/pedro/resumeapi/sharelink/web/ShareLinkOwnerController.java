@@ -29,6 +29,7 @@ public class ShareLinkOwnerController {
         var result = shareLinkService.create(
                 resumeId,
                 req.permission(),
+                req.allowDownload() == null || req.allowDownload(),
                 req.expiresAt(),
                 req.maxUses(),
                 ownerId
@@ -38,6 +39,7 @@ public class ShareLinkOwnerController {
                 result.id(),
                 result.token(),
                 result.permission(),
+                result.allowDownload(),
                 result.expiresAt(),
                 result.maxUses()
         );

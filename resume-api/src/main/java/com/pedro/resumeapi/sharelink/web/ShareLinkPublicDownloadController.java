@@ -60,6 +60,11 @@ public class ShareLinkPublicDownloadController {
 
         var link = shareLinkService.resolveValidLinkOrThrow(token, ip, ua);
 
+        if (!link.isAllowDownload()) {
+            shareLinkService.auditDownload(link, ip, ua, false, "permission_denied", null);
+            throw new com.pedro.resumeapi.api.error.ForbiddenException("Share link does not allow downloads");
+        }
+
         Resume resume = link.getResume();
         ResumeVersion current = resume.getCurrentVersion();
 
