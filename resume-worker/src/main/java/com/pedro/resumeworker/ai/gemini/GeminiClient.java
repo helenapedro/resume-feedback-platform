@@ -3,20 +3,16 @@ package com.pedro.resumeworker.ai.gemini;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -31,8 +27,13 @@ public class GeminiClient {
     private final ObjectMapper objectMapper;
     private final ObjectMapper lenientObjectMapper;
     private final HttpClient httpClient;
+    private final GeminiRequestFactory requestFactory;
 
-    public GeminiClient(GeminiProperties properties, ObjectMapper objectMapper) {
+    public GeminiClient(
+            GeminiProperties properties,
+            ObjectMapper objectMapper,
+            HttpClient geminiHttpClient,
+            GeminiRequestFactory requestFactory) {
         this.properties = properties;
         this.objectMapper = objectMapper;
         this.lenientObjectMapper = JsonMapper.builder()
@@ -40,9 +41,8 @@ public class GeminiClient {
                 .enable(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER)
                 .enable(JsonReadFeature.ALLOW_SINGLE_QUOTES)
                 .build();
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(10))
-                .build();
+        this.httpClient = geminiHttpClient;
+        this.requestFactory = requestFactory;
         log.info("Gemini client configured model={} maxOutputTokens={} temperature={}",
                 effectiveModel(),
                 properties.maxOutputTokens(),
@@ -54,7 +54,7 @@ public class GeminiClient {
     }
 
     public GeminiCallResult generateFeedbackWithDiagnostics(String prompt) {
-        if (!properties.enabled() || !StringUtils.hasText(properties.apiKey())) {
+        if (!properties.hasRequiredProviderConfig()) {
             return GeminiCallResult.failure("AI_PROVIDER_DISABLED", "Gemini is disabled or API key is missing");
         }
 
@@ -88,7 +88,7 @@ public class GeminiClient {
     }
 
     public GeminiProgressCallResult generateProgressAnalysisWithDiagnostics(String prompt) {
-        if (!properties.enabled() || !StringUtils.hasText(properties.apiKey())) {
+        if (!properties.hasRequiredProviderConfig()) {
             return GeminiProgressCallResult.failure("AI_PROVIDER_DISABLED", "Gemini is disabled or API key is missing");
         }
 
@@ -121,19 +121,12 @@ public class GeminiClient {
     }
 
     public String effectiveModel() {
-        return StringUtils.hasText(properties.model())
-                ? properties.model()
-                : "gemini-1.5-flash";
+        return properties.effectiveModel();
     }
 
     private GeminiCallResult requestFeedback(String prompt, boolean useResponseSchema, boolean allowRepair) {
         try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(buildUri())
-                    .timeout(Duration.ofSeconds(30))
-                    .header("Content-Type", "application/json; charset=utf-8")
-                    .POST(HttpRequest.BodyPublishers.ofString(buildPayload(prompt, useResponseSchema, buildResponseSchema())))
-                    .build();
+            HttpRequest request = requestFactory.feedbackRequest(prompt, useResponseSchema);
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
@@ -205,12 +198,7 @@ public class GeminiClient {
 
     private GeminiProgressCallResult requestProgressAnalysis(String prompt, boolean useResponseSchema, boolean allowRepair) {
         try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(buildUri())
-                    .timeout(Duration.ofSeconds(30))
-                    .header("Content-Type", "application/json; charset=utf-8")
-                    .POST(HttpRequest.BodyPublishers.ofString(buildPayload(prompt, useResponseSchema, buildProgressResponseSchema())))
-                    .build();
+            HttpRequest request = requestFactory.progressRequest(prompt, useResponseSchema);
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
@@ -278,133 +266,6 @@ public class GeminiClient {
             Thread.currentThread().interrupt();
             return GeminiProgressCallResult.failure("AI_PROVIDER_INTERRUPTED", ex.getMessage());
         }
-    }
-
-    private URI buildUri() {
-        String baseUrl = StringUtils.hasText(properties.baseUrl())
-                ? properties.baseUrl()
-                : "https://generativelanguage.googleapis.com";
-        String model = effectiveModel();
-
-        return URI.create(String.format(
-                "%s/v1beta/models/%s:generateContent?key=%s",
-                baseUrl,
-                model,
-                properties.apiKey()
-        ));
-    }
-
-    private String buildPayload(String prompt, boolean useResponseSchema, ObjectNode responseSchema) throws IOException {
-        ObjectNode root = objectMapper.createObjectNode();
-        ObjectNode content = objectMapper.createObjectNode();
-        content.put("role", "user");
-        ObjectNode part = objectMapper.createObjectNode();
-        part.put("text", prompt);
-        content.set("parts", objectMapper.valueToTree(List.of(part)));
-        root.set("contents", objectMapper.valueToTree(List.of(content)));
-
-        ObjectNode config = objectMapper.createObjectNode();
-        config.put("temperature", properties.temperature());
-        config.put("maxOutputTokens", properties.maxOutputTokens());
-        config.put("responseMimeType", "application/json");
-        if (useResponseSchema) {
-            config.set("responseSchema", responseSchema);
-        }
-        root.set("generationConfig", config);
-
-        return objectMapper.writeValueAsString(root);
-    }
-
-    private ObjectNode buildResponseSchema() {
-        ObjectNode schema = objectMapper.createObjectNode();
-        schema.put("type", "OBJECT");
-
-        ObjectNode propertiesNode = objectMapper.createObjectNode();
-
-        ObjectNode summary = objectMapper.createObjectNode();
-        summary.put("type", "STRING");
-        propertiesNode.set("summary", summary);
-
-        ObjectNode strengths = objectMapper.createObjectNode();
-        strengths.put("type", "ARRAY");
-        strengths.put("minItems", 3);
-        strengths.put("maxItems", 3);
-        ObjectNode strengthsItems = objectMapper.createObjectNode();
-        strengthsItems.put("type", "STRING");
-        strengths.set("items", strengthsItems);
-        propertiesNode.set("strengths", strengths);
-
-        ObjectNode improvements = objectMapper.createObjectNode();
-        improvements.put("type", "ARRAY");
-        improvements.put("minItems", 3);
-        improvements.put("maxItems", 3);
-        ObjectNode improvementsItems = objectMapper.createObjectNode();
-        improvementsItems.put("type", "STRING");
-        improvements.set("items", improvementsItems);
-        propertiesNode.set("improvements", improvements);
-
-        schema.set("properties", propertiesNode);
-
-        ArrayNode required = objectMapper.createArrayNode();
-        required.add("summary");
-        required.add("strengths");
-        required.add("improvements");
-        schema.set("required", required);
-        return schema;
-    }
-
-    private ObjectNode buildProgressResponseSchema() {
-        ObjectNode schema = objectMapper.createObjectNode();
-        schema.put("type", "OBJECT");
-
-        ObjectNode propertiesNode = objectMapper.createObjectNode();
-
-        ObjectNode summary = objectMapper.createObjectNode();
-        summary.put("type", "STRING");
-        propertiesNode.set("summary", summary);
-
-        ObjectNode progressStatus = objectMapper.createObjectNode();
-        progressStatus.put("type", "STRING");
-        propertiesNode.set("progressStatus", progressStatus);
-
-        ObjectNode progressScore = objectMapper.createObjectNode();
-        progressScore.put("type", "INTEGER");
-        progressScore.put("minimum", 0);
-        progressScore.put("maximum", 100);
-        propertiesNode.set("progressScore", progressScore);
-
-        ObjectNode improvedAreas = objectMapper.createObjectNode();
-        improvedAreas.put("type", "ARRAY");
-        ObjectNode improvedItems = objectMapper.createObjectNode();
-        improvedItems.put("type", "STRING");
-        improvedAreas.set("items", improvedItems);
-        propertiesNode.set("improvedAreas", improvedAreas);
-
-        ObjectNode unchangedIssues = objectMapper.createObjectNode();
-        unchangedIssues.put("type", "ARRAY");
-        ObjectNode unchangedItems = objectMapper.createObjectNode();
-        unchangedItems.put("type", "STRING");
-        unchangedIssues.set("items", unchangedItems);
-        propertiesNode.set("unchangedIssues", unchangedIssues);
-
-        ObjectNode newIssues = objectMapper.createObjectNode();
-        newIssues.put("type", "ARRAY");
-        ObjectNode newItems = objectMapper.createObjectNode();
-        newItems.put("type", "STRING");
-        newIssues.set("items", newItems);
-        propertiesNode.set("newIssues", newIssues);
-
-        schema.set("properties", propertiesNode);
-
-        ArrayNode required = objectMapper.createArrayNode();
-        required.add("summary");
-        required.add("progressStatus");
-        required.add("progressScore");
-        required.add("improvedAreas");
-        required.add("unchangedIssues");
-        required.add("newIssues");
-        schema.set("required", required);
-        return schema;
     }
 
     private boolean isTerminalProviderFailure(String errorCode) {

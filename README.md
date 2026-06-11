@@ -2,7 +2,7 @@
 
 Resume Feedback Platform helps candidates turn resume feedback from a one-time, subjective review into a repeatable improvement loop. Users can upload a resume in Portuguese or English, get structured language-aware AI feedback, track progress across versions, and share controlled review links with mentors, recruiters, or peers.
 
-This repo is the backend monorepo behind the hosted app at `https://feedback.hmpedro.com`. The frontend is a separate React + TypeScript application hosted on AWS Amplify, while this repository contains the Spring Boot API and worker services deployed on Heroku. Development was assisted by GitHub Copilot inside VS Code.
+This repo is the backend monorepo for Resume Feedback Platform. The frontend is a separate React + TypeScript application hosted on AWS Amplify, while this repository contains the Spring Boot API and worker services deployed on Heroku. Development was assisted by GitHub Copilot inside VS Code.
 
 ## Problem
 
@@ -20,7 +20,6 @@ Resume Feedback Platform creates a single workflow for resume iteration:
 - New uploads can be compared against previous versions, making progress visible instead of anecdotal.
 - Share links let outside reviewers view or comment without exposing the whole account.
 - Access controls, audit records, and token revocation make sharing safer than sending resume files manually.
-- The hosted product is live and discoverable through the Handshake AI Showcase.
 
 ## Recognition
 
@@ -47,7 +46,7 @@ Resume Feedback Platform creates a single workflow for resume iteration:
 - Shareable review workflow: token-based links, comments, and access auditing support recruiter or mentor review.
 - Practical engineering choices: MySQL for transactional state, MongoDB for AI artifacts, Kafka for event-driven processing, and Redis-backed rate limiting.
 - GitHub Copilot assisted development in VS Code, especially for debugging, documentation, and reasoning through safe implementation boundaries.
-- The worker uses an `AiProviderClient` abstraction. A low-risk Azure OpenAI / Microsoft Foundry-compatible provider path is planned as an optional provider without changing production defaults.
+- The worker uses an `AiProviderClient` abstraction. `APP_AI_PROVIDER` lets each environment select the provider that best fits its needs, including Azure OpenAI for Microsoft Foundry-compatible deployments.
 
 ## Core product flow
 

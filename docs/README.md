@@ -45,5 +45,5 @@ Detailed project documentation lives here.
 
 - Language support: the platform accepts resumes in Portuguese and English and is designed for language-aware feedback.
 - Development: GitHub Copilot inside VS Code assisted documentation, debugging, and safe implementation planning.
-- AI provider abstraction: worker integrations use the `AiProviderClient` contract; a low-risk Azure OpenAI / Microsoft Foundry-compatible adapter path is planned without changing default production behavior.
+- AI provider abstraction: worker integrations use the `AiProviderClient` contract; `APP_AI_PROVIDER` lets each environment choose the provider that fits best, including Azure OpenAI as an optional Microsoft Foundry-compatible path.
 - Submission package: see [Agents League Submission](agents-league-submission.md).

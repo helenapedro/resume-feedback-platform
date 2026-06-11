@@ -53,14 +53,14 @@ The project is not presented as fully AI-generated. It is presented as an exampl
 
 ## Microsoft IQ / Foundry Strategy
 
-The current backend already isolates model access behind the worker-side `AiProviderClient` abstraction. That makes the safest Microsoft integration path an optional Azure OpenAI or Microsoft Foundry-compatible provider.
+The backend isolates model access behind the worker-side `AiProviderClient` abstraction. `APP_AI_PROVIDER` lets each environment select the provider that best fits its needs. The Microsoft integration path is an optional Azure OpenAI provider that can support Microsoft Foundry-compatible deployments without changing the existing AI job pipeline.
 
-Planned low-risk integration:
+Low-risk integration:
 
 - Add an `AzureOpenAiProviderClient` implementation of `AiProviderClient`.
 - Configure it with environment variables only.
-- Keep the current production default provider unchanged.
-- Enable it only when `APP_AI_PROVIDER=azure-openai` or a similar explicit setting is used.
+- Keep existing environment provider choices unchanged unless `APP_AI_PROVIDER` is explicitly updated.
+- Enable it only when `APP_AI_PROVIDER=azure-openai`, `APP_AI_FEEDBACK_AZURE_OPENAI_ENABLED=true`, and Azure OpenAI credentials are provided.
 - Reuse the existing prompt builders, response factories, MongoDB persistence, MySQL references, and AI job lifecycle.
 
 This approach aligns the project with Microsoft IQ / Foundry concepts without destabilizing production. The version-comparison workflow is especially well suited for grounded reasoning because it uses:

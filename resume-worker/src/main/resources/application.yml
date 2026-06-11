@@ -73,6 +73,14 @@ app:
       model: ${APP_AI_FEEDBACK_OPENAI_MODEL:${APP_AI_MODEL:gpt-4o-mini}}
       temperature: ${APP_AI_FEEDBACK_OPENAI_TEMPERATURE:${APP_AI_TEMPERATURE:0.2}}
       max-output-tokens: ${APP_AI_FEEDBACK_OPENAI_MAX_OUTPUT_TOKENS:${APP_AI_MAX_OUTPUT_TOKENS:1800}}
+    azure-openai:
+      enabled: ${APP_AI_FEEDBACK_AZURE_OPENAI_ENABLED:false}
+      api-key: ${AZURE_OPENAI_API_KEY:}
+      endpoint: ${AZURE_OPENAI_ENDPOINT:}
+      deployment: ${AZURE_OPENAI_DEPLOYMENT:${APP_AI_MODEL:}}
+      api-version: ${AZURE_OPENAI_API_VERSION:2024-08-01-preview}
+      temperature: ${APP_AI_FEEDBACK_AZURE_OPENAI_TEMPERATURE:${APP_AI_TEMPERATURE:0.2}}
+      max-output-tokens: ${APP_AI_FEEDBACK_AZURE_OPENAI_MAX_OUTPUT_TOKENS:${APP_AI_MAX_OUTPUT_TOKENS:1800}}
 
 logging:
   level:

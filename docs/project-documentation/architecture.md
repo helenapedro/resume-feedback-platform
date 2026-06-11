@@ -16,7 +16,7 @@ Related docs:
   - Auth, resume, sharing, comments, AI job orchestration
   - Creates `AiJob` records and supports optional Kafka publishing
 - `resume-worker`
-  - Processes AI jobs, calls Gemini, stores feedback, updates job status
+  - Processes AI jobs, calls the configured AI provider, stores feedback, updates job status
 - `common`
   - Shared message contracts and models
 - Datastores
@@ -34,7 +34,7 @@ flowchart LR
   API --> WORKER[resume-worker]
   API -. optional .-> KAFKA[(Kafka topic: resume-ai-jobs)]
   KAFKA -. optional .-> WORKER
-  WORKER --> GEMINI[Gemini API]
+  WORKER --> PROVIDER[AI Provider Registry<br/>Gemini / OpenAI / Azure OpenAI]
   WORKER --> MONGO[(MongoDB)]
   WORKER --> MYSQL
   API --> MONGO
@@ -53,7 +53,7 @@ sequenceDiagram
     participant MySQL as MySQL
     participant Worker as resume-worker
     participant Extractor as ResumeTextExtractor
-    participant Gemini as Gemini API
+    participant Provider as Configured AI Provider
     participant Mongo as MongoDB
 
     User->>API: POST /api/resumes or POST /versions
@@ -79,15 +79,15 @@ sequenceDiagram
     Extractor->>Extractor: Extract and normalize PDF text
     Extractor-->>Worker: Resume text
 
-    Worker->>Gemini: Prompt with resume text
-    Gemini-->>Worker: JSON feedback(summary, strengths, improvements)
+    Worker->>Provider: Prompt with resume text
+    Provider-->>Worker: JSON feedback(summary, strengths, improvements)
 
-    alt Gemini response valid
+    alt Provider response valid
         Worker->>Mongo: Save AiFeedbackDocument
         Mongo-->>Worker: mongoDocId
         Worker->>MySQL: Save AiFeedbackRef(version, model, promptVersion, mongoDocId)
         Worker->>MySQL: Mark job DONE
-    else Gemini failure / parse error / provider error
+    else Provider failure / parse error / provider error
         Worker->>MySQL: Mark job FAILED with error metadata
     end
 
@@ -111,7 +111,7 @@ sequenceDiagram
     participant MySQL as MySQL
     participant Worker as resume-worker
     participant Extractor as ResumeTextExtractor
-    participant Gemini as Gemini API
+    participant Provider as Configured AI Provider
     participant Mongo as MongoDB
 
     User->>API: POST /api/resumes/{resumeId}/versions
@@ -131,8 +131,8 @@ sequenceDiagram
     alt Previous version exists and baseline feedback exists
         Worker->>Extractor: Extract previous resume text
         Extractor-->>Worker: Previous resume text
-        Worker->>Gemini: Prompt with previous resume, current resume, and previous feedback
-        Gemini-->>Worker: JSON progress(summary, status, score, issue lists)
+        Worker->>Provider: Prompt with previous resume, current resume, and previous feedback
+        Provider-->>Worker: JSON progress(summary, status, score, issue lists)
         Worker->>Mongo: Save AiProgressDocument
         Mongo-->>Worker: mongoDocId
         Worker->>MySQL: Save AiProgressRef(baselineVersion, model, promptVersion, mongoDocId)

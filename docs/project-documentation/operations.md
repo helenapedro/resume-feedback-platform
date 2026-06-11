@@ -64,7 +64,11 @@ Production runs should continue to rely on environment variables. The current ho
 | `SPRING_DATASOURCE_PASSWORD` | Yes | API/Worker | MySQL password |
 | `SPRING_DATA_MONGODB_URI` | Yes | API/Worker | MongoDB URI |
 | `SPRING_KAFKA_BOOTSTRAP_SERVERS` | No | API/Worker | Needed only when Kafka integration is enabled |
-| `GEMINI_API_KEY` | Yes (AI feedback) | Worker | Gemini API key |
+| `GEMINI_API_KEY` | Yes when `APP_AI_PROVIDER=gemini` | Worker | Gemini API key |
+| `OPENAI_API_KEY` | Yes when `APP_AI_PROVIDER=openai` | Worker | OpenAI API key |
+| `AZURE_OPENAI_API_KEY` | Yes when `APP_AI_PROVIDER=azure-openai` | Worker | Azure OpenAI API key |
+| `AZURE_OPENAI_ENDPOINT` | Yes when `APP_AI_PROVIDER=azure-openai` | Worker | Azure OpenAI resource endpoint |
+| `AZURE_OPENAI_DEPLOYMENT` | Yes when `APP_AI_PROVIDER=azure-openai` | Worker | Azure OpenAI deployment name |
 | `KAFKA_PREFIX` | No | API/Worker | Optional topic/group prefix |
 
 ### Kafka SSL (Optional Integration)
@@ -103,6 +107,7 @@ Run module tests:
 
 - Frontend: React + TypeScript app hosted on AWS Amplify
 - App runtime: Heroku (`web` + `worker`)
+- AI provider: selected per environment with `APP_AI_PROVIDER`
 - Relational database: MySQL
 - Document database: MongoDB
 - Messaging/cache: Kafka and Redis are supported in code, but not used in the current low-cost Heroku deployment

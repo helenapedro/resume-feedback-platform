@@ -47,8 +47,8 @@ Core variables:
 
 AI provider:
 
-- `APP_AI_PROVIDER` selects the active provider. Default: `gemini`.
-- `APP_AI_MODEL` sets the default model used by provider-specific config. Default: `gemini-1.5-flash`.
+- `APP_AI_PROVIDER` selects the active provider for each environment. Packaged fallback default: `gemini`.
+- `APP_AI_MODEL` sets the default model used by provider-specific config. Packaged fallback default: `gemini-1.5-flash`.
 - `APP_AI_MAX_OUTPUT_TOKENS` sets the default generated JSON token cap. Default: `1800`.
 - `APP_AI_TEMPERATURE` sets the default model temperature. Default: `0.2`.
 
@@ -70,10 +70,21 @@ OpenAI:
 - `APP_AI_FEEDBACK_OPENAI_TEMPERATURE` overrides `APP_AI_TEMPERATURE` for OpenAI only.
 - `APP_AI_FEEDBACK_OPENAI_BASE_URL` defaults to `https://api.openai.com`.
 
+Azure OpenAI:
+
+- `APP_AI_PROVIDER=azure-openai` selects the optional Azure OpenAI provider.
+- `APP_AI_FEEDBACK_AZURE_OPENAI_ENABLED=true` enables the provider.
+- `AZURE_OPENAI_API_KEY` is required when the provider is selected.
+- `AZURE_OPENAI_ENDPOINT` is the Azure OpenAI resource endpoint, for example `https://your-resource.openai.azure.com`.
+- `AZURE_OPENAI_DEPLOYMENT` is the Azure OpenAI deployment name used in the chat completions URL.
+- `AZURE_OPENAI_API_VERSION` defaults to `2024-08-01-preview`.
+- `APP_AI_FEEDBACK_AZURE_OPENAI_MAX_OUTPUT_TOKENS` overrides `APP_AI_MAX_OUTPUT_TOKENS` for Azure OpenAI only.
+- `APP_AI_FEEDBACK_AZURE_OPENAI_TEMPERATURE` overrides `APP_AI_TEMPERATURE` for Azure OpenAI only.
+
 Cost-control environment overrides:
 
-- `APP_AI_FEEDBACK_MAX_RESUME_CHARS` limits resume text sent to Gemini. Default: `8000`. Progress analysis uses half of this value per resume version, with a minimum of `1500`, and sends head/tail excerpts instead of two full resume bodies.
-- Feedback responses are intentionally compact: one short summary, 3 strengths, and 3 improvements. This keeps the JSON under Gemini output limits and reduces retry churn.
+- `APP_AI_FEEDBACK_MAX_RESUME_CHARS` limits resume text sent to the active AI provider. Default: `8000`. Progress analysis uses half of this value per resume version, with a minimum of `1500`, and sends head/tail excerpts instead of two full resume bodies.
+- Feedback responses are intentionally compact: one short summary, 3 strengths, and 3 improvements. This keeps provider responses under output limits and reduces retry churn.
 - `APP_AI_FEEDBACK_GEMINI_MAX_OUTPUT_TOKENS` overrides `APP_AI_MAX_OUTPUT_TOKENS` for Gemini only. Avoid setting this too low; truncated JSON causes failed jobs and can cost more through retries.
 - `APP_AI_FEEDBACK_GEMINI_TEMPERATURE` overrides `APP_AI_TEMPERATURE` for Gemini only.
 - `APP_AI_FEEDBACK_PROGRESS_ENABLED=false` disables version-to-version progress calls. This can roughly halve AI calls for second and later resume versions.
@@ -96,7 +107,7 @@ Cost-control environment overrides:
 
 - The worker talks to AI providers through `AiProviderClient` and `AiProviderRegistry`. Provider-specific code maps model responses into platform-neutral feedback and progress records before MongoDB persistence.
 - The platform supports Portuguese and English resumes; prompts and output handling are designed for language-aware feedback.
-- A low-risk provider integration path is planned: implement an adapter that maps Azure OpenAI / Microsoft Foundry-compatible endpoints into the existing `AiProviderClient` contract so provider switching can be configured and validated without changing default production behavior.
+- Azure OpenAI is available as an optional provider path: the adapter maps Azure OpenAI / Microsoft Foundry-compatible endpoints into the existing `AiProviderClient` contract so provider switching can be configured and validated through `APP_AI_PROVIDER`.
 - Development was assisted by GitHub Copilot inside VS Code.
 - Stored model values include the provider prefix, such as `gemini:gemini-1.5-flash`, so historical feedback remains auditable after provider changes.
 - If the active provider is disabled or fails, the AI job is marked failed and retried according to the configured retry policy.
