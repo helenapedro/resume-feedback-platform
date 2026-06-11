@@ -81,6 +81,21 @@ app:
       api-version: ${AZURE_OPENAI_API_VERSION:2024-08-01-preview}
       temperature: ${APP_AI_FEEDBACK_AZURE_OPENAI_TEMPERATURE:${APP_AI_TEMPERATURE:0.2}}
       max-output-tokens: ${APP_AI_FEEDBACK_AZURE_OPENAI_MAX_OUTPUT_TOKENS:${APP_AI_MAX_OUTPUT_TOKENS:1800}}
+    foundry-iq:
+      enabled: ${APP_AI_FEEDBACK_FOUNDRY_IQ_ENABLED:false}
+      source: ${APP_AI_FEEDBACK_FOUNDRY_IQ_SOURCE:local}
+      max-context-chars: ${APP_AI_FEEDBACK_FOUNDRY_IQ_MAX_CONTEXT_CHARS:1800}
+      azure-search:
+        endpoint: ${AZURE_SEARCH_ENDPOINT:}
+        index-name: ${AZURE_SEARCH_INDEX_NAME:}
+        api-key: ${AZURE_SEARCH_API_KEY:}
+        api-version: ${AZURE_SEARCH_API_VERSION:2024-07-01}
+        query-type: ${AZURE_SEARCH_QUERY_TYPE:semantic}
+        semantic-configuration: ${AZURE_SEARCH_SEMANTIC_CONFIGURATION:}
+        content-field: ${AZURE_SEARCH_CONTENT_FIELD:content}
+        title-field: ${AZURE_SEARCH_TITLE_FIELD:title}
+        url-field: ${AZURE_SEARCH_URL_FIELD:url}
+        top: ${AZURE_SEARCH_TOP:3}
 
 logging:
   level:

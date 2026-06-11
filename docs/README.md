@@ -46,4 +46,5 @@ Detailed project documentation lives here.
 - Language support: the platform accepts resumes in Portuguese and English and is designed for language-aware feedback.
 - Development: GitHub Copilot inside VS Code assisted documentation, debugging, and safe implementation planning.
 - AI provider abstraction: worker integrations use the `AiProviderClient` contract; `APP_AI_PROVIDER` lets each environment choose the provider that fits best, including Azure OpenAI as an optional Microsoft Foundry-compatible path.
+- Microsoft IQ / Foundry IQ grounding: the worker can enrich feedback and progress prompts with cited knowledge through `APP_AI_FEEDBACK_FOUNDRY_IQ_ENABLED`. The implementation supports Azure AI Search semantic retrieval and a local demo knowledge source.
 - Submission package: see [Agents League Submission](agents-league-submission.md).

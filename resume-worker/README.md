@@ -81,6 +81,19 @@ Azure OpenAI:
 - `APP_AI_FEEDBACK_AZURE_OPENAI_MAX_OUTPUT_TOKENS` overrides `APP_AI_MAX_OUTPUT_TOKENS` for Azure OpenAI only.
 - `APP_AI_FEEDBACK_AZURE_OPENAI_TEMPERATURE` overrides `APP_AI_TEMPERATURE` for Azure OpenAI only.
 
+Microsoft IQ / Foundry IQ grounding:
+
+- `APP_AI_FEEDBACK_FOUNDRY_IQ_ENABLED=true` enables grounding context injection in feedback and progress prompts.
+- `APP_AI_FEEDBACK_FOUNDRY_IQ_SOURCE` selects the knowledge source. Supported values: `local` and `azure-search`. Default: `local`.
+- `APP_AI_FEEDBACK_FOUNDRY_IQ_MAX_CONTEXT_CHARS` limits retrieved grounding context. Default: `1800`.
+- `AZURE_SEARCH_ENDPOINT` is required when `APP_AI_FEEDBACK_FOUNDRY_IQ_SOURCE=azure-search`.
+- `AZURE_SEARCH_INDEX_NAME` is required when Azure AI Search grounding is enabled.
+- `AZURE_SEARCH_API_KEY` is required when Azure AI Search grounding is enabled.
+- `AZURE_SEARCH_API_VERSION` defaults to `2024-07-01`.
+- `AZURE_SEARCH_QUERY_TYPE` defaults to `semantic`.
+- `AZURE_SEARCH_SEMANTIC_CONFIGURATION` can be set when the index has semantic ranking configured.
+- `AZURE_SEARCH_CONTENT_FIELD`, `AZURE_SEARCH_TITLE_FIELD`, and `AZURE_SEARCH_URL_FIELD` map index fields into cited grounding snippets.
+
 Cost-control environment overrides:
 
 - `APP_AI_FEEDBACK_MAX_RESUME_CHARS` limits resume text sent to the active AI provider. Default: `8000`. Progress analysis uses half of this value per resume version, with a minimum of `1500`, and sends head/tail excerpts instead of two full resume bodies.
@@ -107,6 +120,7 @@ Cost-control environment overrides:
 
 - The worker talks to AI providers through `AiProviderClient` and `AiProviderRegistry`. Provider-specific code maps model responses into platform-neutral feedback and progress records before MongoDB persistence.
 - The platform supports Portuguese and English resumes; prompts and output handling are designed for language-aware feedback.
+- Microsoft IQ / Foundry IQ grounding is implemented before provider execution. When enabled, the worker retrieves cited review knowledge through Azure AI Search or the packaged local knowledge source and injects it into prompts as rubric context.
 - Azure OpenAI is available as an optional provider path: the adapter maps Azure OpenAI / Microsoft Foundry-compatible endpoints into the existing `AiProviderClient` contract so provider switching can be configured and validated through `APP_AI_PROVIDER`.
 - Development was assisted by GitHub Copilot inside VS Code.
 - Stored model values include the provider prefix, such as `gemini:gemini-1.5-flash`, so historical feedback remains auditable after provider changes.

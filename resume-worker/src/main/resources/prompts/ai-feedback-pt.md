@@ -26,6 +26,8 @@ Regras:
 - Nao inclua quebra de linha nos valores.
 - Escape corretamente quaisquer caracteres especiais.
 
+{{MICROSOFT_IQ_GROUNDING_SECTION}}
+
 Metadados:
 - jobId: {{JOB_ID}}
 - resumeId: {{RESUME_ID}}

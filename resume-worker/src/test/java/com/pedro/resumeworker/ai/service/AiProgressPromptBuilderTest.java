@@ -3,6 +3,7 @@ package com.pedro.resumeworker.ai.service;
 import com.pedro.common.ai.AiJobRequestedMessage;
 import com.pedro.common.ai.Language;
 import com.pedro.common.ai.mongo.AiFeedbackDocument;
+import com.pedro.resumeworker.ai.foundryiq.FoundryIqGroundingProvider;
 import com.pedro.resumeworker.ai.domain.ResumeVersion;
 import org.junit.jupiter.api.Test;
 
@@ -120,5 +121,51 @@ class AiProgressPromptBuilderTest {
         assertTrue(prompt.contains("previous-start-"));
         assertTrue(prompt.contains("-previous-end"));
         assertTrue(prompt.contains("[TRUNCATED MIDDLE: resume excerpt limited for progress analysis]"));
+    }
+
+    @Test
+    void buildInjectsMicrosoftIqGroundingWhenProviderReturnsContext() {
+        AiProgressPromptBuilder groundedBuilder = new AiProgressPromptBuilder(
+                12000,
+                new PromptTemplateLoader(),
+                new TestGroundingProvider("Microsoft IQ / Foundry IQ grounding context: version comparison rubric"));
+        AiJobRequestedMessage message = new AiJobRequestedMessage(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                Instant.now(),
+                Language.EN);
+        ResumeVersion currentVersion = new ResumeVersion();
+        currentVersion.setId(UUID.randomUUID());
+        ResumeVersion previousVersion = new ResumeVersion();
+        previousVersion.setId(UUID.randomUUID());
+
+        String prompt = groundedBuilder.build(
+                message,
+                currentVersion,
+                previousVersion,
+                "Current version text",
+                "Previous version text",
+                null,
+                Language.EN);
+
+        assertTrue(prompt.contains("Microsoft IQ / Foundry IQ grounding context: version comparison rubric"));
+    }
+
+    private record TestGroundingProvider(String context) implements FoundryIqGroundingProvider {
+        @Override
+        public String feedbackGrounding(Language language, String resumeText) {
+            return context;
+        }
+
+        @Override
+        public String progressGrounding(
+                Language language,
+                String currentResumeText,
+                String previousResumeText,
+                AiFeedbackDocument previousFeedback) {
+            return context;
+        }
     }
 }

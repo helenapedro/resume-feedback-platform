@@ -51,6 +51,7 @@ Resume Feedback Platform creates a single workflow for resume iteration:
 - **Practical engineering choices**: **_MySQL_** for transactional state, **_MongoDB_** for AI artifacts, **_Kafka_** for event-driven processing, and **_Redis-backed rate limiting_**.
 - **GitHub Copilot** assisted development in VS Code, especially for debugging, documentation, and reasoning through safe implementation boundaries.
 - The **worker** uses an `AiProviderClient` abstraction. `APP_AI_PROVIDER` lets each environment select the provider that best fits its needs, including Azure OpenAI for Microsoft Foundry-compatible deployments.
+- The **Microsoft IQ / Foundry IQ grounding layer** can inject cited resume-review knowledge into feedback and progress prompts through `APP_AI_FEEDBACK_FOUNDRY_IQ_ENABLED`, with Azure AI Search support for semantic retrieval.
 
 ## Core product flow
 

@@ -16,7 +16,7 @@ Related docs:
   - Auth, resume, sharing, comments, AI job orchestration
   - Creates `AiJob` records and supports optional Kafka publishing
 - `resume-worker`
-  - Processes AI jobs, calls the configured AI provider, stores feedback, updates job status
+  - Processes AI jobs, retrieves optional Microsoft IQ / Foundry IQ grounding context, calls the configured AI provider, stores feedback, updates job status
 - `common`
   - Shared message contracts and models
 - Datastores
@@ -34,6 +34,7 @@ flowchart LR
   API --> WORKER[resume-worker]
   API -. optional .-> KAFKA[(Kafka topic: resume-ai-jobs)]
   KAFKA -. optional .-> WORKER
+  WORKER -. optional grounding .-> FOUNDRYIQ[Microsoft IQ / Foundry IQ Grounding<br/>Azure AI Search / Local Knowledge]
   WORKER --> PROVIDER[AI Provider Registry<br/>Gemini / OpenAI / Azure OpenAI]
   WORKER --> MONGO[(MongoDB)]
   WORKER --> MYSQL
@@ -53,6 +54,7 @@ sequenceDiagram
     participant MySQL as MySQL
     participant Worker as resume-worker
     participant Extractor as ResumeTextExtractor
+    participant Grounding as Microsoft IQ Grounding
     participant Provider as Configured AI Provider
     participant Mongo as MongoDB
 
@@ -79,7 +81,12 @@ sequenceDiagram
     Extractor->>Extractor: Extract and normalize PDF text
     Extractor-->>Worker: Resume text
 
-    Worker->>Provider: Prompt with resume text
+    opt Foundry IQ grounding enabled
+        Worker->>Grounding: Retrieve cited resume-review knowledge
+        Grounding-->>Worker: Grounding context with source citations
+    end
+
+    Worker->>Provider: Prompt with resume text and optional grounding context
     Provider-->>Worker: JSON feedback(summary, strengths, improvements)
 
     alt Provider response valid
@@ -111,6 +118,7 @@ sequenceDiagram
     participant MySQL as MySQL
     participant Worker as resume-worker
     participant Extractor as ResumeTextExtractor
+    participant Grounding as Microsoft IQ Grounding
     participant Provider as Configured AI Provider
     participant Mongo as MongoDB
 
@@ -131,7 +139,11 @@ sequenceDiagram
     alt Previous version exists and baseline feedback exists
         Worker->>Extractor: Extract previous resume text
         Extractor-->>Worker: Previous resume text
-        Worker->>Provider: Prompt with previous resume, current resume, and previous feedback
+        opt Foundry IQ grounding enabled
+            Worker->>Grounding: Retrieve cited version-comparison knowledge
+            Grounding-->>Worker: Grounding context with source citations
+        end
+        Worker->>Provider: Prompt with previous resume, current resume, previous feedback, and optional grounding context
         Provider-->>Worker: JSON progress(summary, status, score, issue lists)
         Worker->>Mongo: Save AiProgressDocument
         Mongo-->>Worker: mongoDocId
@@ -153,6 +165,7 @@ sequenceDiagram
 - REST for user-facing operations
 - Background worker for asynchronous AI jobs
 - Optional Kafka integration for event-driven deployments
+- Optional Microsoft IQ / Foundry IQ grounding via Azure AI Search semantic retrieval or local demo knowledge
 
 ## Persistence Strategy
 

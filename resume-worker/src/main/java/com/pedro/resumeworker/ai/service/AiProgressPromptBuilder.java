@@ -3,7 +3,9 @@ package com.pedro.resumeworker.ai.service;
 import com.pedro.common.ai.AiJobRequestedMessage;
 import com.pedro.common.ai.Language;
 import com.pedro.common.ai.mongo.AiFeedbackDocument;
+import com.pedro.resumeworker.ai.foundryiq.FoundryIqGroundingProvider;
 import com.pedro.resumeworker.ai.domain.ResumeVersion;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -16,14 +18,22 @@ public class AiProgressPromptBuilder {
     private final int maxProgressResumeChars;
     private final String englishTemplate;
     private final String portugueseTemplate;
+    private final FoundryIqGroundingProvider groundingProvider;
 
+    public AiProgressPromptBuilder(int maxResumeChars, PromptTemplateLoader promptTemplateLoader) {
+        this(maxResumeChars, promptTemplateLoader, FoundryIqGroundingProvider.NONE);
+    }
+
+    @Autowired
     public AiProgressPromptBuilder(
             @Value("${app.ai-feedback.max-resume-chars:12000}") int maxResumeChars,
-            PromptTemplateLoader promptTemplateLoader) {
+            PromptTemplateLoader promptTemplateLoader,
+            FoundryIqGroundingProvider groundingProvider) {
         this.maxResumeChars = maxResumeChars;
         this.maxProgressResumeChars = Math.max(1500, maxResumeChars / 2);
         this.englishTemplate = promptTemplateLoader.load("prompts/ai-progress-en.md");
         this.portugueseTemplate = promptTemplateLoader.load("prompts/ai-progress-pt.md");
+        this.groundingProvider = groundingProvider;
     }
 
     public String build(
@@ -43,6 +53,12 @@ public class AiProgressPromptBuilder {
                 .replace("{{OWNER_ID}}", String.valueOf(message.ownerId()))
                 .replace("{{MAX_RESUME_CHARS}}", String.valueOf(maxResumeChars))
                 .replace("{{MAX_PROGRESS_RESUME_CHARS}}", String.valueOf(maxProgressResumeChars))
+                .replace("{{MICROSOFT_IQ_GROUNDING_SECTION}}",
+                        groundingProvider.progressGrounding(
+                                resolvedLanguage,
+                                currentResumeText,
+                                previousResumeText,
+                                previousFeedback))
                 .replace("{{PREVIOUS_RESUME_TEXT}}", buildResumeExcerpt(previousResumeText))
                 .replace("{{PREVIOUS_FEEDBACK_SECTION}}", buildPreviousFeedbackSection(previousFeedback, resolvedLanguage))
                 .replace("{{CURRENT_RESUME_TEXT}}", buildResumeExcerpt(currentResumeText));

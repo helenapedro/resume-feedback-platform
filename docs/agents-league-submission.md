@@ -51,23 +51,27 @@ GitHub Copilot and VS Code were used as part of the development workflow. Copilo
 
 The project is not presented as fully AI-generated. It is presented as an example of AI-assisted software engineering where Copilot accelerated a real product workflow while human review guided architecture, safety, and product decisions.
 
-## Microsoft IQ / Foundry Strategy
+## Microsoft IQ / Foundry Integration
 
-The backend isolates model access behind the worker-side `AiProviderClient` abstraction. `APP_AI_PROVIDER` lets each environment select the provider that best fits its needs. The Microsoft integration path is an optional Azure OpenAI provider that can support Microsoft Foundry-compatible deployments without changing the existing AI job pipeline.
+The backend integrates a Microsoft IQ / Foundry IQ grounding layer in the worker prompt pipeline. When `APP_AI_FEEDBACK_FOUNDRY_IQ_ENABLED=true`, the worker retrieves cited resume-review knowledge and injects it into feedback and progress-analysis prompts as grounding context. The implementation supports Azure AI Search semantic retrieval, using the documented search endpoint pattern for indexed knowledge sources, and also includes a local knowledge source for safe demo environments.
 
-Low-risk integration:
+Model access remains isolated behind the worker-side `AiProviderClient` abstraction. `APP_AI_PROVIDER` lets each environment select the provider that best fits its needs. Azure OpenAI is available as an optional provider path for Microsoft Foundry-compatible deployments without changing the existing AI job pipeline.
 
-- Add an `AzureOpenAiProviderClient` implementation of `AiProviderClient`.
-- Configure it with environment variables only.
-- Keep existing environment provider choices unchanged unless `APP_AI_PROVIDER` is explicitly updated.
-- Enable it only when `APP_AI_PROVIDER=azure-openai`, `APP_AI_FEEDBACK_AZURE_OPENAI_ENABLED=true`, and Azure OpenAI credentials are provided.
-- Reuse the existing prompt builders, response factories, MongoDB persistence, MySQL references, and AI job lifecycle.
+Low-risk implementation:
 
-This approach aligns the project with Microsoft IQ / Foundry concepts without destabilizing production. The version-comparison workflow is especially well suited for grounded reasoning because it uses:
+- `FoundryIqGroundingProvider` enriches prompts before the selected model provider is called.
+- `APP_AI_FEEDBACK_FOUNDRY_IQ_ENABLED=false` keeps production behavior unchanged by default.
+- `APP_AI_FEEDBACK_FOUNDRY_IQ_SOURCE=azure-search` enables Azure AI Search-backed retrieval when endpoint, index, and key are configured.
+- `APP_AI_FEEDBACK_FOUNDRY_IQ_SOURCE=local` uses the packaged cited knowledge source for demo and offline environments.
+- The grounded prompt still instructs the model not to invent resume evidence; retrieved knowledge is used only as rubric context.
+- Azure OpenAI remains independently selectable with `APP_AI_PROVIDER=azure-openai`, `APP_AI_FEEDBACK_AZURE_OPENAI_ENABLED=true`, and Azure OpenAI credentials.
+
+This aligns with the challenge's Foundry IQ direction: agentic knowledge retrieval, grounded context, and cited knowledge sources without destabilizing production. The version-comparison workflow is especially well suited for grounded reasoning because it uses:
 
 - the previous resume version,
 - the current resume version,
 - prior AI feedback,
+- Microsoft IQ / Foundry IQ grounding context when enabled,
 - structured progress categories,
 - and an explicit improvement score.
 
@@ -119,7 +123,7 @@ Before submitting a public repository:
 - [ ] Public frontend repository available.
 - [ ] README updated for Portuguese and English resume support.
 - [ ] GitHub Copilot usage documented.
-- [ ] Microsoft IQ / Foundry integration strategy documented.
+- [ ] Microsoft IQ / Foundry grounding integration documented.
 - [ ] Architecture diagram included.
 - [ ] Demo video recorded, 2 minutes max.
 - [ ] Demo video uploaded to YouTube or Vimeo as a public link.
