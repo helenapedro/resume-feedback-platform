@@ -6,7 +6,9 @@ For platform context and architecture, see the [root README](../README.md).
 
 ## Purpose
 
-`resume-api` is the entry point for client applications. It handles user-facing operations and creates AI jobs for asynchronous worker processing. The codebase supports Kafka publishing, but the current hosted deployment does not depend on Kafka.
+`resume-api` is the entry point for client applications. It handles user-facing operations and creates AI jobs for asynchronous worker processing. The platform supports Portuguese-speaking and English-speaking users, including resumes submitted in Portuguese or English. The codebase supports Kafka publishing, but the current hosted deployment does not depend on Kafka.
+
+Development of this repository was assisted by GitHub Copilot inside VS Code. AI provider integrations are handled by the worker through the `AiProviderClient` abstraction.
 
 ## Responsibilities
 

@@ -95,6 +95,9 @@ Cost-control environment overrides:
 ## Notes
 
 - The worker talks to AI providers through `AiProviderClient` and `AiProviderRegistry`. Provider-specific code maps model responses into platform-neutral feedback and progress records before MongoDB persistence.
+- The platform supports Portuguese and English resumes; prompts and output handling are designed for language-aware feedback.
+- A low-risk provider integration path is planned: implement an adapter that maps Azure OpenAI / Microsoft Foundry-compatible endpoints into the existing `AiProviderClient` contract so provider switching can be configured and validated without changing default production behavior.
+- Development was assisted by GitHub Copilot inside VS Code.
 - Stored model values include the provider prefix, such as `gemini:gemini-1.5-flash`, so historical feedback remains auditable after provider changes.
 - If the active provider is disabled or fails, the AI job is marked failed and retried according to the configured retry policy.
 - Monitor logs for worker polling, processing, and job status transitions.

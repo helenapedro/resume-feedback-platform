@@ -1,18 +1,16 @@
 # Resume Feedback Platform
 
-Resume Feedback Platform helps candidates turn resume feedback from a one-time, subjective review into a repeatable improvement loop. Users can upload a resume, get structured AI feedback, track progress across versions, and share controlled review links with mentors, recruiters, or peers.
+Resume Feedback Platform helps candidates turn resume feedback from a one-time, subjective review into a repeatable improvement loop. Users can upload a resume in Portuguese or English, get structured language-aware AI feedback, track progress across versions, and share controlled review links with mentors, recruiters, or peers.
 
-This repo is the backend monorepo behind the hosted app at `https://feedback.hmpedro.com`. The frontend is a separate React + TypeScript application hosted on AWS Amplify, while this repository contains the Spring Boot API and worker services deployed on Heroku.
+This repo is the backend monorepo behind the hosted app at `https://feedback.hmpedro.com`. The frontend is a separate React + TypeScript application hosted on AWS Amplify, while this repository contains the Spring Boot API and worker services deployed on Heroku. Development was assisted by GitHub Copilot inside VS Code.
 
 ## Problem
 
-Resume improvement is usually fragmented. Candidates receive advice from different people, paste resumes into generic AI tools, lose track of what changed between versions, and have no clean way to invite reviewers without sending files around manually.
+The idea for Resume Feedback Platform came from conversations with talented, qualified people who asked for help planning their careers. When I looked at their resumes, I saw a painful gap: the documents did not communicate the real professional value those people already had.
 
-That creates three practical problems:
+Many companies are genuinely looking for candidates like them. The candidate may have experience, technical ability, potential, and a strong desire to grow. But a recruiter cannot guess that from context they do not have. The resume is often the first entry point, and writing a strong resume is its own skill.
 
-- Feedback is hard to compare across resume versions.
-- Review collaboration happens outside the resume workflow.
-- Candidates do not get a clear record of whether each revision actually improved the resume.
+Over time, I saw smart, capable people miss opportunities not because they lacked talent, but because their resumes did not present their professional journey clearly, structurally, and strategically. Resume Feedback Platform was created to reduce that communication barrier and help people make their talent, knowledge, and potential more visible through a continuous resume improvement process.
 
 ## Impact
 
@@ -35,18 +33,21 @@ Resume Feedback Platform creates a single workflow for resume iteration:
 - Live app: `https://feedback.hmpedro.com`
 - Handshake AI Showcase: `https://app.joinhandshake.com/ai-showcase?project_id=3056375`
 - Frontend repo: `https://github.com/helenapedro/ui_ai-powered-resume-feedback-platform`
-- Demo guide: [DEMO.md](DEMO.md)
-- API reference: [docs/API.md](docs/API.md)
-- Architecture: [docs/architecture.md](docs/architecture.md)
-- Operations: [docs/operations.md](docs/operations.md)
+- Agents League submission notes: [docs/agents-league-submission.md](docs/agents-league-submission.md)
+- API reference: [docs/project-documentation/API.md](docs/project-documentation/API.md)
+- Architecture: [docs/project-documentation/architecture.md](docs/project-documentation/architecture.md)
+- Operations: [docs/project-documentation/operations.md](docs/project-documentation/operations.md)
 
 ## What We Built
 
 - Real product, not a toy endpoint set: there is a deployed UI and a working end-to-end workflow.
 - AI feedback is asynchronous: uploads stay responsive while a background worker processes LLM jobs.
 - Version-aware analysis: the platform compares resume versions instead of treating each upload in isolation.
+- Portuguese and English resume support: the product supports users who submit resumes in Portuguese or English and need feedback that fits their language context.
 - Shareable review workflow: token-based links, comments, and access auditing support recruiter or mentor review.
 - Practical engineering choices: MySQL for transactional state, MongoDB for AI artifacts, Kafka for event-driven processing, and Redis-backed rate limiting.
+- GitHub Copilot assisted development in VS Code, especially for debugging, documentation, and reasoning through safe implementation boundaries.
+- The worker uses an `AiProviderClient` abstraction. A low-risk Azure OpenAI / Microsoft Foundry-compatible provider path is planned as an optional provider without changing production defaults.
 
 ## Core product flow
 
@@ -68,8 +69,8 @@ If you want the fastest way to understand the project:
 
 1. Open the live app at `https://feedback.hmpedro.com`
 2. Review the product workflow in the hosted frontend
-3. Skim [docs/architecture.md](docs/architecture.md)
-4. Use [DEMO.md](DEMO.md) only if you want to run the stack locally
+3. Skim [docs/project-documentation/architecture.md](docs/project-documentation/architecture.md)
+4. Review [docs/agents-league-submission.md](docs/agents-league-submission.md) for the hackathon-focused story and demo flow
 
 ## Local development
 
@@ -88,7 +89,7 @@ docker compose -f docker/docker-compose.kafka.yml up -d
 ./mvnw -pl resume-worker spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-For the full local walkthrough, see [DEMO.md](DEMO.md). For runtime details, see [docs/operations.md](docs/operations.md).
+For runtime details, see [docs/project-documentation/operations.md](docs/project-documentation/operations.md).
 
 ## Focused execution coverage
 
@@ -100,13 +101,12 @@ This repo includes focused automated coverage around the highest-risk execution 
 
 ## Documentation
 
-- [DEMO.md](DEMO.md)
 - [Documentation Index](docs/README.md)
-- [API Reference](docs/API.md)
-- [Architecture](docs/architecture.md)
-- [Requirements](docs/requirements.md)
-- [Operations](docs/operations.md)
-- [Codex Build Story](docs/codex-build-story.md)
+- [API Reference](docs/project-documentation/API.md)
+- [Architecture](docs/project-documentation/architecture.md)
+- [Requirements](docs/project-documentation/requirements.md)
+- [Operations](docs/project-documentation/operations.md)
+- [Agents League Submission](docs/agents-league-submission.md)
 
 ## Next improvements
 
