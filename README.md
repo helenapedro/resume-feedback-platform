@@ -1,5 +1,9 @@
 # Resume Feedback Platform
 
+**Resume Feedback Platform is featured in the [Handshake AI Showcase](https://app.joinhandshake.com/ai-showcase?project_id=3056375).**
+
+![Live Demo Image](/docs/project-images/live-demo-home-page.png)
+
 Resume Feedback Platform helps candidates turn resume feedback from a one-time, subjective review into a repeatable improvement loop. Users can upload a resume in Portuguese or English, get structured language-aware AI feedback, track progress across versions, and share controlled review links with mentors, recruiters, or peers.
 
 This repo is the backend monorepo for Resume Feedback Platform. The frontend is a separate React + TypeScript application hosted on AWS Amplify, while this repository contains the Spring Boot API and worker services deployed on Heroku. Development was assisted by GitHub Copilot inside VS Code.
@@ -39,14 +43,14 @@ Resume Feedback Platform creates a single workflow for resume iteration:
 
 ## What We Built
 
-- Real product, not a toy endpoint set: there is a deployed UI and a working end-to-end workflow.
-- AI feedback is asynchronous: uploads stay responsive while a background worker processes LLM jobs.
-- Version-aware analysis: the platform compares resume versions instead of treating each upload in isolation.
-- Portuguese and English resume support: the product supports users who submit resumes in Portuguese or English and need feedback that fits their language context.
-- Shareable review workflow: token-based links, comments, and access auditing support recruiter or mentor review.
-- Practical engineering choices: MySQL for transactional state, MongoDB for AI artifacts, Kafka for event-driven processing, and Redis-backed rate limiting.
-- GitHub Copilot assisted development in VS Code, especially for debugging, documentation, and reasoning through safe implementation boundaries.
-- The worker uses an `AiProviderClient` abstraction. `APP_AI_PROVIDER` lets each environment select the provider that best fits its needs, including Azure OpenAI for Microsoft Foundry-compatible deployments.
+- **Real product**: there is a deployed UI and a working end-to-end workflow.
+- **AI feedback is asynchronous**: uploads stay responsive while a background worker processes LLM jobs.
+- **Version-aware analysis**: the platform compares resume versions.
+- **Portuguese and English resume support**: the product supports users who submit resumes in Portuguese or English and need feedback that fits their language context.
+- **Shareable review workflow**: token-based links, comments, and access auditing support recruiter or mentor review.
+- **Practical engineering choices**: **_MySQL_** for transactional state, **_MongoDB_** for AI artifacts, **_Kafka_** for event-driven processing, and **_Redis-backed rate limiting_**.
+- **GitHub Copilot** assisted development in VS Code, especially for debugging, documentation, and reasoning through safe implementation boundaries.
+- The **worker** uses an `AiProviderClient` abstraction. `APP_AI_PROVIDER` lets each environment select the provider that best fits its needs, including Azure OpenAI for Microsoft Foundry-compatible deployments.
 
 ## Core product flow
 
