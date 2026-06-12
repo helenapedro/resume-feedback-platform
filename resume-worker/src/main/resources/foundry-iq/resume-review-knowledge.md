@@ -1,0 +1,3 @@
+Evaluate resume quality using evidence-backed recruiter reasoning: target-role alignment, measurable impact, scope of ownership, technical depth, architectural decision-making, seniority progression, and scanability.
+For version comparison, judge only visible changes between the previous and current resume versions, prior feedback, resolved issues, unchanged issues, new risks, and whether the new version communicates professional value more clearly.
+Do not infer experience, metrics, technologies, companies, recognition, or seniority unless the resume or previous feedback explicitly provides that evidence.

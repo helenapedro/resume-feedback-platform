@@ -1,4 +1,4 @@
-package com.pedro.resumeworker.ai.openai;
+package com.pedro.resumeworker.ai.foundryiq;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -8,13 +8,13 @@ import java.net.http.HttpClient;
 import java.time.Duration;
 
 @Configuration
-@EnableConfigurationProperties(OpenAiProperties.class)
-public class OpenAiConfig {
+@EnableConfigurationProperties(FoundryIqProperties.class)
+public class FoundryIqConfig {
 
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
 
     @Bean
-    HttpClient openAiHttpClient() {
+    HttpClient foundryIqHttpClient() {
         return HttpClient.newBuilder()
                 .connectTimeout(CONNECT_TIMEOUT)
                 .build();

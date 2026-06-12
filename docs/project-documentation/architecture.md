@@ -12,11 +12,13 @@ Related docs:
 
 ## High-Level Components
 
+![Overall architecture diagram](../project-images/overall-architecture-diagram.png)
+
 - `resume-api`
   - Auth, resume, sharing, comments, AI job orchestration
   - Creates `AiJob` records and supports optional Kafka publishing
 - `resume-worker`
-  - Processes AI jobs, calls Gemini, stores feedback, updates job status
+  - Processes AI jobs, retrieves optional Microsoft IQ / Foundry IQ grounding context, calls the configured AI provider, stores feedback, updates job status
 - `common`
   - Shared message contracts and models
 - Datastores
@@ -27,6 +29,8 @@ Related docs:
 
 ## Data Flow
 
+![Async upload and AI feedback pipeline](../project-images/resume-feedback-async-upload-ai-pipeline.png)
+
 ```mermaid
 flowchart LR
   U[User / Client] --> API[resume-api]
@@ -34,7 +38,8 @@ flowchart LR
   API --> WORKER[resume-worker]
   API -. optional .-> KAFKA[(Kafka topic: resume-ai-jobs)]
   KAFKA -. optional .-> WORKER
-  WORKER --> GEMINI[Gemini API]
+  WORKER -. optional grounding .-> FOUNDRYIQ[Microsoft IQ / Foundry IQ Grounding<br/>Azure AI Search / Local Knowledge]
+  WORKER --> PROVIDER[AI Provider Registry<br/>Gemini / OpenAI / Azure OpenAI]
   WORKER --> MONGO[(MongoDB)]
   WORKER --> MYSQL
   API --> MONGO
@@ -53,7 +58,8 @@ sequenceDiagram
     participant MySQL as MySQL
     participant Worker as resume-worker
     participant Extractor as ResumeTextExtractor
-    participant Gemini as Gemini API
+    participant Grounding as Microsoft IQ Grounding
+    participant Provider as Configured AI Provider
     participant Mongo as MongoDB
 
     User->>API: POST /api/resumes or POST /versions
@@ -79,15 +85,20 @@ sequenceDiagram
     Extractor->>Extractor: Extract and normalize PDF text
     Extractor-->>Worker: Resume text
 
-    Worker->>Gemini: Prompt with resume text
-    Gemini-->>Worker: JSON feedback(summary, strengths, improvements)
+    opt Foundry IQ grounding enabled
+        Worker->>Grounding: Retrieve cited resume-review knowledge
+        Grounding-->>Worker: Grounding context with source citations
+    end
 
-    alt Gemini response valid
+    Worker->>Provider: Prompt with resume text and optional grounding context
+    Provider-->>Worker: JSON feedback(summary, strengths, improvements)
+
+    alt Provider response valid
         Worker->>Mongo: Save AiFeedbackDocument
         Mongo-->>Worker: mongoDocId
         Worker->>MySQL: Save AiFeedbackRef(version, model, promptVersion, mongoDocId)
         Worker->>MySQL: Mark job DONE
-    else Gemini failure / parse error / provider error
+    else Provider failure / parse error / provider error
         Worker->>MySQL: Mark job FAILED with error metadata
     end
 
@@ -111,7 +122,8 @@ sequenceDiagram
     participant MySQL as MySQL
     participant Worker as resume-worker
     participant Extractor as ResumeTextExtractor
-    participant Gemini as Gemini API
+    participant Grounding as Microsoft IQ Grounding
+    participant Provider as Configured AI Provider
     participant Mongo as MongoDB
 
     User->>API: POST /api/resumes/{resumeId}/versions
@@ -131,8 +143,12 @@ sequenceDiagram
     alt Previous version exists and baseline feedback exists
         Worker->>Extractor: Extract previous resume text
         Extractor-->>Worker: Previous resume text
-        Worker->>Gemini: Prompt with previous resume, current resume, and previous feedback
-        Gemini-->>Worker: JSON progress(summary, status, score, issue lists)
+        opt Foundry IQ grounding enabled
+            Worker->>Grounding: Retrieve cited version-comparison knowledge
+            Grounding-->>Worker: Grounding context with source citations
+        end
+        Worker->>Provider: Prompt with previous resume, current resume, previous feedback, and optional grounding context
+        Provider-->>Worker: JSON progress(summary, status, score, issue lists)
         Worker->>Mongo: Save AiProgressDocument
         Mongo-->>Worker: mongoDocId
         Worker->>MySQL: Save AiProgressRef(baselineVersion, model, promptVersion, mongoDocId)
@@ -153,6 +169,7 @@ sequenceDiagram
 - REST for user-facing operations
 - Background worker for asynchronous AI jobs
 - Optional Kafka integration for event-driven deployments
+- Optional Microsoft IQ / Foundry IQ grounding via Azure AI Search semantic retrieval or local demo knowledge
 
 ## Persistence Strategy
 

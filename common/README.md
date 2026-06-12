@@ -1,5 +1,7 @@
 # common
 
+![Common Module Overview Image](/docs/project-images/common-module-overview.png)
+
 Shared contracts and cross-module models.
 
 For platform context and architecture, see the [root README](../README.md).
@@ -10,9 +12,10 @@ For platform context and architecture, see the [root README](../README.md).
 
 ## Responsibilities
 
-- Shared Kafka payload contracts (for AI jobs)
+- Shared Kafka payload contracts for AI jobs
 - Shared DTO-like records and utility models
-- Reduce duplication and keep integration contracts consistent
+- Reduced duplication across module boundaries
+- Consistent integration contracts between API and worker flows
 
 ## Key Dependencies
 
@@ -22,6 +25,7 @@ For platform context and architecture, see the [root README](../README.md).
 ## Usage
 
 Imported as a module dependency by:
+
 - `resume-api`
 - `resume-worker`
 
