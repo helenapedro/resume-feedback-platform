@@ -63,6 +63,8 @@ Resume Feedback Platform creates a single workflow for resume iteration:
 4. The worker stores AI feedback and progress documents in MongoDB, then updates job status and artifact references in MySQL.
 5. The frontend polls `resume-api` for job status, feedback, and progress analysis, then shows version history, comments, and share-link controls so users can iterate over time.
 
+The diagram is a simplified view of the pipeline: the frontend never talks directly to MySQL or MongoDB, `resume-api` owns client-facing reads, and Microsoft IQ / Foundry IQ grounding is an optional worker-side context step before the configured provider is called.
+
 ## Repository layout
 
 - `resume-api`: REST API for auth, resumes, share links, comments, AI job orchestration, and retrieval
