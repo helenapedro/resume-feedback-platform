@@ -107,6 +107,61 @@ The two-minute demo should show:
 8. Create a share link and show the collaboration/review workflow.
 9. Briefly show the code/documentation in VS Code and mention GitHub Copilot assisted the development process.
 
+## Innovation Studio Copy
+
+### Short Description
+
+Resume Feedback Platform is a production-style creative app that helps candidates improve resumes through structured AI feedback, version-aware progress analysis, and controlled share links for human review.
+
+### Project Description
+
+Resume Feedback Platform helps candidates turn resume feedback from a one-time, subjective review into a repeatable improvement loop. The project came from a personal observation: talented, qualified people often have experience, technical ability, and growth potential, but their resumes do not clearly communicate that value to recruiters. The platform reduces that communication barrier by helping users improve how their professional journey is presented.
+
+Users can upload a resume PDF, receive structured AI feedback, upload revised versions, compare progress across versions, and share controlled review links with mentors, recruiters, or peers. The workflow supports resumes in Portuguese and English, so the feedback remains useful for the user's language context.
+
+The application is submitted to the Creative Apps track because it combines a real user-facing workflow with AI-assisted development using GitHub Copilot in VS Code. Copilot helped accelerate backend navigation, documentation, refactoring, debugging, and safe extension of the AI provider architecture.
+
+The backend also integrates a Microsoft IQ / Foundry IQ grounding layer. When enabled, the worker retrieves cited resume-review knowledge through Azure AI Search or a local demo knowledge source and injects that context into feedback and progress-analysis prompts before calling the configured AI provider. This keeps the resume itself as the primary evidence while using controlled rubric context to make feedback more consistent and grounded.
+
+### AI Value
+
+- Generates structured resume feedback tied to a specific version.
+- Compares revised resumes against previous versions to show whether the candidate improved.
+- Uses Microsoft IQ / Foundry IQ grounding as optional rubric context before model execution.
+- Keeps provider selection configurable through `APP_AI_PROVIDER`.
+- Supports human-in-the-loop review through share links and comments.
+
+### Technologies
+
+- Frontend: React, TypeScript, AWS Amplify
+- Backend: Java 17, Spring Boot, Maven multi-module architecture
+- Data: MySQL for transactional state, MongoDB for AI artifacts
+- Storage: local file storage or S3-compatible storage
+- Async processing: background worker, optional Kafka event path, MySQL polling fallback
+- AI: configurable `AiProviderClient` registry for OpenAI, Azure OpenAI, and Gemini
+- Microsoft IQ / Foundry IQ: optional grounding with Azure AI Search semantic retrieval or local knowledge source
+- Tooling: GitHub Copilot in VS Code
+
+### Links
+
+- Live app: `https://feedback.hmpedro.com/`
+- Handshake AI Showcase: `https://app.joinhandshake.com/ai-showcase?project_id=3056375`
+- Backend repository: `https://github.com/helenapedro/resume-feedback-platform`
+- Frontend repository: `https://github.com/helenapedro/ui_ai-powered-resume-feedback-platform`
+
+## Two-Minute Video Script
+
+Target length: 1:45 to 2:00.
+
+1. 0:00-0:10 - Open the live app and introduce the problem: talented candidates often have resumes that do not communicate their real value clearly.
+2. 0:10-0:25 - Upload a resume PDF and show that the upload returns immediately while AI processing runs asynchronously.
+3. 0:25-0:45 - Show the generated AI feedback: summary, strengths, and improvement areas.
+4. 0:45-1:05 - Upload or open a later resume version and show the progress analysis across versions.
+5. 1:05-1:20 - Show share-link or review workflow for mentor/recruiter collaboration.
+6. 1:20-1:40 - Show the architecture diagram and mention `resume-api`, `resume-worker`, MySQL, MongoDB, provider registry, and optional Kafka/polling.
+7. 1:40-1:55 - Show VS Code briefly and mention GitHub Copilot-assisted development plus Microsoft IQ / Foundry IQ grounding before provider execution.
+8. 1:55-2:00 - Close with the live URL and project repository.
+
 ## Security Notes
 
 Before submitting a public repository:
