@@ -1,10 +1,10 @@
 # Resume Feedback Platform
 
-**Resume Feedback Platform is featured in the [Handshake AI Showcase](https://app.joinhandshake.com/ai-showcase?project_id=3056375).**
+**Resume Feedback Platform helps candidates turn resume feedback from a one-time, subjective review into a repeatable improvement loop. Users can upload a resume in Portuguese or English, get structured language-aware AI feedback, track progress across versions, and share controlled review links with mentors, recruiters, or peers.**
+
+[Live Demo](https://feedback.hmpedro.com).
 
 ![Live Demo Image](/docs/project-images/live-demo-home-page.png)
-
-Resume Feedback Platform helps candidates turn resume feedback from a one-time, subjective review into a repeatable improvement loop. Users can upload a resume in Portuguese or English, get structured language-aware AI feedback, track progress across versions, and share controlled review links with mentors, recruiters, or peers.
 
 This repo is the backend monorepo for Resume Feedback Platform. The frontend is a separate React + TypeScript application hosted on AWS Amplify, while this repository contains the Spring Boot API and worker services deployed on Heroku. Development was assisted by GitHub Copilot inside VS Code.
 
@@ -41,7 +41,7 @@ Resume Feedback Platform creates a single workflow for resume iteration:
 - Architecture: [docs/project-documentation/architecture.md](docs/project-documentation/architecture.md)
 - Operations: [docs/project-documentation/operations.md](docs/project-documentation/operations.md)
 
-## What We Built
+## What I Built
 
 - **Real product**: there is a deployed UI and a working end-to-end workflow.
 - **AI feedback is asynchronous**: uploads stay responsive while a background worker processes LLM jobs.
@@ -54,6 +54,8 @@ Resume Feedback Platform creates a single workflow for resume iteration:
 - The **Microsoft IQ / Foundry IQ grounding layer** can inject cited resume-review knowledge into feedback and progress prompts through `APP_AI_FEEDBACK_FOUNDRY_IQ_ENABLED`, with Azure AI Search support for semantic retrieval.
 
 ## Core product flow
+
+![Async upload and AI feedback pipeline](docs/project-images/resume-feedback-async-upload-ai-pipeline.png)
 
 1. Sign in and upload a resume PDF.
 2. The API stores metadata and creates an AI job.

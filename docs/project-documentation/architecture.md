@@ -12,6 +12,8 @@ Related docs:
 
 ## High-Level Components
 
+![Overall architecture diagram](../project-images/overall-architecture-diagram.png)
+
 - `resume-api`
   - Auth, resume, sharing, comments, AI job orchestration
   - Creates `AiJob` records and supports optional Kafka publishing
@@ -26,6 +28,8 @@ Related docs:
   - Kafka: optional AI jobs topic integration
 
 ## Data Flow
+
+![Async upload and AI feedback pipeline](../project-images/resume-feedback-async-upload-ai-pipeline.png)
 
 ```mermaid
 flowchart LR

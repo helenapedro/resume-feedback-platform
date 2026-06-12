@@ -77,6 +77,8 @@ This aligns with the challenge's Foundry IQ direction: agentic knowledge retriev
 
 ## Architecture Summary
 
+![Async upload and AI feedback pipeline](project-images/resume-feedback-async-upload-ai-pipeline.png)
+
 The backend is a multi-module Spring Boot system:
 
 - `resume-api`: authentication, resume upload, versioning, share links, comments, AI job orchestration, and read APIs.
