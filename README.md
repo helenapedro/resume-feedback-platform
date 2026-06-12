@@ -58,10 +58,12 @@ Resume Feedback Platform creates a single workflow for resume iteration:
 ![Async upload and AI feedback pipeline](docs/project-images/resume-feedback-async-upload-ai-pipeline.png)
 
 1. Sign in and upload a resume PDF.
-2. The API stores metadata and creates an AI job.
-3. The worker processes pending AI jobs and generates feedback plus progress analysis.
-4. The UI shows version history, AI feedback, comments, and share-link controls.
-5. Users iterate on new resume versions and compare improvement over time.
+2. The React frontend sends the upload to `resume-api`, which stores the PDF, records resume metadata, and creates an AI job while returning an immediate upload response.
+3. `resume-worker` picks up pending jobs through MySQL polling or optional Kafka, extracts resume text, retrieves optional Microsoft IQ / Foundry IQ grounding context, and calls the configured AI provider.
+4. The worker stores AI feedback and progress documents in MongoDB, then updates job status and artifact references in MySQL.
+5. The frontend polls `resume-api` for job status, feedback, and progress analysis, then shows version history, comments, and share-link controls so users can iterate over time.
+
+The diagram is a simplified view of the pipeline: the frontend never talks directly to MySQL or MongoDB, `resume-api` owns client-facing reads, and Microsoft IQ / Foundry IQ grounding is an optional worker-side context step before the configured provider is called.
 
 ## Repository layout
 
