@@ -31,10 +31,17 @@ Resume Feedback Platform creates a single workflow for resume iteration:
 
 ![Handshake Featured Image](https://resume-feedback-platform.s3.us-east-1.amazonaws.com/images/handshake_feature.png)
 
+## Project Story Video
+
+I recorded a short video explaining why I built Resume Feedback Platform, why resumes should be treated as evolving products, and how AI can help make resume improvement more structured and measurable.
+
+[![Watch the Resume Feedback Platform story video](https://img.youtube.com/vi/eao3UwOldW4/maxresdefault.jpg)](https://www.youtube.com/watch?v=eao3UwOldW4)
+
 ## Start here
 
 - Live app: `https://feedback.hmpedro.com`
 - Handshake AI Showcase: `https://app.joinhandshake.com/ai-showcase?project_id=3056375`
+- Project story video: `https://www.youtube.com/watch?v=eao3UwOldW4`
 - Frontend repo: `https://github.com/helenapedro/ui_ai-powered-resume-feedback-platform`
 - Agents League submission notes: [docs/agents-league-submission.md](docs/agents-league-submission.md)
 - API reference: [docs/project-documentation/API.md](docs/project-documentation/API.md)
@@ -118,7 +125,6 @@ This repo includes focused automated coverage around the highest-risk execution 
 
 ## Next improvements
 
-- Add a short public demo video or GIF-based walkthrough
 - Add richer before-vs-after resume examples in the product documentation
 - Add one scripted seeded demo data path
 - Add a single end-to-end browser smoke test for the hosted frontend
