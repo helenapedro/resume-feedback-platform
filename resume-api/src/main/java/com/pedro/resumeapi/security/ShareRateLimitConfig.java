@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 
 import java.nio.ByteBuffer;
 
@@ -19,13 +20,16 @@ import java.nio.ByteBuffer;
 @ConditionalOnProperty(prefix = "app.security.rate-limit.share", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ShareRateLimitConfig {
 
-    @Value("${REDIS_URL}")
+    @Value("${REDIS_URL:}")
+    private String redisUrl;
+
+    @Value("${spring.data.redis.host:localhost}")
     private String host;
 
-    @Value("${SPRING_DATA_REDIS_PORT}")
+    @Value("${spring.data.redis.port:6379}")
     private int port;
 
-    @Value("${SPRING_DATA_REDIS_PASSWORD}")
+    @Value("${spring.data.redis.password:}")
     private String password;
 
     @Value("${spring.data.redis.database:0}")
@@ -34,8 +38,19 @@ public class ShareRateLimitConfig {
     @Value("${spring.data.redis.ssl.enabled:true}")
     private boolean ssl;
 
+    @Value("${spring.data.redis.ssl.verify-peer:false}")
+    private boolean verifyPeer;
+
     @Bean(destroyMethod = "shutdown")
     public RedisClient shareRateLimitRedisClient() {
+        if (StringUtils.hasText(redisUrl)) {
+            RedisURI redisURI = RedisURI.create(redisUrl);
+            if (redisURI.isSsl()) {
+                redisURI.setVerifyPeer(verifyPeer);
+            }
+            return RedisClient.create(redisURI);
+        }
+
         RedisURI.Builder builder = RedisURI.builder()
                 .withHost(host)
                 .withPort(port)
@@ -46,7 +61,7 @@ public class ShareRateLimitConfig {
         }
 
         if (ssl) {
-            builder.withSsl(true);
+            builder.withSsl(true).withVerifyPeer(verifyPeer);
         }
 
         return RedisClient.create(builder.build());
