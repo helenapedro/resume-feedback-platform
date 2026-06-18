@@ -1,9 +1,7 @@
 package com.pedro.resumeapi.security;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
 @ConfigurationProperties(prefix = "app.auth.google")
 public class GoogleAuthProperties {
 
