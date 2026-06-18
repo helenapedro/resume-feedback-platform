@@ -14,5 +14,4 @@ public interface AiJobRepository extends JpaRepository<AiJob, UUID> {
 
     @EntityGraph(attributePaths = "resumeVersion")
     List<AiJob> findTop50ByStatusAndNextRetryAtBeforeOrderByNextRetryAtAsc(AiJob.Status status, Instant retryAt);
-
 }

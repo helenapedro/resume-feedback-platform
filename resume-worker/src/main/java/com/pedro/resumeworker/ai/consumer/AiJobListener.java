@@ -9,7 +9,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name = "app.ai-jobs.kafka-enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "app.ai-jobs", name = "kafka-enabled", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 public class AiJobListener {

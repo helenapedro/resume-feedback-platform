@@ -13,11 +13,11 @@ public class AiJobEventPublisher {
 
     private final ObjectProvider<KafkaTemplate<String, AiJobRequestedMessage>> kafkaTemplateProvider;
 
-    @Value("${app.ai-jobs.topic:resume-ai-jobs}")
-    private String topic;
-
     @Value("${app.ai-jobs.kafka-enabled:false}")
     private boolean kafkaEnabled;
+
+    @Value("${app.ai-jobs.topic:resume-ai-jobs}")
+    private String topic;
 
     public AiJobEventPublisher(ObjectProvider<KafkaTemplate<String, AiJobRequestedMessage>> kafkaTemplateProvider) {
         this.kafkaTemplateProvider = kafkaTemplateProvider;

@@ -55,7 +55,7 @@ public class AiJobRetryScheduler {
                 version.getId(),
                 version.getCreatedBy(),
                 job.getCreatedAt(),
-                job.getLanguage() == null ? Language.EN : job.getLanguage());
+                job.getLanguage() == null ? Language.AUTO : job.getLanguage());
         processor.process(message);
     }
 }
