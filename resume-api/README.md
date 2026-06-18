@@ -56,6 +56,7 @@ Core dependencies are provided via environment variables:
 - `SPRING_DATA_MONGODB_URI`
 - `SPRING_KAFKA_BOOTSTRAP_SERVERS` (only if Kafka is enabled)
 - `KAFKA_PREFIX` (optional topic/group prefix)
+- `GOOGLE_OAUTH_CLIENT_ID` or `GOOGLE_OAUTH_CLIENT_IDS` for Google sign-in
 
 Storage:
 
@@ -67,6 +68,7 @@ Storage:
 Auth:
 - `POST /api/auth/register`
 - `POST /api/auth/login`
+- `POST /api/auth/google`
 
 Resumes:
 - `GET /api/resumes`

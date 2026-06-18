@@ -1,17 +1,20 @@
 package com.pedro.resumeapi.security;
 
 import com.pedro.resumeapi.api.error.UnauthorizedException;
-import com.pedro.resumeapi.demo.DemoAccountPolicy;
-import com.pedro.resumeapi.user.domain.User;
 import com.pedro.resumeapi.auth.dto.AuthResponse;
 import com.pedro.resumeapi.auth.dto.GoogleAuthRequest;
 import com.pedro.resumeapi.auth.dto.LoginRequest;
 import com.pedro.resumeapi.auth.dto.ReactivateRequest;
 import com.pedro.resumeapi.auth.dto.RegisterRequest;
+import com.pedro.resumeapi.demo.DemoAccountPolicy;
+import com.pedro.resumeapi.user.domain.User;
 import com.pedro.resumeapi.user.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 
@@ -59,7 +62,7 @@ public class AuthController {
 
         if (!user.isEnabled()) throw new IllegalArgumentException("user disabled");
 
-        if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(req.password(), user.getPasswordHash())) {
             throw new UnauthorizedException("invalid credentials");
         }
         user.setLastLoginAt(Instant.now());
@@ -67,8 +70,7 @@ public class AuthController {
 
         String token = jwtService.generate(user.getId(),
                 user.getEmail(),
-                user.getRole().name())
-                ;
+                user.getRole().name());
         return new AuthResponse(token);
     }
 
@@ -76,23 +78,24 @@ public class AuthController {
     public AuthResponse google(@RequestBody GoogleAuthRequest req) {
         var identity = googleTokenVerifierService.verifyIdToken(req.idToken());
 
-        User user = userRepository.findByEmail(identity.email()).orElseGet(() -> {
-            User created = new User();
-            created.setEmail(identity.email());
-            // local password auth is not used for Google-only sign-in users
-            created.setPasswordHash(passwordEncoder.encode("google-oauth-" + identity.sub()));
-            created.setRole(User.Role.USER);
-            created.setEnabled(true);
-            created.setCreatedAt(Instant.now());
-            created.setFullName(identity.name());
-            created.setAvatarUrl(identity.pictureUrl());
-            return created;
-        });
+        User user = userRepository.findByGoogleSub(identity.sub())
+                .or(() -> userRepository.findByEmail(identity.email()))
+                .orElseGet(() -> {
+                    User created = new User();
+                    created.setEmail(identity.email());
+                    created.setRole(User.Role.USER);
+                    created.setEnabled(true);
+                    created.setCreatedAt(Instant.now());
+                    return created;
+                });
 
         if (!user.isEnabled()) {
             user.setEnabled(true);
         }
-
+        if (user.getGoogleSub() == null || user.getGoogleSub().isBlank()) {
+            user.setGoogleSub(identity.sub());
+        }
+        user.setEmail(identity.email());
         if ((user.getFullName() == null || user.getFullName().isBlank()) && identity.name() != null) {
             user.setFullName(identity.name());
         }
@@ -117,7 +120,7 @@ public class AuthController {
         var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("invalid credentials"));
 
-        if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(req.password(), user.getPasswordHash())) {
             throw new UnauthorizedException("invalid credentials");
         }
 

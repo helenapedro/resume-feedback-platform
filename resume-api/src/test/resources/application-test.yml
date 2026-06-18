@@ -34,6 +34,9 @@ app:
     secret: test-secret-key-test-secret-key-test-secret-key-123456
     issuer: resume-api-test
     expMinutes: 60
+  auth:
+    google:
+      client-id: test-google-client-id.apps.googleusercontent.com
   security:
     rate-limit:
       share:

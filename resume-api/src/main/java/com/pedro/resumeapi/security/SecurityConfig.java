@@ -14,7 +14,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import java.util.Optional;
 
 @Configuration
-@EnableConfigurationProperties(ShareRateLimitProperties.class)
+@EnableConfigurationProperties({ShareRateLimitProperties.class, GoogleAuthProperties.class})
 public class SecurityConfig {
 
     @Bean

@@ -35,4 +35,3 @@ public class GoogleAuthProperties {
         this.tokenInfoUrl = tokenInfoUrl;
     }
 }
-

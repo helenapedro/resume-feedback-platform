@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -185,6 +186,22 @@ public class GlobalExceptionHandler {
                 null
         );
         return ResponseEntity.status(status).body(body);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNoResourceFound(
+            NoResourceFoundException ex,
+            HttpServletRequest req
+    ) {
+        var body = ApiErrorResponse.of(
+                ErrorCode.RESOURCE_NOT_FOUND.name(),
+                "Resource not found",
+                HttpStatus.NOT_FOUND.value(),
+                req.getRequestURI(),
+                traceId(),
+                exceptionDetails(ex)
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
 
